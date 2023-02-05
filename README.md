@@ -18,7 +18,8 @@ This repository contains the toy-compiler created as part of requirements for th
 
 | Meeting | Summary                                     | Date        |
 | ------- | ------------------------------------------- | ----------- |
-| 1       | Project Logistics Discussion                | Feb 3, 2023 | 
+| 1       | Project Logistics Discussion                | Feb 3, 2023 |
+| 2       | Primitive DFA Construction                | Feb 4, 2023 |
 
 ## Deadlines
 
