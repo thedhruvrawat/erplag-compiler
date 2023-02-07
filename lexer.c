@@ -80,6 +80,7 @@ int main(int argc, char* argv[]) {
             case 2:
                 state = 0;
                 TOKEN* token = createToken();
+                token->tok = ID;
                 tokenBuffer[temp++] = *token;
                 forward--;
             case 4:
@@ -91,11 +92,11 @@ int main(int argc, char* argv[]) {
         forward++;
 
 
-        if(forward==BUF_SIZE) break;
+        if(forward==BUF_SIZE) break; //|| forward=='\0'
     }
 
     for (int i = 0; i < 20; ++i) {
-        printf("%s\n", tokenBuffer[i].lexeme);
+        printf("%s: %s\n", token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
     }
 
     fclose(fp);
