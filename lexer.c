@@ -18,10 +18,13 @@ int begin = 0;
 int forward = 0;
 int state = 0;
 
+int COUNT = 0;
+
 // Buffer to store tokens
 TOKEN tokenBuffer[TOK_BUF_SIZE];
 
 void bufferLoader(FILE* fp, bool firstPart) {
+    COUNT++;
     if (firstPart) {
         fread(buf, sizeof(char), BUF_SIZE, fp);
     } else {
@@ -35,16 +38,12 @@ TOKEN* createToken() {
     TOKEN* token = malloc(sizeof(TOKEN));
     int pos = 0;
     while (begin < forward) {
-        token->lexeme[pos++] = buf[begin++];
+        token->lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
+        begin++;
     }
     token->linenum = LINE_NUM;
-    if(strcmp(token->lexeme, "abcdefghijklmnopqr")==0) {
-        for (int i = 0; i < BUF_SIZE*2; i++) {
-            printf("%c", buf[i]);
-        }
-        printf("\n");
-        printf("%d, %d\n", forward, begin);
-    }
+    // begin %= (2 * BUF_SIZE);
+    // forward %= (2 * BUF_SIZE);
     
     return token;
 }
@@ -64,7 +63,7 @@ int main(int argc, char* argv[]) {
     bufferLoader(fp, true);
     while (true) {
         count++;
-        char curr = buf[forward];
+        char curr = buf[forward % (2 * BUF_SIZE)];
         // if (curr == '\n') { 
         //     LINE_NUM++;
         // }
@@ -101,19 +100,20 @@ int main(int argc, char* argv[]) {
         }
         forward++;
         // if(forward==BUF_SIZE) break; //|| forward=='\0'
-        if(forward==BUF_SIZE-1) 
+        if((forward % (2 * BUF_SIZE)) == (BUF_SIZE - 1)) 
             bufferLoader(fp, false);
-        else if(forward==2*BUF_SIZE-1) 
+        else if((forward % (2 * BUF_SIZE)) == (2 * BUF_SIZE - 1)) 
             bufferLoader(fp, true);
-        forward = forward % (2 * BUF_SIZE);
         if(count==4000) {
             printf("here\n");
             break;
         }
     }
     
-    // for (int i = 0; i < TOK_BUF_SIZE; ++i) {
-    //     printf("%d. Line: %d,\t%s: %s\n", i, tokenBuffer[i].linenum, token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
-    // }
+    for (int i = 0; i < TOK_BUF_SIZE; ++i) {
+        printf("%d. Line: %d,\t%s: %s\n", i, tokenBuffer[i].linenum, token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
+    }
+
+    printf("%d\n", COUNT);
     fclose(fp);
 }
