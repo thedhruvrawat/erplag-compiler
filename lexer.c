@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     //     return 1;
     // }
 
-    FILE* fp = fopen("testtest", "r");
+    FILE* fp = fopen("testtest3", "r");
     int temp = 0;
 
     bufferLoader(fp, true);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         char curr = buf[forward % (2 * BUF_SIZE)];
 
         switch(state) {
-            case 0:
+            case 0: { // Start State
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z')) {
                     state = 1;
                 } else if (curr == ' ' || curr == '\t' || curr == '\n') {
@@ -77,11 +77,44 @@ int main(int argc, char* argv[]) {
                         LINE_NUM++;
                     }
                     begin++;
+                } else if (curr == '+') {
+                    state = 13; 
+                } else if (curr == '-') {
+                    state = 14;
+                } else if (curr == '*') {
+                    state = 15;
+                } else if (curr == '/') {
+                    state = 17;
+                } else if (curr == '<') {
+                    state = 18;
+                } else if (curr == '>') {
+                    state = 24;
+                } else if (curr == '=') {
+                    state = 30;
+                } else if (curr == '!') {
+                    state = 32;
+                } else if (curr == ':') {
+                    state = 34;
+                } else if (curr == ';') {
+                    state = 37;
+                } else if (curr == ',') {
+                    state = 38;
+                } else if (curr == '[') {
+                    state = 39;
+                } else if (curr == ']') {
+                    state = 40;
+                } else if (curr == '(') {
+                    state = 41;
+                } else if (curr == ')') {
+                    state = 42;
+                } else if (curr == '.') {
+                    state = 43;
                 } else {
-                    state = 4;
+                    state = 100;
                 }
                 break;
-            case 1:
+            }
+            case 1: {
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z') || (curr >= '0' && curr <= '9')) {
                     state = 1;
                 } else {
@@ -89,15 +122,290 @@ int main(int argc, char* argv[]) {
                     forward--;
                 }
                 break;
-            case 2:
+            }
+            case 2: { // Accept State for ID
                 state = 0;
                 TOKEN* token = createToken();
                 token->tok = ID;
                 tokenBuffer[temp++] = *token;
                 forward--;
-            case 4:
-                state = 0;
                 break;
+            }
+            case 13: { // Accept State for PLUS
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = PLUS;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 14: { // Accept State for MINUS
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = MINUS;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 15: {
+                if(curr == '*'){
+                    state = 45;
+                } else {
+                    state = 16;
+                    forward--;
+                }
+                break;
+            }
+            case 16: { // Accept State for MUL
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = MUL;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 17: { // Accept State for DIV
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = DIV;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 18: {
+                if (curr == '=') {
+                    state = 20;
+                } else if (curr == '<') {
+                    state = 21;
+                } else { 
+                    state = 19;
+                    forward--;
+                }
+                break;
+            }
+            case 19: { // Accept State for LT
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = LT;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 20: { // Accept State for LE
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = LE;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 21: {
+                if (curr == '<') {
+                    state = 23;
+                } else { 
+                    state = 22;
+                    forward--;
+                }
+                break;
+            }
+            case 22: { // Accept State for DEF
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = DEF;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 23: { // Accept State for DRIVERDEF
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = DRIVERDEF;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 24: {
+                if (curr == '=') {
+                    state = 26;
+                } else if (curr == '>') {
+                    state = 27;
+                } else {
+                    state = 25;
+                    forward--;
+                }
+                break;
+            }
+            case 25: { // Accept State for GT
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = GT;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 26: { // Accept State for GE
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = GE;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;                
+            }
+            case 27: {
+                if (curr == '>') {
+                    state = 29;
+                } else {
+                    state = 28;
+                    forward--;
+                }
+                break;
+            } 
+            case 28: { // Accept State for ENDDEF
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = ENDDEF;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            } 
+            case 29: { // Accept State for DRIVERENDDEF
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = DRIVERENDDEF;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 30: {
+                if (curr == '=') {
+                    state = 31;
+                } else {
+                    state = 100;
+                }
+                break;
+            }
+            case 31: { // Accept State for EQ
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = EQ;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 32: {
+                if (curr == '=') {
+                    state = 33;
+                } else {
+                    state = 100;
+                }
+                break;
+            } 
+            case 33: { // Accept State for NE
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = NE;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 34: {
+                if (curr == '=') {
+                    state = 35;
+                } else {
+                    state = 36;
+                    forward--;
+                }
+                break;
+            } 
+            case 35: { // Accept State for ASSIGNOP
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = ASSIGNOP;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 36: { // Accept State for COLON
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = COLON;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            } 
+            case 37: { // Accept State for SEMICOL
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = SEMICOL;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            } 
+            case 38: { // Accept State for COMMA
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = COMMA;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            } 
+            case 39: { // Accept State for SQBO
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = SQBO;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 40: { // Accept State for SQBC
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = SQBC;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 41: { // Accept State for BO
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = BO;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 42: { // Accept State for BC
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = BC;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 43: {
+                if (curr == '.') {
+                    state = 44;
+                } else {
+                    state = 100;
+                }
+                break;
+            }
+            case 44: { // Accept State for RANGEOP
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = RANGEOP;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 45: { // Accept State for COMMENTMARK
+                state = 0; // TODO COMMENT LATER
+                TOKEN* token = createToken();
+                token->tok = COMMENTMARK;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+
         }
         forward++;
 
