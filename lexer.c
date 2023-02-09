@@ -18,17 +18,21 @@ int begin = 0;
 int forward = 0;
 int state = 0;
 
-int COUNT = 0;
-
 // Buffer to store tokens
 TOKEN tokenBuffer[TOK_BUF_SIZE];
 
 void bufferLoader(FILE* fp, bool firstPart) {
-    COUNT++;
+    // Setting the buffer end as EOF if the number of characters read is less than BUF_SIZE
     if (firstPart) {
-        fread(buf, sizeof(char), BUF_SIZE, fp);
+        int val = fread(buf, sizeof(char), BUF_SIZE, fp);
+        if (val < BUF_SIZE) {
+            buf[val] = EOF;
+        }
     } else {
-        fread(buf + BUF_SIZE, sizeof(char), BUF_SIZE, fp);
+        int val = fread(buf + BUF_SIZE, sizeof(char), BUF_SIZE, fp);
+        if (val < BUF_SIZE) {
+            buf[val + BUF_SIZE] = EOF;
+        }
     }
 
     return;
@@ -42,8 +46,6 @@ TOKEN* createToken() {
         begin++;
     }
     token->linenum = LINE_NUM;
-    // begin %= (2 * BUF_SIZE);
-    // forward %= (2 * BUF_SIZE);
     
     return token;
 }
@@ -58,15 +60,14 @@ int main(int argc, char* argv[]) {
     FILE* fp = fopen("testtest", "r");
     int temp = 0;
 
-    // TODO : MODULO of forward pointer
-
     bufferLoader(fp, true);
+    bool lastBufLoad = 0;
+    bool twice = false;
+
     while (true) {
         count++;
         char curr = buf[forward % (2 * BUF_SIZE)];
-        // if (curr == '\n') { 
-        //     LINE_NUM++;
-        // }
+
         switch(state) {
             case 0:
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z')) {
@@ -99,21 +100,30 @@ int main(int argc, char* argv[]) {
                 break;
         }
         forward++;
-        // if(forward==BUF_SIZE) break; //|| forward=='\0'
-        if((forward % (2 * BUF_SIZE)) == (BUF_SIZE - 1)) 
+
+        // Loading the buffer when required
+        if((forward % (2 * BUF_SIZE)) == (BUF_SIZE - 1) && !lastBufLoad) {
             bufferLoader(fp, false);
-        else if((forward % (2 * BUF_SIZE)) == (2 * BUF_SIZE - 1)) 
+            lastBufLoad = 1;
+        } else if((forward % (2 * BUF_SIZE)) == (2 * BUF_SIZE - 1) && lastBufLoad) { 
             bufferLoader(fp, true);
-        if(count==4000) {
-            printf("here\n");
-            break;
+            lastBufLoad = 0;
+        }
+
+        // Checking if we have reached the end of file
+        // twice variable helps to exit the program by keeping track of the number of times EOF encountered
+        if (curr == EOF || twice) {
+            if (twice) {
+                break;
+            } else {
+                twice = true;
+            }
         }
     }
     
-    for (int i = 0; i < TOK_BUF_SIZE; ++i) {
+    for (int i = 0; i < temp; ++i) {
         printf("%d. Line: %d,\t%s: %s\n", i, tokenBuffer[i].linenum, token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
     }
 
-    printf("%d\n", COUNT);
     fclose(fp);
 }
