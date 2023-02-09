@@ -2,9 +2,12 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "lexer.h"
+#include <string.h>
 
 // Buffers
 #define BUF_SIZE 512
+#define TOK_BUF_SIZE 512
+
 char buf[BUF_SIZE * 2];
 
 // Line Number
@@ -16,7 +19,7 @@ int forward = 0;
 int state = 0;
 
 // Buffer to store tokens
-TOKEN tokenBuffer[20];
+TOKEN tokenBuffer[TOK_BUF_SIZE];
 
 void bufferLoader(FILE* fp, bool firstPart) {
     if (firstPart) {
@@ -30,31 +33,37 @@ void bufferLoader(FILE* fp, bool firstPart) {
 
 TOKEN* createToken() {
     TOKEN* token = malloc(sizeof(TOKEN));
-
     int pos = 0;
     while (begin < forward) {
         token->lexeme[pos++] = buf[begin++];
     }
-
-    token->linenum = pos;
-
+    token->linenum = LINE_NUM;
+    if(strcmp(token->lexeme, "abcdefghijklmnopqr")==0) {
+        for (int i = 0; i < BUF_SIZE*2; i++) {
+            printf("%c", buf[i]);
+        }
+        printf("\n");
+        printf("%d, %d\n", forward, begin);
+    }
+    
     return token;
 }
 
 int main(int argc, char* argv[]) {
+    int count = 0;
     // if (argc != 2) {
     //     printf("Usage: ./a.out <filename>\n");
     //     return 1;
     // }
 
     FILE* fp = fopen("testtest", "r");
-
     int temp = 0;
 
     // TODO : MODULO of forward pointer
 
     bufferLoader(fp, true);
     while (true) {
+        count++;
         char curr = buf[forward];
         // if (curr == '\n') { 
         //     LINE_NUM++;
@@ -64,6 +73,9 @@ int main(int argc, char* argv[]) {
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z')) {
                     state = 1;
                 } else if (curr == ' ' || curr == '\t' || curr == '\n') {
+                    if (curr == '\n') { 
+                        LINE_NUM++;
+                    }
                     begin++;
                 } else {
                     state = 4;
@@ -86,18 +98,22 @@ int main(int argc, char* argv[]) {
             case 4:
                 state = 0;
                 break;
-            
         }
-
         forward++;
-
-
-        if(forward==BUF_SIZE) break; //|| forward=='\0'
+        // if(forward==BUF_SIZE) break; //|| forward=='\0'
+        if(forward==BUF_SIZE-1) 
+            bufferLoader(fp, false);
+        else if(forward==2*BUF_SIZE-1) 
+            bufferLoader(fp, true);
+        forward = forward % (2 * BUF_SIZE);
+        if(count==4000) {
+            printf("here\n");
+            break;
+        }
     }
-
-    for (int i = 0; i < 20; ++i) {
-        printf("%s: %s\n", token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
-    }
-
+    
+    // for (int i = 0; i < TOK_BUF_SIZE; ++i) {
+    //     printf("%d. Line: %d,\t%s: %s\n", i, tokenBuffer[i].linenum, token_types[tokenBuffer[i].tok], tokenBuffer[i].lexeme);
+    // }
     fclose(fp);
 }
