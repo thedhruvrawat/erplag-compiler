@@ -1,8 +1,23 @@
 #include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include "lexer.h"
-#include <string.h>
+#include "trie.h"
+
+const char *token_types[] =  {
+    "ID", "NUM", "RNUM", 
+    "PLUS", "MINUS", "MUL", "DIV", 
+    "LT", "LE", "GE", "GT", "EQ", "NE", 
+    "DEF", "ENDDEF", "DRIVERDEF", "DRIVERENDDEF", 
+    "COLON", "RANGEOP", "SEMICOL", "COMMA", "ASSIGNOP", 
+    "SQBO", "SQBC", "BO", "BC", 
+    "COMMENTMARK",
+    // Boolean Operators
+    "TRUE", "FALSE", "AND", "OR",
+    // Keywords
+    "INTEGER", "REAL", "BOOLEAN", "OF", "ARRAY", "START",
+    "END", "DECLARE", "MODULE", "DRIVER", "PROGRAM", "GET_VALUE",
+    "PRINT", "USE", "WITH", "PARAMETERS", "TAKES", "INPUT",
+    "RETURNS", "FOR", "IN", "SWITCH", "CASE", "BREAK",
+    "DEFAULT", "WHILE"
+};
 
 // Buffers
 #define BUF_SIZE 512
@@ -17,6 +32,8 @@ unsigned int LINE_NUM = 1;
 int begin = 0;
 int forward = 0;
 int state = 0;
+
+Trie* trie;
 
 // Buffer to store tokens
 TOKEN tokenBuffer[TOK_BUF_SIZE];
@@ -46,7 +63,7 @@ TOKEN* createToken() {
         begin++;
     }
     token->linenum = LINE_NUM;
-    
+    token->tok = searchWord(trie, token->lexeme);
     return token;
 }
 
@@ -57,7 +74,9 @@ int main(int argc, char* argv[]) {
     //     return 1;
     // }
 
-    FILE* fp = fopen("testtest3", "r");
+    FILE* fp = fopen("testCase2", "r");
+    trie = setupTrie();
+
     int temp = 0;
 
     bufferLoader(fp, true);
@@ -77,6 +96,8 @@ int main(int argc, char* argv[]) {
                         LINE_NUM++;
                     }
                     begin++;
+                } else if (curr >= '0' && curr <= '9') {
+                    state = 3;
                 } else if (curr == '+') {
                     state = 13; 
                 } else if (curr == '-') {
@@ -126,9 +147,101 @@ int main(int argc, char* argv[]) {
             case 2: { // Accept State for ID
                 state = 0;
                 TOKEN* token = createToken();
-                token->tok = ID;
                 tokenBuffer[temp++] = *token;
                 forward--;
+                break;
+            }
+            case 3: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 3;
+                } else if (curr == '.') {
+                    state = 5;
+                } else {
+                    state = 4;
+                    forward--;
+                }
+                break;
+            }
+            case 4: { // Accept State for NUM
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = NUM;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 5: {
+                if (curr == '.') {
+                    state = 6;
+                    forward -= 2;
+                } else if (curr >= '0' && curr <= '9') {
+                    state = 7;
+                } else {
+                    state = 100;
+                }
+                break;
+            }
+            case 6: { // Accept State for NUM
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = NUM;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 7: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 7;
+                } else if (curr == 'e' || curr == 'E') {
+                    state = 9;
+                } else {
+                    state = 8;
+                    forward--;
+                }
+                break;
+            }
+            case 8: { // Accept State for RNUM
+                state = 0;
+                TOKEN* token = createToken();
+                token->tok = RNUM;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            } 
+            case 9: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 12;
+                } else if (curr == '+' || curr == '-') {
+                    state = 10;
+                } else {
+                    state = 100;
+                }
+                break;
+            }
+            case 10: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 11;
+                } else {
+                    state = 100;
+                }
+                break;
+            }
+            case 11: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 11;
+                } else {
+                    state = 8;
+                    forward--;
+                }
+                break;
+            }
+            case 12: {
+                if (curr >= '0' && curr <= '9') {
+                    state = 12;
+                } else {
+                    state = 8;
+                    forward--;
+                }
                 break;
             }
             case 13: { // Accept State for PLUS
