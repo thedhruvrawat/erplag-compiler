@@ -69,12 +69,16 @@ TOKEN* createToken() {
 
 int main(int argc, char* argv[]) {
     int count = 0;
-    // if (argc != 2) {
-    //     printf("Usage: ./a.out <filename>\n");
-    //     return 1;
-    // }
+    if (argc != 2) {
+        printf("Usage: ./a.out <filename>\n");
+        return 1;
+    }
 
-    FILE* fp = fopen("testCase2", "r");
+    FILE* fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+        printf("File Not Found.\n");
+        exit(1);
+    }
     trie = setupTrie();
 
     int temp = 0;
@@ -510,8 +514,37 @@ int main(int argc, char* argv[]) {
                 forward--;
                 break;
             }
-            case 45: { // Accept State for COMMENTMARK
-                state = 0; // TODO COMMENT LATER
+            case 45: { // Comment starts here
+                state = 46; 
+                TOKEN* token = createToken();
+                token->tok = COMMENTMARK;
+                tokenBuffer[temp++] = *token;
+                forward--;
+                break;
+            }
+            case 46: {
+                if (curr == '*') {
+                    state = 47;
+                } else if (curr == '\n') {
+                    LINE_NUM++;
+                } else {
+                    state = 46;
+                }
+                break;
+            }
+            case 47: {
+                if (curr == '*') {
+                    state = 48;
+                } else if (curr == '\n') {
+                    LINE_NUM++;
+                } else {
+                    state = 46;
+                }
+                break;
+            }
+            case 48: { // Comment ends here
+                state = 0;
+                begin = forward - 2;
                 TOKEN* token = createToken();
                 token->tok = COMMENTMARK;
                 tokenBuffer[temp++] = *token;
