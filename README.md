@@ -23,6 +23,7 @@ This repository contains the toy-compiler created as part of requirements for th
 | 3       | DFA Construction, `struct` for encapsulation                | Feb 5, 2023 |
 | 4       | Coded state transitions for identifiers                     | Feb 7, 2023 |
 | 5       | Twin Buffer Implementation and many DFA states added        | Feb 9, 2023 |
+| 6       | RNUM, NUM added; Trie Added; DFA (on paper) completed       | Feb 10, 2023 |
 
 ## Deadlines
 
