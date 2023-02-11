@@ -537,6 +537,7 @@ int main(int argc, char* argv[]) {
                     state = 48;
                 } else if (curr == '\n') {
                     LINE_NUM++;
+                    state = 46; // As state doesn't change if it reads '/n'. Need two consecutive *
                 } else {
                     state = 46;
                 }
