@@ -33,7 +33,7 @@ int begin = 0;
 int forward = 0;
 int state = 0;
 
-Trie* trie;
+Trie* terminalTrie;
 
 // Buffer to store tokens
 TOKEN tokenBuffer[TOK_BUF_SIZE];
@@ -63,7 +63,7 @@ TOKEN* createToken() {
         begin++;
     }
     token->linenum = LINE_NUM;
-    token->tok = searchWord(trie, token->lexeme);
+    token->tok = searchWord(terminalTrie, token->lexeme);
     return token;
 }
 
@@ -79,7 +79,8 @@ int main(int argc, char* argv[]) {
         printf("File Not Found.\n");
         exit(1);
     }
-    trie = setupTrie();
+    terminalTrie = setupTrie();
+    populateTerminalTrie(terminalTrie);
 
     int temp = 0;
 

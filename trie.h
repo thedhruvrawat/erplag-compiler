@@ -5,11 +5,12 @@
 
 typedef struct Trie {
     bool end;
-    TOK_TYPE tok;
+    int tok;
     struct Trie* next[128];
 } Trie;
 
 Trie* setupTrie();
-Trie* createTrieNode();
-void insertWord(Trie* tr, char *word, TOK_TYPE tok);
-TOK_TYPE searchWord(Trie* tr, char* word);
+void populateTerminalTrie(Trie* trie);
+Trie *createTrieNode();
+int insertWord(Trie* tr, char *word, int tok);
+int searchWord(Trie* tr, char* word);

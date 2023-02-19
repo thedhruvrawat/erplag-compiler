@@ -2,6 +2,10 @@
 
 Trie* setupTrie() {
     Trie* trie = createTrieNode();
+    return trie;
+}
+
+void populateTerminalTrie(Trie* trie) {
     insertWord(trie, "integer", INTEGER);
     insertWord(trie, "real", REAL);
     insertWord(trie, "boolean", BOOLEAN);
@@ -13,7 +17,7 @@ Trie* setupTrie() {
     insertWord(trie, "module", MODULE);
     insertWord(trie, "driver", DRIVER);
     // "program" specified in the language specifications but "Program" in the test cases
-    insertWord(trie, "Program", PROGRAM); 
+    insertWord(trie, "program", PROGRAM); 
     insertWord(trie, "get_value", GET_VALUE);
     insertWord(trie, "print", PRINT);
     insertWord(trie, "use", USE);
@@ -33,7 +37,6 @@ Trie* setupTrie() {
     insertWord(trie, "OR", OR);
     insertWord(trie, "true", TRUE);
     insertWord(trie, "false", FALSE);
-    return trie;
 }
 
 Trie* createTrieNode() {
@@ -45,7 +48,7 @@ Trie* createTrieNode() {
     return res;
 }
 
-void insertWord(Trie* tr, char *word, TOK_TYPE tok) {
+int insertWord(Trie* tr, char *word, int tok) {
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
         if (tr->next[word[i]] == NULL) {
@@ -54,12 +57,15 @@ void insertWord(Trie* tr, char *word, TOK_TYPE tok) {
         tr = tr->next[word[i]];
     }
 
+    if (tr->end) {
+        return tok;
+    }
     tr->end = true;
     tr->tok = tok;
-    return;
+    return tok + 1;
 }
 
-TOK_TYPE searchWord(Trie* tr, char* word) {
+int searchWord(Trie* tr, char* word) {
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
         if (tr->next[word[i]] == NULL) {
