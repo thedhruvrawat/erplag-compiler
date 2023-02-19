@@ -1,23 +1,5 @@
-typedef enum { 
-    // Non-Keywords
-    ID, NUM, RNUM, 
-    PLUS, MINUS, MUL, DIV, 
-    LT, LE, GE, GT, EQ, NE, 
-    DEF, ENDDEF, DRIVERDEF, DRIVERENDDEF, 
-    COLON, RANGEOP, SEMICOL, COMMA, ASSIGNOP, 
-    SQBO, SQBC, BO, BC, COMMENTMARK, 
-    // Boolean Operators
-    TRUE, FALSE, AND, OR,
-    // Keywords
-    INTEGER, REAL, BOOLEAN, OF, ARRAY, START,
-    END, DECLARE, MODULE, DRIVER, PROGRAM, GET_VALUE,
-    PRINT, USE, WITH, PARAMETERS, TAKES, INPUT,
-    RETURNS, FOR, IN, SWITCH, CASE, BREAK,
-    DEFAULT, WHILE
-} TOK_TYPE;
+#include <stdio.h>
+#include "trie.h"
 
-typedef struct TOKEN {
-    TOK_TYPE tok;
-    char lexeme[20];
-    int linenum;
-} TOKEN;
+int setupLexer(FILE* fp);
+TOKEN* getNextToken();

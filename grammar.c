@@ -1,4 +1,4 @@
-#include "dictionary.h"
+#include "grammar.h"
 #include "trie.h"
 
 Trie *nonTerminalTrie;
@@ -62,6 +62,7 @@ int main() {
     char *line = NULL;
     size_t len = 0;
     ssize_t read = 0; // number of bytes read in a line
+    int nonTerminalID = 0;
     while ((read = getline(&line, &len, f))!=-1) {
         if(line[read-1]=='\n') line[read-1] = '\0';
         // printf("%s\n", line);
@@ -75,6 +76,7 @@ int main() {
         p->LHS = (grammarElement*)malloc(sizeof(grammarElement));
         strcpy(p->LHS->lexeme, tok);
         p->LHS->next = NULL;
+        nonTerminalID = insertWord(nonTerminalTrie, tok, nonTerminalID);
 
         //Right side of Production Rule
         grammarElement *RHSHead = malloc(sizeof(grammarElement));
@@ -111,6 +113,10 @@ int main() {
         printf("%s,", listNullables[i]);        
     }
     printf("}\n");
+
+    // Testing trie
+    printf("%s\t%d\n", "<moduleDeclaration>", searchWord(nonTerminalTrie, "<moduleDeclaration>"));
+    printf("%s\t%d\n", "<moduleDef>", searchWord(nonTerminalTrie, "<moduleDef>"));
 
     fclose(f);
     return 0;

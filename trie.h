@@ -1,13 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lexer.h"
-
-typedef struct Trie {
-    bool end;
-    int tok;
-    struct Trie* next[128];
-} Trie;
+#include "structs.h"
 
 Trie* setupTrie();
 void populateTerminalTrie(Trie* trie);
