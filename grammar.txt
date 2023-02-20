@@ -84,8 +84,8 @@
 <N9> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
 <N9> = e
 <value> = NUM
-<value> = TRUE_
-<value> = FALSE_
+<value> = TRUE
+<value> = FALSE
 <default_1> = DEFAULT COLON <statements> BREAK SEMICOL
 <default_1> = e
 <iterativeStmt> = FOR BO ID IN <range> BC START <statements> END

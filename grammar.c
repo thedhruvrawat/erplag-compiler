@@ -1,7 +1,7 @@
 #include "grammar.h"
 #include "trie.h"
 
-Trie *nonTerminalTrie, *grammarTrie;
+Trie *grammarTrie, *grammarTrie;
 
 #define TOTAL_RULES 100     //total number of rules in grammar
 #define NULL_RULES 50       //expected number of nullable rules
@@ -55,7 +55,6 @@ void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
 }
 
 int main() {
-    nonTerminalTrie = setupTrie();
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
@@ -67,7 +66,7 @@ int main() {
     char *line = NULL;
     size_t len = 0;
     ssize_t read = 0; // number of bytes read in a line
-    int nonTerminalID = 0;
+    int nonTerminalID = grammarTrie->count;
     int productionRuleID = 1;
     while ((read = getline(&line, &len, f)) != -1) {
         if(line[read-1]=='\n') line[read-1] = '\0';
@@ -82,9 +81,9 @@ int main() {
         p->LHS = (grammarElement*)malloc(sizeof(grammarElement));
         strcpy(p->LHS->lexeme, tok);
         p->LHS->next = NULL;
-        int nonTerminalCheck = searchGrammar(nonTerminalTrie, tok); //Check if non-terminal already exists in NT Trie
+        int nonTerminalCheck = searchGrammar(grammarTrie, tok); //Check if non-terminal already exists in NT Trie
         if(nonTerminalCheck == -1) {
-            nonTerminalID = insertWord(nonTerminalTrie, tok, nonTerminalID); //It doesn't exist, so add it
+            nonTerminalID = insertWord(grammarTrie, tok, nonTerminalID); //It doesn't exist, so add it
             p->LHS->tokenID = nonTerminalID - 1; //since it returns value incremented by 1
         }
         else
@@ -109,9 +108,9 @@ int main() {
                     newElement->tokenID = terminalCheck; //set tokenID to its unique enum from terminalTrie
                 } else {
                     newElement->isTerminal = false; // not found in terminal trie, this means it is a non-terminal
-                    int nonTerminalCheck = searchGrammar(nonTerminalTrie, tok); // check if it exists in non-terminal trie
+                    int nonTerminalCheck = searchGrammar(grammarTrie, tok); // check if it exists in non-terminal trie
                     if(nonTerminalCheck == -1) {
-                        nonTerminalID = insertWord(nonTerminalTrie, tok, nonTerminalID); //it doesn not exist in NT trie, so insert
+                        nonTerminalID = insertWord(grammarTrie, tok, nonTerminalID); //it doesn not exist in NT trie, so insert
                         newElement->tokenID = nonTerminalID - 1; //since it returns value incremented by 1
                     } else {
                         newElement->tokenID = nonTerminalCheck; // it already exists so assign value
@@ -152,8 +151,16 @@ int main() {
     printf("}\n");
 
     // Testing trie
-    printf("%s\t%d\n", "<moduleDeclaration>", searchWord(nonTerminalTrie, "<moduleDeclaration>"));
-    printf("%s\t%d\n", "<moduleDef>", searchWord(nonTerminalTrie, "<moduleDef>"));
+    printf("%s\t%d\n", "<moduleDeclaration>", searchWord(grammarTrie, "<moduleDeclaration>"));
+    printf("%s\t%d\n", "<moduleDef>", searchWord(grammarTrie, "<moduleDef>"));
+
+    // Printing Trie
+    int grammarTrieLen = grammarTrie->count;
+    printf("grammarTrie Len: %d\n", grammarTrieLen);
+    Tuple* elements = getElements(grammarTrie);
+    for (int i = 0; i < grammarTrieLen; ++i) {
+        printf("%d\t%s\n", elements[i].enumID, elements[i].token);
+    }
 
     fclose(f);
     return 0;

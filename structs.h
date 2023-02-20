@@ -26,7 +26,13 @@ typedef struct TOKEN {
 } TOKEN;
 
 typedef struct Trie {
+    int count;
     bool end;
     TOK_TYPE tok;
     struct Trie* next[128];
 } Trie;
+
+typedef struct Tuple {
+    int enumID;
+    char *token;
+} Tuple;

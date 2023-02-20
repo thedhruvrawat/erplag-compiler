@@ -1,3 +1,8 @@
 {
-  "C_Cpp.loggingLevel": "Debug"
+  "C_Cpp.loggingLevel": "Debug",
+  "files.associations": {
+    "*.pl": "prolog",
+    "*.rmd": "markdown",
+    "stdlib.h": "c"
+  }
 }

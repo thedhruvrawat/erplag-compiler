@@ -1,5 +1,6 @@
 // #include <ctype.h>
 #include "trie.h"
+#include "grammar.h"
 
 Trie* setupTrie() {
     Trie* trie = createTrieNode();
@@ -102,6 +103,7 @@ void populateGrammarTrie(Trie* trie) {
 
 Trie* createTrieNode() {
     Trie* res = malloc(sizeof(Trie));
+    res->count = 0;
     res->tok = ID;
     res->end = false;
     memset(res->next, 0, sizeof(res->next));
@@ -110,6 +112,7 @@ Trie* createTrieNode() {
 }
 
 int insertWord(Trie* tr, char *word, int tok) {
+    Trie* head = tr;
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
         if (tr->next[word[i]] == NULL) {
@@ -121,6 +124,7 @@ int insertWord(Trie* tr, char *word, int tok) {
     if (tr->end) {
         return tok;
     }
+    head->count++;
     tr->end = true;
     tr->tok = tok;
     return tok + 1;
@@ -146,4 +150,49 @@ int searchGrammar(Trie* tr, char* word) {
         tr = tr->next[word[i]];
     }
     return tr->tok;
+}
+
+int compareTuple(const void *a, const void *b) {
+    Tuple *tupleA = (Tuple *)a;
+    Tuple *tupleB = (Tuple *)b;
+
+    return (tupleA->enumID - tupleB->enumID);
+}
+
+void getElement(Trie* tr, char* tok, int pos, Tuple* elements) {
+    if (tr->end) {
+        tok[pos] = 0;
+        elements[tr->tok] = (Tuple) {
+            .enumID = tr->tok,
+            .token = strdup(tok)
+        };
+    }
+    for (int i = 0; i < 128; ++i) {
+        if (tr->next[i] == NULL) { continue; }
+        tok[pos] = (char) i;
+        getElement(tr->next[i], tok, pos + 1, elements);
+    }
+    return;
+}
+
+Tuple* getElements(Trie* tr) {
+    int sz = tr->count;
+    Tuple* elements = malloc(sz * sizeof(Tuple));
+    for (int i = 0; i < 128; ++i) {
+        if (tr->next[i] == NULL) { continue; }
+        char tok[100];
+        tok[0] = (char) i;
+        getElement(tr->next[i], tok, 1, elements);
+    }
+
+    return elements;
+}
+
+void freeTrie(Trie* tr) {
+    for (int i = 0; i < 128; ++i) {
+        if (tr->next[i] == NULL) { continue; }
+        free(tr->next[i]);
+    }
+    free(tr);
+    return;
 }
