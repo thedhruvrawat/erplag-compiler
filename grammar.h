@@ -5,8 +5,10 @@
 #include <sys/types.h>
 
 typedef struct grammarElement {
+    bool isTerminal;
+    int tokenID;
     char lexeme[100];
-    struct grammarElement *next;
+    struct grammarElement *next, *prev;
 } grammarElement;
 
 typedef struct ProductionRule {
@@ -14,7 +16,7 @@ typedef struct ProductionRule {
     int RHScount;
     bool isEpsilon;
     grammarElement *LHS; // pointer to LHS of a rule
-    grammarElement *RHS; // pointer to first element in RHS
+    grammarElement *RHSHead, *RHSTail; // pointer to first element in RHS
 } ProductionRule;
 
 typedef struct ProductionTable {

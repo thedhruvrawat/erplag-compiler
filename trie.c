@@ -1,3 +1,4 @@
+// #include <ctype.h>
 #include "trie.h"
 
 Trie* setupTrie() {
@@ -39,6 +40,66 @@ void populateTerminalTrie(Trie* trie) {
     insertWord(trie, "false", FALSE);
 }
 
+void populateGrammarTrie(Trie* trie) {
+    insertWord(trie, "INTEGER", INTEGER);
+    insertWord(trie, "REAL", REAL);
+    insertWord(trie, "BOOLEAN", BOOLEAN);
+    insertWord(trie, "OF", OF);
+    insertWord(trie, "ARRAY", ARRAY);
+    insertWord(trie, "START", START);
+    insertWord(trie, "END", END);
+    insertWord(trie, "DECLARE", DECLARE);
+    insertWord(trie, "MODULE", MODULE);
+    insertWord(trie, "DRIVER", DRIVER);
+    insertWord(trie, "PROGRAM", PROGRAM); 
+    insertWord(trie, "GET_VALUE", GET_VALUE);
+    insertWord(trie, "PRINT", PRINT);
+    insertWord(trie, "USE", USE);
+    insertWord(trie, "WITH", WITH);
+    insertWord(trie, "PARAMETERS", PARAMETERS);
+    insertWord(trie, "TAKES", TAKES);
+    insertWord(trie, "INPUT", INPUT);
+    insertWord(trie, "RETURNS", RETURNS);
+    insertWord(trie, "FOR", FOR);
+    insertWord(trie, "IN", IN);
+    insertWord(trie, "SWITCH", SWITCH);
+    insertWord(trie, "CASE", CASE);
+    insertWord(trie, "BREAK", BREAK);
+    insertWord(trie, "DEFAULT", DEFAULT);
+    insertWord(trie, "WHILE", WHILE);
+    insertWord(trie, "ID", ID);
+    insertWord(trie, "NUM", NUM);
+    insertWord(trie, "RNUM", RNUM);
+    insertWord(trie, "AND", AND);
+    insertWord(trie, "OR", OR);
+    insertWord(trie, "TRUE", TRUE);
+    insertWord(trie, "FALSE", FALSE);
+    insertWord(trie, "PLUS", PLUS);
+    insertWord(trie, "MINUS", MINUS);
+    insertWord(trie, "MUL", MUL);
+    insertWord(trie, "DIV", DIV);
+    insertWord(trie, "LT", LT);
+    insertWord(trie, "LE", LE);
+    insertWord(trie, "GE", GE);
+    insertWord(trie, "GT", GT);
+    insertWord(trie, "EQ", EQ);
+    insertWord(trie, "NE", NE);
+    insertWord(trie, "DEF", DEF);
+    insertWord(trie, "ENDDEF", ENDDEF);
+    insertWord(trie, "DRIVERDEF", DRIVERDEF);
+    insertWord(trie, "DRIVERENDDEF", DRIVERENDDEF);
+    insertWord(trie, "COLON", COLON);
+    insertWord(trie, "RANGEOP", RANGEOP);
+    insertWord(trie, "SEMICOL", SEMICOL);
+    insertWord(trie, "COMMA", COMMA);
+    insertWord(trie, "ASSIGNOP", ASSIGNOP);
+    insertWord(trie, "SQBO", SQBO);
+    insertWord(trie, "SQBC", SQBC);
+    insertWord(trie, "BO", BO);
+    insertWord(trie, "BC", BC);
+    insertWord(trie, "COMMENTMARK", COMMENTMARK); // Not really needed
+}
+
 Trie* createTrieNode() {
     Trie* res = malloc(sizeof(Trie));
     res->tok = ID;
@@ -73,6 +134,16 @@ int searchWord(Trie* tr, char* word) {
         }
         tr = tr->next[word[i]];
     }
+    return tr->tok;
+}
 
+int searchGrammar(Trie* tr, char* word) {
+    int len = strlen(word);
+    for (int i = 0; i < len; ++i) {
+        if (tr->next[word[i]] == NULL) {
+            return -1;
+        }
+        tr = tr->next[word[i]];
+    }
     return tr->tok;
 }
