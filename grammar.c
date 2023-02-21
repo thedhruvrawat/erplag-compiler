@@ -31,7 +31,7 @@ void printProductionTable(ProductionTable *pdtable) {
     printf("Printing Production Table\n");
     int sz = pdtable->ruleCount;
     for (int i = 1; i <= sz; i++) {
-        printf("[%d] (%d)%s -> ", pdtable->grammarrules[i-1]->productionID, pdtable->grammarrules[i - 1]->LHS->tokenID, pdtable->grammarrules[i - 1]->LHS->lexeme);
+        printf("[%d]\t(%d)%s -> ", pdtable->grammarrules[i-1]->productionID, pdtable->grammarrules[i - 1]->LHS->tokenID, pdtable->grammarrules[i - 1]->LHS->lexeme);
         grammarElement *ptr = pdtable->grammarrules[i - 1]->RHSHead;
         while(ptr!=NULL) {
             printf("(%d)%s", ptr->tokenID, ptr->lexeme);
@@ -57,6 +57,8 @@ void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
 int main() {
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
+    int terminalTrieLen = grammarTrie->count; //it only contains terminals right now
+    printf("terminalTrie Len: %d\n", terminalTrieLen);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
     nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
     char *grammarFile = "grammar.txt";
@@ -103,7 +105,7 @@ int main() {
                 grammarElement *newElement = (grammarElement *)malloc(sizeof(grammarElement)); //allocate memory for a new element
                 strcpy(newElement->lexeme, tok); //copy the token string to the new element
                 int terminalCheck = searchGrammar(grammarTrie, tok); //check if it is a terminal
-                if (terminalCheck != -1) {
+                if (terminalCheck!= -1 && terminalCheck < terminalTrieLen) {
                     newElement->isTerminal = true;
                     newElement->tokenID = terminalCheck; //set tokenID to its unique enum from terminalTrie
                 } else {
