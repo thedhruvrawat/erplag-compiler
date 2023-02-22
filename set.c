@@ -15,7 +15,6 @@ bool unionSet(Set* a, Set* b) {
     int sz = a->sz;
     // Flag for checking LL(1)
     bool flag = false;
-    char** elements = getElements(grammarTrie);
     for (int i = 0; i < sz; ++i) {
         if (a->contains[i] && b->contains[i]) {
             flag = true;
