@@ -24,7 +24,8 @@ This repository contains the toy-compiler created as part of requirements for th
 | 4       | Coded state transitions for identifiers                     | Feb 7, 2023 |
 | 5       | Twin Buffer Implementation and many DFA states added        | Feb 9, 2023 |
 | 6       | RNUM, NUM, Trie Added; DFA completed; Comment handling      | Feb 10, 2023|
-| 7       | Analysis of DFA; Contemplating Life Decisions               | Feb 11, 2023|
+| 7       | Analysis of DFA                                             | Feb 11, 2023|
+| 8       | Started first & follow set computation, error handling      | Feb 21, 2023|
 
 
 ## Deadlines

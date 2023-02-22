@@ -13,6 +13,7 @@ static unsigned int LINE_NUM = 1;
 static int begin = 0;
 static int forward = 0;
 static int state = 0;
+static int errno = 0;
 
 Trie* terminalTrie;
 
@@ -89,6 +90,7 @@ TOKEN* getNextToken(){
         count++;
         curr = buf[forward % (2 * BUF_SIZE)];
         // printf("Char read: %c \t State: %d \t Forward: %d\n", curr, state, forward);
+            // printf("Curr State: %d\n", state);
 
         switch(state) {
             case 0: { // Start State
@@ -137,6 +139,8 @@ TOKEN* getNextToken(){
                     return NULL;
                 } else {
                     state = 100;
+                    forward--;
+                    errno = 8;
                 }
                 break;
             }
@@ -183,6 +187,7 @@ TOKEN* getNextToken(){
                     state = 7;
                 } else {
                     state = 100;
+                    errno = 1; // char other than . or integer after .
                 }
                 break;
             }
@@ -220,6 +225,8 @@ TOKEN* getNextToken(){
                     state = 10;
                 } else {
                     state = 100;
+                    forward--; // char other than +/-/0-9 after e
+                    errno = 2;
                 }
                 break;
             }
@@ -228,6 +235,8 @@ TOKEN* getNextToken(){
                     state = 11;
                 } else {
                     state = 100;
+                    forward--;
+                    errno = 3; // non-int after x.x e +/- 
                 }
                 break;
             }
@@ -399,6 +408,8 @@ TOKEN* getNextToken(){
                     state = 31;
                 } else {
                     state = 100;
+                    forward--;
+                    errno = 4; // char other than = after one =
                 }
                 break;
             }
@@ -415,6 +426,8 @@ TOKEN* getNextToken(){
                     state = 33;
                 } else {
                     state = 100;
+                    forward--; 
+                    errno = 5; // Not = after ! 
                 }
                 break;
             } 
@@ -504,6 +517,8 @@ TOKEN* getNextToken(){
                     state = 44;
                 } else {
                     state = 100;
+                    forward--;
+                    errno = 6; // Not . after .
                 }
                 break;
             }
@@ -528,7 +543,13 @@ TOKEN* getNextToken(){
                     state = 47;
                 } else if (curr == '\n') {
                     LINE_NUM++;
-                } else {
+                } 
+                else if(curr == EOF){
+                    state = 100;
+                    forward--;
+                    errno = 7;  
+                }
+                else {
                     state = 46;
                 }
                 break;
@@ -538,7 +559,13 @@ TOKEN* getNextToken(){
                     state = 48;
                 } else if (curr == '\n') {
                     LINE_NUM++;
-                } else {
+                } 
+                else if(curr == EOF){
+                    state = 100;
+                    forward--;
+                    errno = 7;
+                }
+                else {
                     state = 46;
                 }
                 break;
@@ -552,6 +579,65 @@ TOKEN* getNextToken(){
                 tokenCreated = true;;
                 break;
             }
+            case 100:{
+                char invalidLex[forward-begin];
+                int i=0;
+                while (begin < forward) {
+                    invalidLex[i++] = buf[begin % (2 * BUF_SIZE)];
+                    begin++;
+                }
+                // Prevent printing for unlosed comment
+                if(errno!=7){
+                    printf("Syntax error at line number %d: \"%s\"; ",LINE_NUM,invalidLex);
+                }
+                switch(errno){
+                    case 1:
+                        printf("Invalid character after '.'\n");
+                        break;
+                    case 2:
+                        printf("Invalid character after start of exponent\n");
+                        break;
+                    case 3:
+                        printf("Expected integer after exponent\n");
+                        break;
+                    case 4:
+                        printf("Expected == for equality operator\n");
+                        break;
+                    case 5:
+                        printf("Expected = after ! \n");
+                        break;
+                    case 6:
+                        printf("Expected .. for range operator\n");
+                        break;
+                    case 7:
+                        printf("Unclosed comment\n");
+                        return NULL;   
+                        break;
+                    case 8:
+                    default:
+                        printf("Undetected Syntax Error\n");
+                        break;
+                }
+                state = 101;
+                forward--;
+                break;
+            }
+
+            case 101:{
+                if(curr=='\n'){
+                    state = 0;
+                    LINE_NUM++;
+                } 
+                else if(curr==';' || curr==' '){
+                    state = 0;
+                }
+                else{
+                    state = 101;
+                }
+                begin++;
+                break;
+            }
+
 
         }
         forward++;
@@ -564,17 +650,6 @@ TOKEN* getNextToken(){
             bufferLoader(fp, true);
             lastBufLoad = 0;
         }
-
-        // Checking if we have reached the end of file
-        // twice variable helps to exit the program by keeping track of the number of times EOF encountered
-        // if (curr == EOF || twice) {
-        //     if (twice) {
-        //         break;
-        //     } else {
-        //         twice = true;
-        //     }
-        // }
-
         if(tokenCreated) return token;
     
     }
