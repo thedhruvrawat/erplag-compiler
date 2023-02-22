@@ -18,7 +18,7 @@ int main(int argc, char* argv[]){
     TOKEN* arr[1024];
     int pos = 0;
     while((newToken = getNextToken())!=NULL){
-
+           
         printf("Line:%d, %s: %s\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->lexeme);
         printf("TOKEN object location: %p\n", newToken);
         arr[pos++] = newToken;
