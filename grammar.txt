@@ -82,11 +82,9 @@
 <term> = <factor> <N5>
 <N5> = <op2> <factor> <N5>
 <N5> = e
-<term> = <factor>
 <factor> = BO <arithmeticOrBooleanExpr> BC
 <factor> = NUM 
 <factor> = RNUM 
-<factor> = <boolConstt> 
 <factor> = ID <N_11>
 <N_11> = SQBO <element_index_with_expressions> SQBC
 <N_11> = e

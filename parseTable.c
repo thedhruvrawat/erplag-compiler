@@ -50,12 +50,14 @@ bool findFirst(int tokenID) {
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
             if (flag) { 
                 printf("LL(1) violated\n");
+                printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
                 exit(1);
             }
         } else {
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
             if (flag) { 
                 printf("LL(1) violated\n");
+                printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
                 exit(1);
             }
         }
