@@ -57,6 +57,7 @@ bool findFirst(int tokenID) {
 
 void computeFirstSet(int nonTerminalLen, int terminalLen) {
     int ruleCount = pdtable->ruleCount;
+    base = terminalLen + 2;
     elements = getElements(grammarTrie);
     printf("%d\t%d\t%d\n", ruleCount, nonTerminalLen, terminalLen);
 
@@ -73,17 +74,17 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
         ruleLoc[nt] = newNode;
     }
 
-    // Printing to check 
-    // for (int i = 0; i < nonTerminalLen; ++i) {
-    //     listElement* head = ruleLoc[i];
-    //     printf("%d: ", i + terminalLen + 2);
-    //     while (head != NULL) {
-    //         printf("%d ", head->productionID);
-    //         head = head->next;
-    //     }
-    //     printf("\n");
-    // }
-    // exit(0);
+    /* // Printing to check 
+    for (int i = 0; i < nonTerminalLen; ++i) {
+        listElement* head = ruleLoc[i];
+        printf("%s: ", elements[i + base]);
+        while (head != NULL) {
+            printf("%d ", head->productionID);
+            head = head->next;
+        }
+        printf("\n");
+    }
+    exit(0); */
 
     // To track whether FIRST of that rule has already been calculated or not
     computed = malloc(ruleCount * sizeof(bool));
@@ -94,7 +95,6 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
     firstSetsNonTerminals = malloc(nonTerminalLen * sizeof(Set*));
     memset(firstSetsNonTerminals, 0, nonTerminalLen * sizeof(Set*));
     bool isEpsilon = false; 
-    base = terminalLen + 2;
 
     for (int i = 0; i < nonTerminalLen; ++i) {
         findFirst(i);

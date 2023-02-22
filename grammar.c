@@ -3,7 +3,7 @@
 
 Trie *grammarTrie;
 
-#define TOTAL_RULES 100     //total number of rules in grammar
+#define TOTAL_RULES 150     //total number of rules in grammar
 #define NULL_RULES 50       //expected number of nullable rules
 
 ProductionTable *pdtable;           //stores all rules
