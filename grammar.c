@@ -3,7 +3,7 @@
 
 Trie *grammarTrie;
 
-#define TOTAL_RULES 150     //total number of rules in grammar
+#define TOTAL_RULES 200     //total number of rules in grammar
 #define NULL_RULES 50       //expected number of nullable rules
 
 ProductionTable *pdtable;           //stores all rules
@@ -61,7 +61,7 @@ int main() {
     printf("terminalTrie Len: %d\n", terminalTrieLen);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
     nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
-    char *grammarFile = "grammar.txt";
+    char *grammarFile = "old_grammar.txt";
     FILE *f = fopen(grammarFile, "r");
     if(f==NULL)
         printf("File error\n");
@@ -150,6 +150,7 @@ int main() {
     // printProductionTable(nullpdtable);
 
     computeFirstSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
+    computeFollowSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
 
     // //Listing all non-terminals for which FOLLOW needs to be calculated
     // char **listNullables = findNullableTerminals(nullpdtable);

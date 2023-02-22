@@ -60,7 +60,7 @@
 <sign> = PLUS 
 <sign> = MINUS
 <sign> = e
-<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <idList>SEMICOL
+<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <idList> SEMICOL
 <optional> = SQBO <idList> SQBC ASSIGNOP
 <optional> = e
 <output_plist> = ID <N3> 
@@ -133,8 +133,7 @@
 <default> = DEFAULT COLON <statements> BREAK SEMICOL 
 <default> = e
 <iterativeStmt> = FOR BO ID IN <range_for_loop> BC START <statements> END
-<iterativeStmt> = FOR BO ID IN <range> BC START <statements> END
-<iterativeStmt> = WHILE BO <booleanExpr> BC START <statements> END
+<iterativeStmt> = WHILE BO <arithmeticOrBooleanExpr> BC START <statements> END
 <index_for_loop> = <sign_for_loop> <new_index_for_loop>
 <new_index_for_loop> = NUM 
 <sign_for_loop> = PLUS 

@@ -8,4 +8,4 @@ typedef struct Set {
 } Set;
 
 Set* initSet(int sz);
-void unionSet(Set* a, Set* b);
+bool unionSet(Set* a, Set* b);
