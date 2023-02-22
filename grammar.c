@@ -1,7 +1,7 @@
 #include "grammar.h"
-#include "trie.h"
+#include "parseTable.h"
 
-Trie *grammarTrie, *grammarTrie;
+Trie *grammarTrie;
 
 #define TOTAL_RULES 100     //total number of rules in grammar
 #define NULL_RULES 50       //expected number of nullable rules
@@ -57,7 +57,7 @@ void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
 int main() {
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
-    int terminalTrieLen = grammarTrie->count; //it only contains terminals right now
+    int terminalTrieLen = grammarTrie->count; // it only contains terminals right now
     printf("terminalTrie Len: %d\n", terminalTrieLen);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
     nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
@@ -69,7 +69,10 @@ int main() {
     size_t len = 0;
     ssize_t read = 0; // number of bytes read in a line
     int nonTerminalID = grammarTrie->count;
-    int productionRuleID = 1;
+    // Adding epsilon and $ to allow easier indexing in first and follow sets;
+    nonTerminalID = insertWord(grammarTrie, "e", nonTerminalID);
+    nonTerminalID = insertWord(grammarTrie, "$", nonTerminalID);
+    int productionRuleID = 0;
     while ((read = getline(&line, &len, f)) != -1) {
         if(line[read-1]=='\n') line[read-1] = '\0';
         // printf("%s\n", line);
@@ -103,6 +106,8 @@ int main() {
                 if(strcmp(tok, "e")==0)
                     p->isEpsilon = true;
                 grammarElement *newElement = (grammarElement *)malloc(sizeof(grammarElement)); //allocate memory for a new element
+                newElement->next = NULL;
+                newElement->prev = NULL;
                 strcpy(newElement->lexeme, tok); //copy the token string to the new element
                 int terminalCheck = searchGrammar(grammarTrie, tok); //check if it is a terminal
                 if (terminalCheck!= -1 && terminalCheck < terminalTrieLen) {
@@ -141,29 +146,33 @@ int main() {
             insertRuleInProductionTable(nullpdtable, p);
         // printf("Done rule\n");
     }
-    printProductionTable(pdtable);
+    // printProductionTable(pdtable);
     // printProductionTable(nullpdtable);
 
-    //Listing all non-terminals for which FOLLOW needs to be calculated
-    char **listNullables = findNullableTerminals(nullpdtable);
-    printf("{");
-    for (int i = 0; i < nullpdtable->ruleCount; i++) {        
-        printf("%s,", listNullables[i]);        
-    }
-    printf("}\n");
+    computeFirstSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
+
+    // //Listing all non-terminals for which FOLLOW needs to be calculated
+    // char **listNullables = findNullableTerminals(nullpdtable);
+    // printf("{");
+    // for (int i = 0; i < nullpdtable->ruleCount; i++) {        
+    //     printf("%s,", listNullables[i]);        
+    // }
+    // printf("}\n");
 
     // Testing trie
-    printf("%s\t%d\n", "<moduleDeclaration>", searchWord(grammarTrie, "<moduleDeclaration>"));
-    printf("%s\t%d\n", "<moduleDef>", searchWord(grammarTrie, "<moduleDef>"));
+    // printf("%d\t%d\n", terminalTrieLen, searchWord(grammarTrie, "e"));
+    // printf("%s\t%d\n", "<moduleDef>", searchWord(grammarTrie, "<moduleDef>"));
 
-    // Printing Trie
+    /* // Printing Trie
     int grammarTrieLen = grammarTrie->count;
     printf("grammarTrie Len: %d\n", grammarTrieLen);
     Tuple* elements = getElements(grammarTrie);
     for (int i = 0; i < grammarTrieLen; ++i) {
         printf("%d\t%s\n", elements[i].enumID, elements[i].token);
-    }
+    } */
 
+    freeTrie(grammarTrie);
+    
     fclose(f);
     return 0;
 }

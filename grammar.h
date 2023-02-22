@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
+#include "trie.h"
 
 typedef struct grammarElement {
     bool isTerminal;
@@ -23,3 +24,6 @@ typedef struct ProductionTable {
     int maxRules, ruleCount;
     ProductionRule **grammarrules; 
 } ProductionTable;
+
+extern ProductionTable* pdtable;
+extern Trie* grammarTrie;

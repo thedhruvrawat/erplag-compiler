@@ -36,3 +36,13 @@ typedef struct Tuple {
     int enumID;
     char *token;
 } Tuple;
+
+typedef struct listElement {
+    int productionID;
+    struct listElement* next;
+} listElement;
+
+typedef struct ParseTable {
+    int lol;
+} ParseTable;
+

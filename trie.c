@@ -1,6 +1,5 @@
 // #include <ctype.h>
 #include "trie.h"
-#include "grammar.h"
 
 Trie* setupTrie() {
     Trie* trie = createTrieNode();
@@ -152,20 +151,11 @@ int searchGrammar(Trie* tr, char* word) {
     return tr->tok;
 }
 
-int compareTuple(const void *a, const void *b) {
-    Tuple *tupleA = (Tuple *)a;
-    Tuple *tupleB = (Tuple *)b;
-
-    return (tupleA->enumID - tupleB->enumID);
-}
-
-void getElement(Trie* tr, char* tok, int pos, Tuple* elements) {
+void getElement(Trie* tr, char* tok, int pos, char** elements) {
     if (tr->end) {
         tok[pos] = 0;
-        elements[tr->tok] = (Tuple) {
-            .enumID = tr->tok,
-            .token = strdup(tok)
-        };
+        elements[tr->tok] = malloc(sizeof(char) * (strlen(tok) + 1));
+        strcpy(elements[tr->tok], tok);
     }
     for (int i = 0; i < 128; ++i) {
         if (tr->next[i] == NULL) { continue; }
@@ -175,15 +165,11 @@ void getElement(Trie* tr, char* tok, int pos, Tuple* elements) {
     return;
 }
 
-Tuple* getElements(Trie* tr) {
+char** getElements(Trie* tr) {
     int sz = tr->count;
-    Tuple* elements = malloc(sz * sizeof(Tuple));
-    for (int i = 0; i < 128; ++i) {
-        if (tr->next[i] == NULL) { continue; }
-        char tok[100];
-        tok[0] = (char) i;
-        getElement(tr->next[i], tok, 1, elements);
-    }
+    char** elements = malloc(sz * sizeof(char*));
+    char tok[100];
+    getElement(tr, tok, 0, elements);
 
     return elements;
 }
@@ -191,7 +177,7 @@ Tuple* getElements(Trie* tr) {
 void freeTrie(Trie* tr) {
     for (int i = 0; i < 128; ++i) {
         if (tr->next[i] == NULL) { continue; }
-        free(tr->next[i]);
+        freeTrie(tr->next[i]);
     }
     free(tr);
     return;
