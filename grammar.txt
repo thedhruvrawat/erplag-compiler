@@ -56,7 +56,7 @@
 <sign> = PLUS 
 <sign> = MINUS
 <sign> = e
-<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <idList>SEMICOL
+<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <idList> SEMICOL
 <optional> = SQBO <idList> SQBC ASSIGNOP
 <optional> = e
 <idList> = ID <N3> 
