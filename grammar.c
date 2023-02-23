@@ -61,7 +61,7 @@ int main() {
     printf("terminalTrie Len: %d\n", terminalTrieLen);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
     nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
-    char *grammarFile = "old_grammar.txt";
+    char *grammarFile = "grammar_swastik.txt";
     FILE *f = fopen(grammarFile, "r");
     if(f==NULL)
         printf("File error\n");

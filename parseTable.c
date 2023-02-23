@@ -48,7 +48,20 @@ bool findFirst(int tokenID) {
 
             computed[head->productionID] = true;
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
-            if (flag) { 
+            if (flag) {
+                for (int i = 33; i < 38; ++i) {
+        printf("FIRST(RHS(%d)): ", i);
+        if (firstSetsRules[i] == NULL) {
+            printf("first set not formed for %d\n", i);
+            continue;   
+        }
+        for (int j = 0; j < base; ++j) {
+            if (firstSetsRules[i]->contains[j]) {
+                printf("%s, ", elements[j]);
+            }
+        }
+        printf("\n");
+    }
                 printf("LL(1) violated\n");
                 printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
                 exit(1);
