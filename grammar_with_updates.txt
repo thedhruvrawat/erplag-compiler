@@ -66,15 +66,15 @@
 <expression> = <U>
 <U> = <unary_op> <new_NT>
 <new_NT> = BO <arithmeticExpr> BC 
-<new_NT> = <var_id_num>
+<new_NT> = <id_num_rnum>
 <unary_op> = PLUS
 <unary_op> = MINUS 
 <arithmeticOrBooleanExpr> = <AnyTerm> <N7>
 <N7> = <logicalOp> <AnyTerm> <N7>
 <N7> = e 
 <AnyTerm> = <arithmeticExpr> <N8> 
-<AnyTerm> = <boolConstt>
-<N8> = <relationalOp> <arithmeticExpr> 
+<AnyTerm> = <boolConstt> <N8>
+<N8> = <relationalOp> <arithmeticExpr> <N8> 
 <N8> = e 
 <arithmeticExpr> = <term> <N4>
 <N4> = <op1> <term> <N4>
@@ -85,7 +85,6 @@
 <factor> = BO <arithmeticExpr> BC 
 <factor> = NUM
 <factor> = RNUM
-<factor> = <boolConstt> 
 <factor> = ID <N_11>
 <N_11> = SQBO <element_index_with_expressions> SQBC
 <N_11> = e 
@@ -99,7 +98,6 @@
 <arrFactor> = <boolConstt> 
 <arrFactor> = BO <arrExpr> BC 
 <element_index_with_expressions> = <sign> <N_10>
-<element_index_with_expressions> = <arrExpr>
 <N_10> = <new_index>
 <N_10> = BO <arrExpr> BC 
 <op1> = PLUS 
