@@ -4,7 +4,7 @@
 <moduleDeclaration> = DECLARE MODULE ID SEMICOL
 <otherModules> = <module>  <otherModules>
 <otherModules> = e
-<driverModule> = DRIVERDEFDRIVER PROGRAM DRIVERENDDEF <moduleDef>
+<driverModule> = DRIVERDEF DRIVER PROGRAM DRIVERENDDEF <moduleDef>
 <module> = DEF MODULE ID ENDDEF TAKES INPUT SQBO <input_plist> SQBC SEMICOL <ret> <moduleDef>
 <ret> = RETURNS SQBO <output_plist> SQBC SEMICOL
 <ret> = e 

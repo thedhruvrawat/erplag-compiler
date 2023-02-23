@@ -1,4 +1,5 @@
 #include<stdbool.h>
+
 typedef enum { 
     // Non-Keywords
     ID, NUM, RNUM, 
@@ -46,3 +47,30 @@ typedef struct ParseTable {
     int lol;
 } ParseTable;
 
+
+typedef struct Set {
+    int sz;
+    bool* contains;
+} Set;
+
+
+typedef struct grammarElement {
+    bool isTerminal;
+    int tokenID;
+    char lexeme[100];
+    struct grammarElement *next, *prev;
+} grammarElement;
+
+typedef struct ProductionRule {
+    int productionID;
+    int RHScount;
+    bool isEpsilon;
+    grammarElement *LHS; // pointer to LHS of a rule
+    grammarElement *RHSHead, *RHSTail; // pointer to first element in RHS
+    Set *firstSet, *followSet;
+} ProductionRule;
+
+typedef struct ProductionTable {
+    int maxRules, ruleCount;
+    ProductionRule **grammarrules; 
+} ProductionTable;

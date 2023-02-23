@@ -5,25 +5,14 @@
 #include <sys/types.h>
 #include "trie.h"
 
-typedef struct grammarElement {
-    bool isTerminal;
-    int tokenID;
-    char lexeme[100];
-    struct grammarElement *next, *prev;
-} grammarElement;
-
-typedef struct ProductionRule {
-    int productionID;
-    int RHScount;
-    bool isEpsilon;
-    grammarElement *LHS; // pointer to LHS of a rule
-    grammarElement *RHSHead, *RHSTail; // pointer to first element in RHS
-} ProductionRule;
-
-typedef struct ProductionTable {
-    int maxRules, ruleCount;
-    ProductionRule **grammarrules; 
-} ProductionTable;
-
 extern ProductionTable* pdtable;
 extern Trie* grammarTrie;
+
+
+Set* initSet(int sz);
+bool unionSet(Set* a, Set* b);
+
+void computeFirstSet(int nonTerminalLen, int terminalLen);
+bool findFirst(int tokenID);
+void computeFollowSet(int nonTerminalLen, int terminalLen);
+bool findFollow(int tokenID);
