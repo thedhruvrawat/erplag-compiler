@@ -164,19 +164,6 @@ bool findFirst(int tokenID) {
             computed[head->productionID] = true;
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
             if (flag) {
-                for (int i = 33; i < 38; ++i) {
-        printf("FIRST(RHS(%d)): ", i);
-        if (firstSetsRules[i] == NULL) {
-            printf("first set not formed for %d\n", i);
-            continue;   
-        }
-        for (int j = 0; j < base; ++j) {
-            if (firstSetsRules[i]->contains[j]) {
-                printf("%s, ", elements[j]);
-            }
-        }
-        printf("\n");
-    }
                 printf("LL(1) violated\n");
                 printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
                 exit(1);
@@ -292,26 +279,37 @@ bool findFollow(int tokenID) {
     while (head != NULL) {
         ProductionRule *rule = pdtable->grammarrules[head->productionID];
         grammarElement* RHS = rule->RHSHead;
-        while (RHS->tokenID != (tokenID + base)) {
-            RHS = RHS->next;
-        }
-        RHS = RHS->next;
+
+        bool computing = false;
         while (RHS != NULL) {
-            if (RHS->isTerminal) {
-                followSets[tokenID]->contains[RHS->tokenID] = true;
-                break;
-            } else {
-                unionSet(followSets[tokenID], firstSets[RHS->tokenID - base]);
-                if (followSets[tokenID]->contains[EPSILON]) {
-                    RHS = RHS->next;
-                    followSets[tokenID]->contains[EPSILON] = false;
-                } else {
+            while (RHS != NULL && RHS->tokenID != (tokenID + base)) {
+                RHS = RHS->next;
+            }
+
+            if (RHS == NULL) { break; }
+            computing = true;
+            RHS = RHS->next;
+
+            while (RHS != NULL) {
+                if (RHS->isTerminal) {
+                    followSets[tokenID]->contains[RHS->tokenID] = true;
                     break;
+                } else {
+                    unionSet(followSets[tokenID], firstSets[RHS->tokenID - base]);
+                    if (followSets[tokenID]->contains[EPSILON]) {
+                        RHS = RHS->next;
+                        followSets[tokenID]->contains[EPSILON] = false;
+                    } else {
+                        break;
+                    }
                 }
             }
-        }
 
-        if (RHS == NULL) {
+            if (RHS != NULL) {
+                computing = false;
+            }
+        }
+        if (computing) {
             int LHStokenID = rule->LHS->tokenID - base;
             if (LHStokenID == tokenID) {
                 head = head->next;

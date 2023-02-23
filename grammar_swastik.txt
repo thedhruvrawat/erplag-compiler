@@ -64,6 +64,10 @@
 <N3> = e 
 <expression> = <arithmeticOrBooleanExpr> 
 <expression> = <U>
+<U> = MINUS BO <arithmeticExpr> BC 
+<U> = PLUS BO <arithmeticExpr> BC 
+<U> = MINUS <var_id_num>
+<U> = PLUS <var_id_num> 
 <U> = <unary_op> <new_NT>
 <new_NT> = BO <arithmeticExpr> BC 
 <new_NT> = <var_id_num>
