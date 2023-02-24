@@ -8,6 +8,8 @@ Trie *grammarTrie;
 ProductionTable *pdtable;           //stores all rules
 ProductionTable *nullpdtable;       //stores only NULLABLE rules
 
+int parseTable[TOTAL_RULES][TOTAL_RULES];
+
 ProductionTable *initializeProductionTable(ProductionTable *pdtable, int maxRules) {
     pdtable = malloc(sizeof(ProductionTable));
     pdtable->maxRules = maxRules;
@@ -44,6 +46,7 @@ listElement** LHSLoc;
 listElement** RHSLoc;
 int base;
 int EPSILON;
+int DOLLAR;
 
 Set* initSet(int sz) {
     Set* s = malloc(sizeof(Set));
@@ -186,8 +189,8 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
     int ruleCount = pdtable->ruleCount;
     base = terminalLen + 2;
     EPSILON = terminalLen;
+    DOLLAR = terminalLen + 1;
     elements = getElements(grammarTrie);
-    printf("%d\t%d\t%d\n", ruleCount, nonTerminalLen, terminalLen);
 
     // Array of linked lists to store the id of production rules of that non-terminal
     LHSLoc = malloc(nonTerminalLen * sizeof(listElement*));
@@ -231,7 +234,8 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
     // Printing the FIRST SETS
     // Rules
     for (int i = 0; i < ruleCount; ++i) {
-        printf("FIRST(RHS(%d)): ", i);
+        pdtable->grammarrules[i]->firstSet = firstSetsRules[i]; //attaching first set
+        /* printf("FIRST(RHS(%d)): ", i);
         if (firstSetsRules[i] == NULL) {
             printf("first set not formed for %d\n", i);
             continue;   
@@ -241,11 +245,10 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
                 printf("%s, ", elements[j]);
             }
         }
-        pdtable->grammarrules[i]->firstSet = firstSetsRules[i]; //attaching first set
-        printf("\n");
+        printf("\n"); */
     }
 
-    // Non-Terminals
+    /* // Non-Terminals
     for (int i = 0; i < nonTerminalLen; ++i) {
         printf("FIRST(%s): ", elements[i + base]);
         if (firstSets[i] == NULL) {
@@ -258,7 +261,7 @@ void computeFirstSet(int nonTerminalLen, int terminalLen) {
             }
         }
         printf("\n");
-    }
+    } */
 
     return;
 }
@@ -376,7 +379,7 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
         }   
     }
 
-    // Printing FOLLOW Sets
+    /* // Printing FOLLOW Sets
     for (int i = 0; i < nonTerminalLen; ++i) {
         if (firstSets[i]->contains[EPSILON]) {
             printf("FOLLOW(%s): ", elements[i + base]);
@@ -387,7 +390,7 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
             }
             printf("\n");
         } 
-    }
+    } */
 
     return;
 }
@@ -396,29 +399,65 @@ void attachFollowToRule() {
     for (int i = 0; i < pdtable->ruleCount; ++i) {
         if(pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
             int currNT = pdtable->grammarrules[i]->LHS->tokenID;
-            printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
+            /* printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
             for (int j = 0; j < base; ++j) {
                 if (followSets[currNT - base]->contains[j]) {
                     printf("%s, ", elements[j]);
                 }
             }
+            printf("\n"); */
             pdtable->grammarrules[i]->followSet = followSets[currNT - base];
-            printf("\n");
         }
     }
 }
 
-ParseTable* computeParseTable() {
-    // TODO 
-    ParseTable* res = malloc(sizeof(ParseTable));
-    return res;
+void computeParseTable() {
+
+    // Initializing to -1
+    memset(parseTable, -1, sizeof(parseTable));
+
+    // Iterate through the production table
+    for (int i = 0; i < pdtable->ruleCount; ++i) {
+        int LHS = pdtable->grammarrules[i]->LHS->tokenID - base;
+        // For each terminal 'a' in FIRST(RHS), add A -> RHS to parseTable[A][a]
+        for (int j = 0; j < EPSILON; ++j) {
+            if (pdtable->grammarrules[i]->firstSet->contains[j]) {
+                parseTable[LHS][j] = i;
+            }
+        }
+        if (pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
+            // If EPSILON is in FIRST(RHS), add A -> RHS to parseTable[A][a]
+            for (int j = 0; j < EPSILON; ++j) {
+                if (pdtable->grammarrules[i]->followSet->contains[j]) {
+                    parseTable[LHS][j] = i;
+                }
+            }
+            // If EPSILON is in FIRST(RHS), and $ is in FOLLOW(A), add A -> RHS to parseTable[A][$]
+            if (pdtable->grammarrules[i]->followSet->contains[DOLLAR]) {
+                parseTable[LHS][DOLLAR] = i;
+            }
+        }
+    }
+
+    /* // Printing parse table to check
+    for (int i = 0; i < grammarTrie->count - base; ++i) {
+        for (int j = 0; j < base; ++j) {
+            if (parseTable[i][j] == -1) {
+                printf("%s,", "e");
+            } else {
+                printf("%d,", parseTable[i][j]);
+            }.
+        }
+        printf("\n");
+    } */
+
+    return;
 }
 
 int main() {
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
     int terminalTrieLen = grammarTrie->count; // it only contains terminals right now
-    printf("terminalTrie Len: %d\n", terminalTrieLen);
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
     nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
     char *grammarFile = "grammar.txt";
@@ -511,30 +550,12 @@ int main() {
 
     computeFirstSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
     computeFollowSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
-
-    printf("\n NOW THE MOMENT OF TRUTH \n");
-
-    // for (int i = 0; i < pdtable->ruleCount; ++i) {
-    //     printf("FIRST(RHS(%d)): ", i);
-    //     if (firstSetsRules[i] == NULL) {
-    //         printf("first set not formed for %d\n", i);
-    //         continue;   
-    //     }
-    //     for (int j = 0; j < base; ++j) {
-    //         if(pdtable->grammarrules[i]->firstSet->contains[j]) {
-    //             printf("%s, ", elements[j]);
-    //         }
-    //     }
-    //     printf("\n");
-    // }
-
+    
     attachFollowToRule();
 
+    // printProductionTable(pdtable);
 
-
-
-    printf("\n NOW THE SECOND MOMENT OF TRUTH \n");
-    printProductionTable(pdtable);
+    computeParseTable();
 
     // //Listing all non-terminals for which FOLLOW needs to be calculated
     // char **listNullables = findNullableTerminals(nullpdtable);

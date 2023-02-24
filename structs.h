@@ -43,11 +43,6 @@ typedef struct listElement {
     struct listElement* next;
 } listElement;
 
-typedef struct ParseTable {
-    int lol;
-} ParseTable;
-
-
 typedef struct Set {
     int sz;
     bool* contains;
