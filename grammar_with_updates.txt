@@ -47,7 +47,7 @@
 <var_print> = ID <P1>
 <var_print> = NUM
 <var_print> = RNUM
-<P1> = SQBO <new_index> SQBC 
+<P1> = SQBO <index_arr> SQBC 
 <P1> = e 
 <simpleStmt> = <assignmentStmt> 
 <simpleStmt> = <moduleReuseStmt> 
@@ -56,7 +56,11 @@
 <whichStmt> = <lvalueARRStmt> 
 <lvalueIDStmt> = ASSIGNOP <expression> SEMICOL 
 <lvalueARRStmt> = SQBO <element_index_with_expressions> SQBC ASSIGNOP <expression> SEMICOL 
-<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <idList> SEMICOL 
+<moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <actual_para_list> SEMICOL 
+<actual_para_list> = NUM
+<actual_para_list> = RNUM
+<actual_para_list> = <boolConstt>
+<actual_para_list> = ID <N_11>
 <optional> = SQBO <idList> SQBC ASSIGNOP
 <optional> = e 
 <idList> = ID <N3>
@@ -94,7 +98,8 @@
 <arrTerm> = <arrFactor> <arr_N5>
 <arr_N5> = <op2> <arrFactor> <arr_N5> 
 <arr_N5> = e 
-<arrFactor> = <id_num_rnum> 
+<arrFactor> = ID
+<arrFactor> = NUM
 <arrFactor> = <boolConstt> 
 <arrFactor> = BO <arrExpr> BC 
 <element_index_with_expressions> = <sign> <N_10>
