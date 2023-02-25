@@ -150,7 +150,7 @@ bool findFirst(int tokenID) {
             }
             // loop if epsilon
             bool isEpsilon = false;
-            while (isEpsilon = findFirst(RHS->tokenID - base)) {
+            while ((isEpsilon = findFirst(RHS->tokenID - base))) {
                 unionSet(firstSetsRules[head->productionID], firstSets[RHS->tokenID - base]);
                 RHS = RHS->next;
                 if (RHS == NULL) { break; }
