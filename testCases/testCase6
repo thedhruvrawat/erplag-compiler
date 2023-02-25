@@ -3,7 +3,7 @@ takes input[list:array[4..20] of real];
 returns [sum:real];
 start
     declare s: real;
-    s := 0.0;
+    s := 5.4321e-310;
     declare index : integer;
     for (index in 4..20)
     start

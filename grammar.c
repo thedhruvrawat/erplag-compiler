@@ -99,7 +99,7 @@ void printProductionTable(ProductionTable *pdtable) {
         printf("[%d]\t(%d)%s -> ", pdtable->grammarrules[i-1]->productionID, pdtable->grammarrules[i - 1]->LHS->tokenID, pdtable->grammarrules[i - 1]->LHS->lexeme);
         grammarElement *ptr = pdtable->grammarrules[i - 1]->RHSHead;
         while(ptr!=NULL) {
-            printf("%s", ptr->lexeme);
+            printf("(%d)%s", ptr->tokenID, ptr->lexeme);
             // if(ptr->isTerminal)
             //     printf("*"); // Print a star, if the element is a terminal
             printf(" ");
@@ -553,7 +553,7 @@ int main() {
     
     attachFollowToRule();
 
-    // printProductionTable(pdtable);
+    printProductionTable(pdtable);
 
     computeParseTable();
 

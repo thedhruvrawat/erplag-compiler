@@ -19,7 +19,15 @@ int main(int argc, char* argv[]){
     int pos = 0;
     while((newToken = getNextToken())!=NULL){
            
-        printf("Line:%d, %s: %s\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->lexeme);
+        if(newToken->tok == NUM){
+            printf("Line:%d, %s: %d\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->num);
+        }
+        else if(newToken->tok == RNUM){
+            printf("Line:%d, %s: %f\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->rnum);
+        }
+        else{
+            printf("Line:%d, %s: %s\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->lexeme);
+        }
         printf("TOKEN object location: %p\n", newToken);
         arr[pos++] = newToken;
     
