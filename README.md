@@ -25,7 +25,10 @@ This repository contains the toy-compiler created as part of requirements for th
 | 5       | Twin Buffer Implementation and many DFA states added        | Feb 9, 2023 |
 | 6       | RNUM, NUM, Trie Added; DFA completed; Comment handling      | Feb 10, 2023|
 | 7       | Analysis of DFA                                             | Feb 11, 2023|
-| 8       | Started first & follow set computation, error handling      | Feb 21, 2023|
+| 8       | Analysis of Grammar                                         | Feb 14, 2023|
+| 9       | Started first & follow set computation, error handling      | Feb 21, 2023|
+| 10      | Completed First & Follow sets, Grammar Correction           | Feb 22, 2023|
+| 11      | Parsing Table, StackADT                                     | Feb 24, 2023|
 
 
 ## Deadlines
