@@ -30,7 +30,40 @@ static int count = 0;
 static int lastBufLoad = 0;
 static bool twice = false;
 
+// checking for character in sync set
+bool inSyncSetA(char c){
+    switch(c){
+        case ' ':
+            return true;
+            break;
+        
+        case ';':
+            return true;
+            break;
 
+        case '+':
+            return true;
+            break;
+        
+        case '-':
+            return true;
+            break;
+        
+        default:
+            return false;
+            break;
+    }
+}
+
+bool inSyncSetB(char c){
+    switch(c){
+        case '.':
+        return true;
+
+        default:
+            return false;
+    }
+}
 void bufferLoader(FILE* fp, bool firstPart) {
     // Setting the buffer end as EOF if the number of characters read is less than BUF_SIZE
     if (firstPart) {
@@ -164,7 +197,13 @@ TOKEN* getNextToken(){
             }
             case 1: {
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z') || (curr >= '0' && curr <= '9')) {
-                    state = 1;
+                    if(forward - begin >= 20){
+                        state = 100;
+                        errno = 9;
+                        forward--;
+                    } else {
+                        state = 1;
+                    }
                 } else {
                     state = 2;
                     forward--;
@@ -172,16 +211,12 @@ TOKEN* getNextToken(){
                 break;
             }
             case 2: { // Accept State for ID
-                if(forward-begin < 20)
-                {
+                
                     state = 0;
                     token = createToken();
-                    token->tok = ID;
+                    // token->tok = ID;
                     tokenCreated = true;;
-                } else {
-                    state = 100;
-                    errno = 9;
-                }
+                
                 forward--;
                 break;
             }
@@ -214,6 +249,7 @@ TOKEN* getNextToken(){
                 } else {
                     state = 100;
                     errno = 1; // char other than . or integer after .
+                    forward--;
                 }
                 break;
             }
@@ -618,23 +654,30 @@ TOKEN* getNextToken(){
                 }
                 begin--; // Begin should begin just after the error char
                 invalidLex[i] = 0;
-                printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
+                // printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
                 // Prevent printing for unlosed comment
                 if(errno!=7){
                     printf("Syntax error at line number %d: \"%s\"; ",LINE_NUM,invalidLex);
                 }
+
+                state = 101;
+                forward--;
+
                 switch(errno){
                     case 1:
                         printf("Invalid character after '.'\n");
+                        state = 0;
                         break;
                     case 2:
                         printf("Invalid character after start of exponent\n");
                         break;
                     case 3:
                         printf("Expected integer after exponent\n");
+                        state = 0;
                         break;
                     case 4:
                         printf("Expected == for equality operator\n");
+                        state = 0;
                         break;
                     case 5:
                         printf("Expected = after ! \n");
@@ -656,8 +699,7 @@ TOKEN* getNextToken(){
                         printf("Undetected Syntax Error\n");
                         break;
                 }
-                state = 101;
-                forward--;
+                
                 break;
             }
 
@@ -666,10 +708,12 @@ TOKEN* getNextToken(){
                     state = 0;
                     LINE_NUM++;
                 } 
-                else if(curr==';' || curr==' '||curr=='.'){
+                else if(inSyncSetA(curr)){
                     state = 0;
-                }
-                else{
+                    forward--;
+                } else if(inSyncSetB(curr)){
+                    state = 0;
+                } else{
                     state = 101;
                 }
                 begin++;
