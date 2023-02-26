@@ -27,7 +27,7 @@ typedef struct TOKEN {
         double rnum;
     };
     //Lexeme outside union as requirement to print lexeme for evaluation
-    char lexeme[20]; 
+    char lexeme[21]; 
     int linenum;
 } TOKEN;
 
