@@ -17,7 +17,7 @@ grammar.o: grammar.c grammar.h
 	gcc -c -g grammar.c
 
 lexer: driver.o lexer.o trie.o structs.o
-	gcc -g driver.o lexer.o trie.o structs.o -o lexer
+	gcc -g driver.o lexer.o trie.o structs.o -o lexer 
 
 driver.o: driver.c
 	gcc -c -g driver.c
