@@ -15,5 +15,5 @@ stackNode *getStackNode(grammarElement *GE);
 stack *initStack(void);
 stackNode *peekStack(stack *st);
 void popStack(stack *S);
-void pushStackGE(stack *S, grammarElement *GE);
+void pushStackGE(stack *S, grammarElement *GE, TreeNode* nodeAddr);
 bool isEmpty(stack * S);

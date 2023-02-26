@@ -57,10 +57,12 @@
 <lvalueIDStmt> = ASSIGNOP <expression> SEMICOL 
 <lvalueARRStmt> = SQBO <element_index_with_expressions> SQBC ASSIGNOP <expression> SEMICOL 
 <moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <actual_para_list> SEMICOL 
-<actual_para_list> = NUM
-<actual_para_list> = RNUM
-<actual_para_list> = <boolConstt>
-<actual_para_list> = ID <N_11>
+<actual_para_list> = NUM <N_12>
+<actual_para_list> = RNUM <N_12>
+<actual_para_list> = <boolConstt> <N_12>
+<actual_para_list> = ID <N_11> <N_12>
+<N_12> = COMMA <actual_para_list>
+<N_12> = e
 <optional> = SQBO <idList> SQBC ASSIGNOP
 <optional> = e 
 <idList> = ID <N3>

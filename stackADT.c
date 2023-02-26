@@ -37,11 +37,12 @@ void popStack(stack * st)
     return;
 }
 
-void pushStackGE(stack *st, grammarElement *GE)
+void pushStackGE(stack *st, grammarElement *GE, TreeNode* nodeAddr)
 {
     
     stackNode *newTop = getStackNode(GE);
     newTop->next = st->top;
+    newTop->nodeAddr = nodeAddr;
     
     st->top = newTop;
     st->size++;

@@ -155,7 +155,7 @@ bool findFirst(int tokenID) {
                 unionSet(firstSetsRules[head->productionID], firstSets[RHS->tokenID - base]);
                 RHS = RHS->next;
                 if (RHS == NULL) { break; }
-                firstSets[tokenID]->contains[EPSILON] = false;
+                firstSetsRules[head->productionID]->contains[EPSILON] = false;
             }
 
             // In case the token is a terminal
@@ -423,6 +423,7 @@ void computeParseTable() {
         // For each terminal 'a' in FIRST(RHS), add A -> RHS to parseTable[A][a]
         for (int j = 0; j < EPSILON; ++j) {
             if (pdtable->grammarrules[i]->firstSet->contains[j]) {
+                // if (parseTable[LHS][j] != -1) { printf("ERROR1\n"); exit(1); }
                 parseTable[LHS][j] = i;
             }
         }
@@ -430,11 +431,13 @@ void computeParseTable() {
             // If EPSILON is in FIRST(RHS), add A -> RHS to parseTable[A][a]
             for (int j = 0; j < EPSILON; ++j) {
                 if (pdtable->grammarrules[i]->followSet->contains[j]) {
+                // if (parseTable[LHS][j] != -1) { printf("ERROR2\n"); exit(1); }
                     parseTable[LHS][j] = i;
                 }
             }
             // If EPSILON is in FIRST(RHS), and $ is in FOLLOW(A), add A -> RHS to parseTable[A][$]
             if (pdtable->grammarrules[i]->followSet->contains[DOLLAR]) {
+                // if (parseTable[LHS][DOLLAR] != -1) { printf("ERROR3\n"); exit(1); }
                 parseTable[LHS][DOLLAR] = i;
             }
         }
@@ -447,7 +450,7 @@ void computeParseTable() {
                 printf("%s,", "e");
             } else {
                 printf("%d,", parseTable[i][j]);
-            }.
+            }
         }
         printf("\n");
     } */
@@ -487,54 +490,42 @@ void initParseTree() {
     return;
 }
 
-void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok) {
+void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack *st) {
     // if (parent->tokenID != pdtable->grammarrules[productionID]->LHS->tokenID) {
     //     printf("ERROR: Invalid Rule Insertion\n");
     //     exit(1);
     // }
 
-    TreeNode* sentinel = malloc(sizeof(TreeNode));
-    TreeNode* currNode = sentinel;
+    TreeNode* head = NULL;
+    TreeNode* currNode;
 
-    grammarElement* g = pdtable->grammarrules[productionID]->RHSHead;
+    grammarElement* g = pdtable->grammarrules[productionID]->RHSTail;
+
 
     while (g != NULL) {
-        currNode->next = malloc(sizeof(TreeNode));
+        currNode = malloc(sizeof(TreeNode));
         parseTree->sz++;
-        currNode = currNode->next;
         currNode->depth = parent->depth + 1;
         currNode->tok = tok;
         currNode->tokenID = g->tokenID;
         currNode->productionID = productionID;
         currNode->tokenDerivedFrom = parent->tokenID;
         currNode->isLeaf = g->isTerminal;
-        currNode->next = NULL;
-        g = g->next;
+        currNode->next = head;
+        head = currNode;
+        pushStackGE(st, g, currNode);
+        g = g->prev;
     }
 
-    parent->child = sentinel->next;
     parseTree->treeDepth = MAX(parseTree->treeDepth, parent->depth + 1);
-    free(sentinel);
     return;
 }
 
-void printParseTree() {
-    TreeNode* curr = parseTree->root;
-
-    while (curr != NULL) {
-        printf("Depth: %d\tProduction ID: %d\t", curr->depth, curr->productionID);
-        TreeNode* temp = curr;
-        
-        while (temp != NULL) {
-            printf("%s\t", elements[temp->tokenID]);
-            temp = temp->next;
-        }
-        printf("\n\n");
-        curr = curr->child;
-    }
+/* void printParseTree(ParseTree* parseTree, char* outFile) {
+    FILE* fp = fopen(outFile, )
 
     return;
-}
+} */
 //############################################
 
 // Setting Up STACK for the Parsing of given Input File
@@ -546,7 +537,7 @@ void initParseStack(stack * st){
     strcpy(dollar->lexeme, "$");
     dollar->next = NULL; dollar->prev = NULL;
 
-    pushStackGE(st, dollar);
+    pushStackGE(st, dollar, NULL);
 
     // push <program> into stack
     grammarElement * S = (grammarElement*) malloc(sizeof(grammarElement));
@@ -555,31 +546,31 @@ void initParseStack(stack * st){
     strcpy(S->lexeme, "<program>");
     S->next = NULL; S->prev = NULL;
 
-    pushStackGE(st, S);
+    pushStackGE(st, S, parseTree->root);
 }
 
-void pushRule(stack *S, ProductionRule *rule)
-{
-    // Insert the Rule RHS from right to left
-    grammarElement *curr = rule->RHSTail;
-    while (curr != NULL)
-    {
-        pushStackGE(S, curr);
-        curr = curr->prev;
-    }
-    return;
-}
+// void pushRule(stack *S, ProductionRule *rule)
+// {
+//     // Insert the Rule RHS from right to left
+//     grammarElement *curr = rule->RHSTail;
+//     while (curr != NULL)
+//     {
+//         pushStackGE(S, curr, );
+//         curr = curr->prev;
+//     }
+//     return;
+// }
 
-void pushRuleViaID(stack *S, int ruleID)
-{
-    // Error Incase pdtable is not accessible
-    if ((pdtable == NULL) || (pdtable->grammarrules == NULL)){
-        printf("Production Table or GrammarRules is empty!\n");
-        return;
-    }
-    pushRule(S, pdtable->grammarrules[ruleID]);
-    return;
-}
+// void pushRuleViaID(stack *S, int ruleID)
+// {
+//     // Error Incase pdtable is not accessible
+//     if ((pdtable == NULL) || (pdtable->grammarrules == NULL)){
+//         printf("Production Table or GrammarRules is empty!\n");
+//         return;
+//     }
+//     pushRule(S, pdtable->grammarrules[ruleID]);
+//     return;
+// }
 
 /*Parsing Check*/
 // Input Buffer contains string to be parsed followed by $ (ENDMARKER) 
@@ -588,13 +579,13 @@ void pushRuleViaID(stack *S, int ruleID)
 // Parse Table Check
 void parse(){
 
-    printf("Into Parser");
+    printf("Into Parser\n");
 
     stack * st = initStack();
     initParseStack(st);
     
     // Checking the Current Token and Top of the Stack
-    TOKEN*  curTok = getNextToken();
+    TOKEN* curTok = getNextToken();
     TOKEN* temp = malloc(sizeof(TOKEN));
     memcpy(temp, curTok, sizeof(TOKEN));
     curTok = temp;
@@ -606,29 +597,41 @@ void parse(){
     stackNode * topStack = peekStack(st);
 
     while(!(isEmpty(st))){
+        if (topStack->GE->tokenID == EPSILON) {
+            popStack(st);
+            topStack = peekStack(st);
+            continue;
+        }
+
         // top of the stack is terminal
         if(topStack->GE->isTerminal){
             
             if(topStack->GE->tokenID == curTok->tok){ // Match
                 // Pop Stack, Update topStack variable
-                popStack(st);
 
+                printf("terminal\t");
+                printf("Top Stack: %-30s", topStack->GE->lexeme);
+                printf("Current Token: %-20s\t", curTok->lexeme);
+                printf("MATCHED\n");
+
+                popStack(st);
                 topStack = peekStack(st);
-                // #####################
                 // Need to add the relation of GrammarElement to TOKEN
                 // Add to ParseTree
                 // #####################
 
                 // Move Ahead i.e. Fetch another Token
                 curTok = getNextToken();
+                if(curTok == NULL){
+                    printf("End of Stream of Tokens\n");
+                    return;
+                }
+
                 temp = malloc(sizeof(TOKEN));
+                // Free this mem or reuse it
                 memcpy(temp, curTok, sizeof(TOKEN));
                 curTok = temp;
 
-                if(curTok == NULL){
-                    printf("End of Stream of Tokens\n");
-                    return ;
-                }
                 // continue;
             }
             else{
@@ -640,31 +643,27 @@ void parse(){
 
         }
         else{
-            printf("into nonTerminal\t");
-            printf("Top Stack: %s\t", topStack->GE->lexeme);
-            printf("Current Token: %s\n", curTok->lexeme);
+            printf("nonTerminal\t");
+            printf("Top Stack: %-30s", topStack->GE->lexeme);
+            printf("Current Token: %-20s\n", curTok->lexeme);
             // Use curToken, parseTable to pop current Element and Push Rule
             int nonTerminalID = topStack->GE->tokenID;
             int terminalID = curTok->tok;
             int ruleID = parseTable[nonTerminalID - base][terminalID];
+            printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
-            insertRuleInParseTree(topStack->nodeAddr, ruleID, curTok);
             if(ruleID == -1){
-                printf("No Rule can be applied");
+                printf("No Rule can be applied\n");
                 // REPORT ERROR 2 !!
                 // Currently breaking
                 break;
             }
             else{
                 // Pop current nonTerminal, push Rule, update topStack
-                
-                pushRuleViaID(st, ruleID);
-                insertRuleInParseTree(topStack->nodeAddr, ruleID, curTok);
-
+                TreeNode* topStackAddr = topStack->nodeAddr;
                 popStack(st);
+                insertRuleInParseTree(topStackAddr, ruleID, curTok, st);
                 topStack = peekStack(st);
-
-                continue;
             }
         }
 
@@ -792,7 +791,7 @@ int main(int argc, char* argv[]) {
 
     initParseTree();
     parse();
-    printParseTree();
+    // printParseTree(parseTree, "parseTable.txt");
     
 
     // #####################################################
