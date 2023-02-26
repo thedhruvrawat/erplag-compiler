@@ -3,7 +3,9 @@
 // Buffers
 #define BUF_SIZE 512
 #define TOK_BUF_SIZE 512
+#define MAX_LEXEME_SIZE 20
 
+// make it on heap
 static char buf[BUF_SIZE * 2];
 
 // Line Number
@@ -60,7 +62,7 @@ TOKEN* createToken() {
         token = malloc(sizeof(TOKEN));
     }
     int pos = 0;
-    char lexeme[20];
+    char lexeme[MAX_LEXEME_SIZE];
     while (begin < forward) {
         lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
         begin++;

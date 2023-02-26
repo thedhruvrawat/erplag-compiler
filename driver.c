@@ -18,16 +18,9 @@ int main(int argc, char* argv[]){
     TOKEN* arr[1024];
     int pos = 0;
     while((newToken = getNextToken())!=NULL){
-           
-        if(newToken->tok == NUM){
-            printf("Line:%d, %s: %d\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->num);
-        }
-        else if(newToken->tok == RNUM){
-            printf("Line:%d, %s: %f\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->rnum);
-        }
-        else{
-            printf("Line:%d, %s: %s\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->lexeme);
-        }
+        
+        // Not checking for lexeme type as requirement is to print lexeme as it is
+        printf("Line:%d, %s: %s\n", newToken->linenum, *(token_types + (newToken->tok)), newToken->lexeme);
         printf("TOKEN object location: %p\n", newToken);
         arr[pos++] = newToken;
     
