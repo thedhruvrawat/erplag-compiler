@@ -3,7 +3,9 @@
 // Buffers
 #define BUF_SIZE 512
 #define TOK_BUF_SIZE 512
+#define MAX_LEXEME_SIZE 20
 
+// make it on heap
 static char buf[BUF_SIZE * 2];
 
 // Line Number
@@ -46,16 +48,28 @@ void bufferLoader(FILE* fp, bool firstPart) {
     return;
 }
 
+void setLexeme(){
+    if(token->tok == NUM){
+        token->num = atoi(token->lexeme);
+    }
+    else if(token->tok == RNUM){
+        token->rnum = atof(token->lexeme);
+    }
+}
+
 TOKEN* createToken() {
     if(token == NULL){
         token = malloc(sizeof(TOKEN));
     }
     int pos = 0;
+    char lexeme[MAX_LEXEME_SIZE];
     while (begin < forward) {
-        token->lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
+        lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
         begin++;
     }
-    if(pos < (sizeof(token->lexeme)/sizeof(char))) token->lexeme[pos] = '\0';
+    if(pos < (sizeof(lexeme)/sizeof(char))) lexeme[pos] = '\0';
+    strcpy(token->lexeme,lexeme);
+
     token->linenum = LINE_NUM;
     token->tok = searchWord(terminalTrie, token->lexeme);
     return token;
@@ -175,6 +189,7 @@ TOKEN* getNextToken(){
                 state = 0;
                 token = createToken();
                 token->tok = NUM;
+                setLexeme();
                 forward--;
                 tokenCreated = true;;
                 break;
@@ -214,6 +229,7 @@ TOKEN* getNextToken(){
                 state = 0;
                 token = createToken();
                 token->tok = RNUM;
+                setLexeme();
                 forward--;
                 tokenCreated = true;;
                 break;
@@ -322,6 +338,7 @@ TOKEN* getNextToken(){
                 state = 0;
                 token = createToken();
                 token->tok = LE;
+                
                 forward--;
                 tokenCreated = true;;
                 break;

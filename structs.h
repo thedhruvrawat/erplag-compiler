@@ -22,7 +22,12 @@ extern const char* token_types[];
 
 typedef struct TOKEN {
     TOK_TYPE tok;
-    char lexeme[20];
+    union{
+        int num;
+        double rnum;
+    };
+    //Lexeme outside union as requirement to print lexeme for evaluation
+    char lexeme[20]; 
     int linenum;
 } TOKEN;
 
