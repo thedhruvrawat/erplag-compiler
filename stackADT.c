@@ -1,5 +1,5 @@
 #include "stackADT.h"
-
+// TESTING IS LEFT
 stackNode *getStackNode(grammarElement *GE)
 {
     stackNode *node = malloc(sizeof(stackNode));
@@ -10,61 +10,50 @@ stackNode *getStackNode(grammarElement *GE)
 stack *initStack(void)
 {
     stack *st = malloc(sizeof(stack));
-    stack->top = NULL;
-    stack->size = 0;
+    st->top = NULL;
+    st->size = 0;
     return st;
 }
 
-grammarElement *top(stack *S)
+grammarElement *peekStack(stack *st)
 {
-    return s->top->GE;
+    if(st->size != 0)
+        return st->top->GE;
+    else
+        return NULL;
 }
 
-void pushGE(stack *S, grammarElement *GE)
+grammarElement *popStack(stack * st)
 {
-    grammarElement *currTop = top(S);
-    stackNode *newTop = getStackNode(GE);
-    newTop->next = currTop;
-    S->size++;
-}
-
-void pushRuleID(stack *S, int ID)
-{
-    // Error Incase pdtable is not accessible
-    if ((pdtable == NULL) || (pdtable->grammarrules == NULL)){
-        printf("Production Table or GrammarRules is empty!\n");
-        return;
-    }
-    pushRule(S, pdtable->grammarrules[ID]);
-    return;
-}
-
-void pushRule(stack *S, ProductionRule *rule)
-{
-    // Insert the Rule RHS from right to left
-    grammarElement *curr = rule->RHSTail;
-    while (curr != NULL)
-    {
-        pushGE(S, curr);
-        curr = curr->prev;
-    }
-    return;
-}
-
-grammarElement *pop(stack *S)
-{
-    if (S->size == 0)
+    if (st->size == 0)
     {
         printf("Stack is empty!\n");
         return NULL;
     }
 
-    stackNode *currTop = S->top;
+    stackNode *currTop = st->top;
     grammarElement *GE = currTop->GE;
 
-    S->top = S->top->next;
-    S->size--;
+    st->top = st->top->next;
+    st->size--;
     free(currTop);
 
     return GE;
+}
+
+void pushStackGE(stack *st, grammarElement *GE)
+{
+    
+    stackNode *newTop = getStackNode(GE);
+    newTop->next = st->top;
+    
+    st->top = newTop;
+    st->size++;
+}
+
+bool isEmpty(stack * st){
+    if(st->size)
+        return false;
+    else
+        return true;
 }
