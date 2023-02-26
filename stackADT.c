@@ -5,6 +5,7 @@ stackNode *getStackNode(grammarElement *GE)
     stackNode *node = malloc(sizeof(stackNode));
     node->GE = GE;
     node->next = NULL;
+    node->nodeAddr = NULL;
 }
 
 stack *initStack(void)
@@ -15,30 +16,25 @@ stack *initStack(void)
     return st;
 }
 
-grammarElement *peekStack(stack *st)
+stackNode *peekStack(stack *st)
 {
-    if(st->size != 0)
-        return st->top->GE;
-    else
-        return NULL;
+    return st->top;
 }
-
-grammarElement *popStack(stack * st)
+void popStack(stack * st)
 {
     if (st->size == 0)
     {
         printf("Stack is empty!\n");
-        return NULL;
-    }
+        return ;
+    }// top of the stack is non-terminal
 
     stackNode *currTop = st->top;
-    grammarElement *GE = currTop->GE;
 
     st->top = st->top->next;
     st->size--;
     free(currTop);
-
-    return GE;
+    
+    return;
 }
 
 void pushStackGE(stack *st, grammarElement *GE)
@@ -49,6 +45,8 @@ void pushStackGE(stack *st, grammarElement *GE)
     
     st->top = newTop;
     st->size++;
+
+    return;
 }
 
 bool isEmpty(stack * st){
