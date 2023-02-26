@@ -1,8 +1,8 @@
-grammarNew: grammar.o trie.o stackADT.o lexer.o
-	gcc grammar.o trie.o stackADT.o lexer.o -g -o grammarNew
+# grammarNew: grammar.o trie.o stackADT.o lexer.o
+# 	gcc grammar.o trie.o stackADT.o lexer.o -g -o grammarNew
 
-grammar: grammar.o lexer.o trie.o
-	gcc grammar.o trie.o lexer.o -g -o grammar
+grammar: grammar.o lexer.o trie.o stackADT.o
+	gcc grammar.o trie.o lexer.o stackADT.o -g -o grammar
 
 # set.o: set.c
 # 	gcc -c -g set.c

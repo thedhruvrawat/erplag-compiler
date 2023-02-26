@@ -792,9 +792,6 @@ int main(int argc, char* argv[]) {
     }
     printParseTree();
 
-
-
-    fclose(fp);
     // #####################################################
     // //Listing all non-terminals for which FOLLOW needs to be calculated
     // char **listNullables = findNullableTerminals(nullpdtable);
