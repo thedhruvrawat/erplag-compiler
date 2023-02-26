@@ -150,6 +150,10 @@ TOKEN* getNextToken(){
                 } else if (curr == '.') {
                     state = 43;
                 } else if(curr == EOF){
+                    if(errno==0){
+                        // Should we add this at all curr==EOF?
+                        printf("Input source code is syntactically correct");
+                    }
                     return NULL;
                 } else {
                     state = 100;
@@ -534,7 +538,7 @@ TOKEN* getNextToken(){
                     state = 44;
                 } else {
                     state = 100;
-                    forward--;
+                    forward -=2 ;
                     errno = 6; // Not . after .
                 }
                 break;
@@ -599,10 +603,14 @@ TOKEN* getNextToken(){
             case 100:{
                 char invalidLex[forward-begin];
                 int i=0;
-                while (begin < forward) {
+                // forward was decremented once more than required to exclude the char after error
+                while (begin < (forward+1)) {
                     invalidLex[i++] = buf[begin % (2 * BUF_SIZE)];
                     begin++;
                 }
+                begin--; // Begin should begin just after the error char
+                invalidLex[i] = 0;
+                printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
                 // Prevent printing for unlosed comment
                 if(errno!=7){
                     printf("Syntax error at line number %d: \"%s\"; ",LINE_NUM,invalidLex);

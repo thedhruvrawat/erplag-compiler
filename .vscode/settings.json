@@ -1,7 +1,4 @@
 {
-    "files.associations": {
-        "lexer.h": "c"
-    },
     "makefile.launchConfigurations": [
         {
             "cwd": "/Users/srshr/Desktop/sem 8/Compiler/Project/erplag-compiler",
