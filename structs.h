@@ -69,3 +69,20 @@ typedef struct ProductionTable {
     int maxRules, ruleCount;
     ProductionRule **grammarrules; 
 } ProductionTable;
+
+typedef struct TreeNode {
+    TOKEN* tok;
+    int depth;
+    int tokenID;
+    int productionID;
+    int tokenDerivedFrom;
+    bool isLeaf;
+    struct TreeNode* next;
+    struct TreeNode* child;
+} TreeNode;
+
+typedef struct ParseTree {
+    TreeNode* root;
+    int sz;
+    int treeDepth;
+} ParseTree;

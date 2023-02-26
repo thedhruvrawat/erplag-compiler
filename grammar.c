@@ -454,7 +454,102 @@ void computeParseTable() {
     return;
 }
 
-int main() {
+
+// PARSE TREE SECTION
+
+ParseTree* parseTree;
+const int ROOT = 618;
+
+#define MAX(a, b) (((a) >= (b)) ? (a) : (b))
+
+void initRootNode() {
+    parseTree->sz++;
+    parseTree->treeDepth++;
+    TreeNode* root = malloc(sizeof(TreeNode));
+    root->tok = NULL;
+    root->depth = 1;
+    root->tokenID = pdtable->grammarrules[0]->LHS->tokenID;
+    root->productionID = -1;
+    root->tokenDerivedFrom = -1;
+    root->isLeaf = false;
+    root->next = NULL;
+    root->child = NULL;
+    parseTree->root = root;
+    return;
+}
+
+void initParseTree() {
+    parseTree = malloc(sizeof(ParseTree));
+    parseTree->sz = 0;
+    parseTree->treeDepth = 0;
+    initRootNode();
+    return;
+}
+
+void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok) {
+    // if (parent->tokenID != pdtable->grammarrules[productionID]->LHS->tokenID) {
+    //     printf("ERROR: Invalid Rule Insertion\n");
+    //     exit(1);
+    // }
+
+    TreeNode* sentinel = malloc(sizeof(TreeNode));
+    TreeNode* currNode = sentinel;
+
+    grammarElement* g = pdtable->grammarrules[productionID]->RHSHead;
+
+    while (g != NULL) {
+        currNode->next = malloc(sizeof(TreeNode));
+        parseTree->sz++;
+        currNode = currNode->next;
+        currNode->depth = parent->depth + 1;
+        currNode->tok = tok;
+        currNode->tokenID = g->tokenID;
+        currNode->productionID = productionID;
+        currNode->tokenDerivedFrom = parent->tokenID;
+        currNode->isLeaf = g->isTerminal;
+        currNode->next = NULL;
+        g = g->next;
+    }
+
+    parent->child = sentinel->next;
+    parseTree->treeDepth = MAX(parseTree->treeDepth, parent->depth + 1);
+    free(sentinel);
+    return;
+}
+
+void printParseTree() {
+    TreeNode* curr = parseTree->root;
+
+    while (curr != NULL) {
+        printf("Depth: %d\tProduction ID: %d\t", curr->depth, curr->productionID);
+        TreeNode* temp = curr;
+        
+        while (temp != NULL) {
+            printf("%s\t", elements[temp->tokenID]);
+            temp = temp->next;
+        }
+        printf("\n\n");
+        curr = curr->child;
+    }
+
+    return;
+}
+
+int main(int argc, char* argv[]) {
+    // Setup 
+    // if (argc != 2) {
+    //     printf("Usage: ./a.out <filename>\n");
+    //     return 1;
+    // }
+
+    FILE* fp = fopen("./testCases/testCase1", "r");
+    if (fp == NULL) {
+        printf("File Not Found.\n");
+        exit(1);
+    }
+
+    setupLexer(fp);
+
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
     int terminalTrieLen = grammarTrie->count; // it only contains terminals right now
@@ -557,6 +652,21 @@ int main() {
 
     computeParseTable();
 
+    initParseTree();
+    TreeNode* curr = parseTree->root;
+    for (int i = 0; i < 10; ++i) {
+        TOKEN* tok = getNextToken();
+        TOKEN* temp = malloc(sizeof(TOKEN));
+        memcpy(temp, tok, sizeof(TOKEN));
+        tok = temp;
+
+        insertRuleInParseTree(curr, i, tok);
+        curr = curr->child;
+    }
+    printParseTree();
+
+
+
     // //Listing all non-terminals for which FOLLOW needs to be calculated
     // char **listNullables = findNullableTerminals(nullpdtable);
     // printf("{");
@@ -580,5 +690,6 @@ int main() {
     freeTrie(grammarTrie);
     
     fclose(f);
+    fclose(fp);
     return 0;
 }

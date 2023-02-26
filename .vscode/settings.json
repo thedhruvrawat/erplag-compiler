@@ -3,6 +3,14 @@
         "*.pl": "prolog",
         "*.rmd": "markdown",
         "grammar.h": "c",
-        "trie.h": "c"
-    }
+        "trie.h": "c",
+        "lexer.h": "c"
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
+            "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/grammar",
+            "binaryArgs": []
+        }
+    ]
 }

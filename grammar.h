@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
-#include "trie.h"
+#include "lexer.h"
 
 extern ProductionTable* pdtable;
 extern Trie* grammarTrie;

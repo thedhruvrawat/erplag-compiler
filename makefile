@@ -1,6 +1,6 @@
 
-grammar: grammar.o trie.o
-	gcc grammar.o trie.o -g -o grammar
+grammar: grammar.o lexer.o trie.o
+	gcc grammar.o trie.o lexer.o -g -o grammar
 
 # set.o: set.c
 # 	gcc -c -g set.c
