@@ -1,6 +1,12 @@
 #include<stdbool.h>
 
 typedef enum { 
+    // Keywords
+    INTEGER, REAL, BOOLEAN, OF, ARRAY, START,
+    END, DECLARE, MODULE, DRIVER, PROGRAM, GET_VALUE,
+    PRINT, USE, WITH, PARAMETERS, TAKES, INPUT,
+    RETURNS, FOR, IN, SWITCH, CASE, BREAK,
+    DEFAULT, WHILE,
     // Non-Keywords
     ID, NUM, RNUM, 
     PLUS, MINUS, MUL, DIV, 
@@ -9,13 +15,7 @@ typedef enum {
     COLON, RANGEOP, SEMICOL, COMMA, ASSIGNOP, 
     SQBO, SQBC, BO, BC, COMMENTMARK, 
     // Boolean Operators
-    TRUE, FALSE, AND, OR,
-    // Keywords
-    INTEGER, REAL, BOOLEAN, OF, ARRAY, START,
-    END, DECLARE, MODULE, DRIVER, PROGRAM, GET_VALUE,
-    PRINT, USE, WITH, PARAMETERS, TAKES, INPUT,
-    RETURNS, FOR, IN, SWITCH, CASE, BREAK,
-    DEFAULT, WHILE
+    TRUE, FALSE, AND, OR
 } TOK_TYPE;
 
 extern const char* token_types[];

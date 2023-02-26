@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include "structs.h"
+#include "stackADT.h"
 
 Trie* setupTrie();
 void populateTerminalTrie(Trie* trie);

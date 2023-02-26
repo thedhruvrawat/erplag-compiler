@@ -1,3 +1,5 @@
+grammarNew: grammar.o trie.o stackADT.o lexer.o
+	gcc grammar.o trie.o stackADT.o lexer.o -g -o grammarNew
 
 grammar: grammar.o trie.o
 	gcc grammar.o trie.o -g -o grammar
@@ -7,6 +9,9 @@ grammar: grammar.o trie.o
 
 # parseTable.o: parseTable.c
 # 	gcc -c -g parseTable.c
+
+stackADT.o: stackADT.c
+	gcc -c -g stackADT.c
 
 grammar.o: grammar.c grammar.h
 	gcc -c -g grammar.c
@@ -27,4 +32,4 @@ structs.o: structs.c structs.h
 	gcc -c -g structs.c
 
 clean:
-	rm -f *.o lexer grammar a.out
+	rm -f *.o lexer grammar grammarNew a.out

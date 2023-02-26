@@ -70,10 +70,6 @@ void populateGrammarTrie(Trie* trie) {
     insertWord(trie, "ID", ID);
     insertWord(trie, "NUM", NUM);
     insertWord(trie, "RNUM", RNUM);
-    insertWord(trie, "AND", AND);
-    insertWord(trie, "OR", OR);
-    insertWord(trie, "TRUE", TRUE);
-    insertWord(trie, "FALSE", FALSE);
     insertWord(trie, "PLUS", PLUS);
     insertWord(trie, "MINUS", MINUS);
     insertWord(trie, "MUL", MUL);
@@ -98,6 +94,10 @@ void populateGrammarTrie(Trie* trie) {
     insertWord(trie, "BO", BO);
     insertWord(trie, "BC", BC);
     insertWord(trie, "COMMENTMARK", COMMENTMARK); // Not really needed
+    insertWord(trie, "TRUE", TRUE);
+    insertWord(trie, "FALSE", FALSE);
+    insertWord(trie, "AND", AND);
+    insertWord(trie, "OR", OR);
 }
 
 Trie* createTrieNode() {

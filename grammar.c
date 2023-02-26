@@ -8,7 +8,145 @@ Trie *grammarTrie;
 ProductionTable *pdtable;           //stores all rules
 ProductionTable *nullpdtable;       //stores only NULLABLE rules
 
-int parseTable[TOTAL_RULES][TOTAL_RULES];
+int parseTable[TOTAL_RULES][TOTAL_RULES]; 
+
+Set** firstSets = NULL;
+Set** firstSetsRules = NULL;
+Set** followSets = NULL;
+char** elements;
+bool *computed;
+listElement** LHSLoc;
+listElement** RHSLoc;
+int base;
+int EPSILON;
+int DOLLAR;
+
+//############################################
+
+// Setting Up STACK for the Parsing of given Input File
+// Pushes Dollar, Followed by <program> into the Stack
+void setStack(stack * st){
+    grammarElement *dollar = (grammarElement*) malloc(sizeof(grammarElement));
+    dollar->isTerminal = true;
+    dollar->tokenID = DOLLAR;
+    strcpy(dollar->lexeme, "$");
+    dollar->next = NULL; dollar->prev = NULL;
+
+    pushStackGE(st, dollar);
+
+    // push <program> into stack
+    grammarElement * S = (grammarElement*) malloc(sizeof(grammarElement));
+    S->isTerminal = false;
+    S->tokenID = searchWord(grammarTrie, "<program>");
+    strcpy(S->lexeme, "<program>");
+    S->next = NULL; S->prev = NULL;
+
+    pushStackGE(st, S);
+}
+void pushRule(stack *S, ProductionRule *rule)
+{
+    // Insert the Rule RHS from right to left
+    grammarElement *curr = rule->RHSTail;
+    while (curr != NULL)
+    {
+        pushStackGE(S, curr);
+        curr = curr->prev;
+    }
+    return;
+}
+
+void pushRuleID(stack *S, int ruleID)
+{
+    // Error Incase pdtable is not accessible
+    if ((pdtable == NULL) || (pdtable->grammarrules == NULL)){
+        printf("Production Table or GrammarRules is empty!\n");
+        return;
+    }
+    pushRule(S, pdtable->grammarrules[ruleID]);
+    return;
+}
+
+/*Parsing Check*/
+// Input Buffer contains string to be parsed followed by $ (ENDMARKER) 
+// Program -> Considers X=>stack(top), a=>current(inputSymbol)
+
+// Parse Table Check
+grammarElement * parse(/*List of Tokens ending with $*/){
+
+    printf("Into Parser");
+
+    stack * st = initStack();
+    setStack(st);
+    
+    // Checking the Current Token and Top of the Stack
+    TOKEN * curTok = getNextToken();
+    if(curTok == NULL){
+        printf("End of Stream of Tokens\n");
+        return NULL;
+    }
+
+    grammarElement * topStack = peekStack(st);
+
+    while(!(isEmpty(st))){
+        // top of the stack is terminal
+        if(topStack->isTerminal){
+            printf("Into terminal");
+            if(topStack->tokenID == curTok->tok){
+                // Pop Stack, Update topStack variable
+                popStack(st);
+                topStack = peekStack(st);
+                // #####################
+                // Need to add the relation of GrammarElement to TOKEN
+                // Add to ParseTree
+                // #####################
+
+                // Move Ahead i.e. Fetch another Token
+                curTok = getNextToken();
+                if(curTok == NULL){
+                    printf("End of Stream of Tokens\n");
+                    return NULL;
+                }
+                continue;
+            }
+            else{
+                printf("Top of Stack is Terminal, Token is not!\n");
+                // REPORT ERROR 1 !!
+                // Currently breaking
+                break;
+            }
+
+        }
+
+        // top of the stack is non-terminal
+        else{
+            printf("into nonTerminal\t");
+            printf("Top Stack: %s\t", topStack->lexeme);
+            printf("Current Token: %s\n", curTok->lexeme);
+            // Use curToken, parseTable to pop current Element and Push Rule
+            int nonTerminalID = topStack->tokenID;
+            int terminalID = curTok->tok;
+            int ruleID = parseTable[nonTerminalID - base][terminalID];
+            
+            if(ruleID == -1){
+                printf("No Rule can be applied");
+                // REPORT ERROR 2 !!
+                // Currently breaking
+                break;
+            }
+            else{
+                // Pop current nonTerminal, push Rule, update topStack
+                popStack(st);
+                pushRuleID(st, ruleID);
+                topStack = peekStack(st);
+
+                continue;
+            }
+        }
+
+    }
+    
+}
+//##########################################
 
 ProductionTable *initializeProductionTable(ProductionTable *pdtable, int maxRules) {
     pdtable = malloc(sizeof(ProductionTable));
@@ -36,17 +174,6 @@ void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
     pdtable->grammarrules[pdtable->ruleCount] = p;
     pdtable->ruleCount++;
 }
-
-Set** firstSets = NULL;
-Set** firstSetsRules = NULL;
-Set** followSets = NULL;
-char** elements;
-bool *computed;
-listElement** LHSLoc;
-listElement** RHSLoc;
-int base;
-int EPSILON;
-int DOLLAR;
 
 Set* initSet(int sz) {
     Set* s = malloc(sizeof(Set));
@@ -556,7 +683,19 @@ int main() {
     // printProductionTable(pdtable);
 
     computeParseTable();
+    // #####################################################
+    // TESTING FOR PARSER
+    FILE* fp = fopen("testCases/testCase1", "r");
+    if (fp == NULL) {
+        printf("File Not Found.\n");
+        exit(1);
+    }
 
+    setupLexer(fp);
+    parse();
+
+    fclose(fp);
+    // #####################################################
     // //Listing all non-terminals for which FOLLOW needs to be calculated
     // char **listNullables = findNullableTerminals(nullpdtable);
     // printf("{");
