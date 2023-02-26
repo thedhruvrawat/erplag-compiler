@@ -150,6 +150,10 @@ TOKEN* getNextToken(){
                 } else if (curr == '.') {
                     state = 43;
                 } else if(curr == EOF){
+                    if(errno==0){
+                        // Should we add this at all curr==EOF?
+                        printf("Input source code is syntactically correct\n");
+                    }
                     return NULL;
                 } else {
                     state = 100;
@@ -168,9 +172,15 @@ TOKEN* getNextToken(){
                 break;
             }
             case 2: { // Accept State for ID
-                state = 0;
-                token = createToken();
-                tokenCreated = true;;
+                if(forward-begin < 20)
+                {
+                    state = 0;
+                    token = createToken();
+                    tokenCreated = true;;
+                } else {
+                    state = 100;
+                    errno = 9;
+                }
                 forward--;
                 break;
             }
@@ -534,7 +544,7 @@ TOKEN* getNextToken(){
                     state = 44;
                 } else {
                     state = 100;
-                    forward--;
+                    forward -=2 ;
                     errno = 6; // Not . after .
                 }
                 break;
@@ -549,10 +559,10 @@ TOKEN* getNextToken(){
             }
             case 45: { // Comment starts here
                 state = 46; 
-                token = createToken();
-                token->tok = COMMENTMARK;
+                // token = createToken();
+                // token->tok = COMMENTMARK;
                 forward--;
-                tokenCreated = true;;
+                // tokenCreated = true;;
                 break;
             }
             case 46: {
@@ -590,19 +600,24 @@ TOKEN* getNextToken(){
             case 48: { // Comment ends here
                 state = 0;
                 begin = forward - 2;
-                token = createToken();
-                token->tok = COMMENTMARK;
+                // token = createToken();
+                // token->tok = COMMENTMARK;
+                begin = forward;
                 forward--;
-                tokenCreated = true;;
+                // tokenCreated = true;;
                 break;
             }
             case 100:{
                 char invalidLex[forward-begin];
                 int i=0;
-                while (begin < forward) {
+                // forward was decremented once more than required to exclude the char after error
+                while (begin < (forward+1)) {
                     invalidLex[i++] = buf[begin % (2 * BUF_SIZE)];
                     begin++;
                 }
+                begin--; // Begin should begin just after the error char
+                invalidLex[i] = 0;
+                printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
                 // Prevent printing for unlosed comment
                 if(errno!=7){
                     printf("Syntax error at line number %d: \"%s\"; ",LINE_NUM,invalidLex);
@@ -631,6 +646,11 @@ TOKEN* getNextToken(){
                         return NULL;   
                         break;
                     case 8:
+                        printf("Invalid character found\n");
+                        break;
+                    case 9:
+                        printf("ID size exeeds limit\n");
+                        break;
                     default:
                         printf("Undetected Syntax Error\n");
                         break;

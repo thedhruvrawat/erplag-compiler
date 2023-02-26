@@ -1,5 +1,7 @@
 #include "stackADT.h"
 // TESTING IS LEFT
+
+// Creates a node of stack for a given Grammar Element
 stackNode *getStackNode(grammarElement *GE)
 {
     stackNode *node = malloc(sizeof(stackNode));
@@ -8,6 +10,7 @@ stackNode *getStackNode(grammarElement *GE)
     node->nodeAddr = NULL;
 }
 
+// Returns a new Stack 
 stack *initStack(void)
 {
     stack *st = malloc(sizeof(stack));
@@ -16,10 +19,13 @@ stack *initStack(void)
     return st;
 }
 
+// Returns the a pointer to the stackNode to the top of stack
 stackNode *peekStack(stack *st)
 {
     return st->top;
 }
+
+// Pops the stack => Free the allocated memory
 void popStack(stack * st)
 {
     if (st->size == 0)
@@ -37,6 +43,7 @@ void popStack(stack * st)
     return;
 }
 
+// Pushes node onto the stack encapsulating Grammar Element, Address of Parse Node in the Tree
 void pushStackGE(stack *st, grammarElement *GE, TreeNode* nodeAddr)
 {
     
@@ -50,6 +57,7 @@ void pushStackGE(stack *st, grammarElement *GE, TreeNode* nodeAddr)
     return;
 }
 
+// Returns is the stack is empty
 bool isEmpty(stack * st){
     if(st->size)
         return false;

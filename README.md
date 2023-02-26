@@ -29,16 +29,17 @@ This repository contains the toy-compiler created as part of requirements for th
 | 9       | Started first & follow set computation, error handling      | Feb 21, 2023|
 | 10      | Completed First & Follow sets, Grammar Correction           | Feb 22, 2023|
 | 11      | Parsing Table, StackADT                                     | Feb 24, 2023|
-
+| 12      | Union structure for TOKENS                                  | Feb 25, 2023|
+| 13      | Merge functionality of Parse Tree and Stack                 | Feb 26, 2023|
 
 ## Deadlines
 
 | Stage | Requirements                                                                                  | Deadline       | Submission |
 | ----- | --------------------------------------------------------------------------------------------- | -------------- | ---------- |
-| 1     | **Lexical Analyzer, Predictive Parser, Syntax Analysis, Error Recovery**                      |                | [ ]        |
-|       | DFA on A3 sheet                                                                               | Feb 12, 2023   | [ ]        |
-|       | Complete and Modified grammar on A4 sheet                                                     | Feb 19, 2023   | [ ]        |
-|       | FIRST & FOLLOW sets on A4 sheet                                                               | Feb 19, 2023   | [ ]        |
+| 1     | **Lexical Analyzer, Predictive Parser, Syntax Analysis, Error Recovery**                      |                | [x]        |
+|       | DFA on A3 sheet                                                                               | Feb 12, 2023   | [x]        |
+|       | Complete and Modified grammar on A4 sheet                                                     | Feb 19, 2023   | [x]        |
+|       | FIRST & FOLLOW sets on A4 sheet                                                               | Feb 19, 2023   | [x]        |
 |       | Code Submission                                                                               | March 19, 2023 | [ ]        |
 | 2     | AST Generation, Symbol Table, Semantic Analysis, Code Generation and Compiler Integration     | TBA            | [ ]        |
 

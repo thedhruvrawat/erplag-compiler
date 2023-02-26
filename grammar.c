@@ -501,7 +501,6 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
 
     grammarElement* g = pdtable->grammarrules[productionID]->RHSTail;
 
-
     while (g != NULL) {
         currNode = malloc(sizeof(TreeNode));
         parseTree->sz++;
@@ -518,14 +517,59 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
     }
 
     parseTree->treeDepth = MAX(parseTree->treeDepth, parent->depth + 1);
+    parent->child = head;
     return;
 }
 
-/* void printParseTree(ParseTree* parseTree, char* outFile) {
-    FILE* fp = fopen(outFile, )
+void printParseTreeRec(TreeNode* node, FILE* fp) {
+    if (node == NULL) { 
+        return;
+    }
 
+    printParseTreeRec(node->child, fp);
+
+    if (node->isLeaf) {
+        fprintf(fp, "%-25s%-10d%-15s", node->tok->lexeme, node->tok->linenum, elements[node->tok->tok]);
+    } else {
+        fprintf(fp, "%-25s%-10s%-15s", "--------------------", "---", "----------");
+    }
+
+    if (node->isLeaf && node->tok->tok == NUM) {
+        fprintf(fp, "%-20d", node->tok->num);
+    } else if (node->isLeaf && node->tok->tok == RNUM) {
+        fprintf(fp, "%-20lf", node->tok->rnum);
+    } else {
+        fprintf(fp, "%-20s", "---------------");
+    }
+
+    if (node->tokenDerivedFrom >= 0) {
+        fprintf(fp, "%-25s", elements[node->tokenDerivedFrom]);
+    } else {
+        fprintf(fp, "%-25s", "ROOT");
+    }
+    fprintf(fp, "%-5s", (node->isLeaf ? "Yes" : "No"));
+    
+    if (!node->isLeaf) {
+        fprintf(fp, "%-20s", elements[node->tokenID]);
+    }
+
+    fprintf(fp, "\n");
+
+    printParseTreeRec(node->next, fp);
     return;
-} */
+}
+
+void printParseTree(ParseTree* parseTree, char* outFile) {
+    FILE* fp = fopen(outFile, "w");
+
+    if (fp == NULL) {
+        printf("Unable to open the file to write parseTree.\n");
+        exit(1);
+    }
+
+    printParseTreeRec(parseTree->root, fp);
+    return;
+}
 //############################################
 
 // Setting Up STACK for the Parsing of given Input File
@@ -608,11 +652,12 @@ void parse(){
             
             if(topStack->GE->tokenID == curTok->tok){ // Match
                 // Pop Stack, Update topStack variable
-
                 printf("terminal\t");
                 printf("Top Stack: %-30s", topStack->GE->lexeme);
                 printf("Current Token: %-20s\t", curTok->lexeme);
                 printf("MATCHED\n");
+
+                topStack->nodeAddr->tok = curTok;
 
                 popStack(st);
                 topStack = peekStack(st);
@@ -674,12 +719,12 @@ void parse(){
 
 int main(int argc, char* argv[]) {
     // Setup 
-    // if (argc != 2) {
-    //     printf("Usage: ./a.out <filename>\n");
-    //     return 1;
-    // }
+    if (argc != 2) {
+        printf("Usage: ./a.out <filename>\n");
+        return 1;
+    }
 
-    FILE* fp = fopen("./testCases/testCase1", "r");
+    FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) {
         printf("File Not Found.\n");
         exit(1);
@@ -791,7 +836,7 @@ int main(int argc, char* argv[]) {
 
     initParseTree();
     parse();
-    // printParseTree(parseTree, "parseTable.txt");
+    printParseTree(parseTree, "parseTable.txt");
     
 
     // #####################################################

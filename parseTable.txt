@@ -1,0 +1,53 @@
+declare                  1         DECLARE        ---------------     <moduleDeclaration>      Yes  
+module                   1         MODULE         ---------------     <moduleDeclaration>      Yes  
+readArr                  1         ID             ---------------     <moduleDeclaration>      Yes  
+;                        1         SEMICOL        ---------------     <moduleDeclaration>      Yes  
+--------------------     ---       ----------     ---------------     <moduleDeclarations>     No   <moduleDeclaration> 
+--------------------     ---       ----------     ---------------     <moduleDeclarations>     No   e                   
+--------------------     ---       ----------     ---------------     <moduleDeclarations>     No   <moduleDeclarations>
+--------------------     ---       ----------     ---------------     <program>                No   <moduleDeclarations>
+<<                       3         DEF            ---------------     <module>                 Yes  
+module                   3         MODULE         ---------------     <module>                 Yes  
+arraySum                 3         ID             ---------------     <module>                 Yes  
+>>                       3         ENDDEF         ---------------     <module>                 Yes  
+takes                    4         TAKES          ---------------     <module>                 Yes  
+input                    4         INPUT          ---------------     <module>                 Yes  
+[                        4         SQBO           ---------------     <module>                 Yes  
+list                     4         ID             ---------------     <input_plist>            Yes  
+:                        4         COLON          ---------------     <input_plist>            Yes  
+array                    4         ARRAY          ---------------     <dataType>               Yes  
+[                        4         SQBO           ---------------     <dataType>               Yes  
+--------------------     ---       ----------     ---------------     <sign>                   No   e                   
+--------------------     ---       ----------     ---------------     <index_arr>              No   <sign>              
+1                        4         NUM            0                   <new_index>              Yes  
+--------------------     ---       ----------     ---------------     <index_arr>              No   <new_index>         
+--------------------     ---       ----------     ---------------     <range_arrays>           No   <index_arr>         
+..                       4         RANGEOP        ---------------     <range_arrays>           Yes  
+--------------------     ---       ----------     ---------------     <sign>                   No   e                   
+--------------------     ---       ----------     ---------------     <index_arr>              No   <sign>              
+15                       4         NUM            15                  <new_index>              Yes  
+--------------------     ---       ----------     ---------------     <index_arr>              No   <new_index>         
+--------------------     ---       ----------     ---------------     <range_arrays>           No   <index_arr>         
+--------------------     ---       ----------     ---------------     <dataType>               No   <range_arrays>      
+]                        4         SQBC           ---------------     <dataType>               Yes  
+of                       4         OF             ---------------     <dataType>               Yes  
+real                     4         REAL           ---------------     <type>                   Yes  
+--------------------     ---       ----------     ---------------     <dataType>               No   <type>              
+--------------------     ---       ----------     ---------------     <input_plist>            No   <dataType>          
+,                        4         COMMA          ---------------     <N1>                     Yes  
+n                        4         ID             ---------------     <N1>                     Yes  
+,                        4         COMMA          ---------------     <N1>                     Yes  
+--------------------     ---       ----------     ---------------     <N1>                     No   <dataType>          
+--------------------     ---       ----------     ---------------     <N1>                     No   <N1>                
+--------------------     ---       ----------     ---------------     <input_plist>            No   <N1>                
+--------------------     ---       ----------     ---------------     <module>                 No   <input_plist>       
+<<                       3         DEF            ---------------     <module>                 Yes  
+<<                       3         DEF            ---------------     <module>                 Yes  
+--------------------     ---       ----------     ---------------     <module>                 No   <ret>               
+--------------------     ---       ----------     ---------------     <module>                 No   <moduleDef>         
+--------------------     ---       ----------     ---------------     <otherModules>           No   <module>            
+--------------------     ---       ----------     ---------------     <otherModules>           No   <otherModules>      
+--------------------     ---       ----------     ---------------     <program>                No   <otherModules>      
+--------------------     ---       ----------     ---------------     <program>                No   <driverModule>      
+--------------------     ---       ----------     ---------------     <program>                No   <otherModules>      
+--------------------     ---       ----------     ---------------     ROOT                     No   <program>           
