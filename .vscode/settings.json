@@ -7,6 +7,11 @@
             "cwd": "/Users/srshr/Desktop/sem 8/Compiler/Project/erplag-compiler",
             "binaryPath": "/Users/srshr/Desktop/sem 8/Compiler/Project/erplag-compiler/lexer",
             "binaryArgs": []
+        },
+        {
+            "cwd": "/home/chirag/StudyMaterial/Year 4-2/CS F363 Compiler Construction/erplag-compiler",
+            "binaryPath": "/home/chirag/StudyMaterial/Year 4-2/CS F363 Compiler Construction/erplag-compiler/lexer",
+            "binaryArgs": []
         }
     ]
 }

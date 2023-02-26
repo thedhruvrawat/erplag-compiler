@@ -168,9 +168,16 @@ TOKEN* getNextToken(){
                 break;
             }
             case 2: { // Accept State for ID
-                state = 0;
-                token = createToken();
-                tokenCreated = true;;
+                if(forward-begin < 20)
+                {
+                    state = 0;
+                    token = createToken();
+                    token->tok = ID;
+                    tokenCreated = true;;
+                } else {
+                    state = 100;
+                    errno = 9;
+                }
                 forward--;
                 break;
             }
@@ -549,10 +556,10 @@ TOKEN* getNextToken(){
             }
             case 45: { // Comment starts here
                 state = 46; 
-                token = createToken();
-                token->tok = COMMENTMARK;
+                // token = createToken();
+                // token->tok = COMMENTMARK;
                 forward--;
-                tokenCreated = true;;
+                // tokenCreated = true;;
                 break;
             }
             case 46: {
@@ -590,10 +597,11 @@ TOKEN* getNextToken(){
             case 48: { // Comment ends here
                 state = 0;
                 begin = forward - 2;
-                token = createToken();
-                token->tok = COMMENTMARK;
+                // token = createToken();
+                // token->tok = COMMENTMARK;
+                begin = forward;
                 forward--;
-                tokenCreated = true;;
+                // tokenCreated = true;;
                 break;
             }
             case 100:{
@@ -631,6 +639,11 @@ TOKEN* getNextToken(){
                         return NULL;   
                         break;
                     case 8:
+                        printf("Invalid character found\n");
+                        break;
+                    case 9:
+                        printf("ID size exeeds limit\n");
+                        break;
                     default:
                         printf("Undetected Syntax Error\n");
                         break;
