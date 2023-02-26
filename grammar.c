@@ -226,7 +226,7 @@ void printProductionTable(ProductionTable *pdtable) {
         printf("[%d]\t(%d)%s -> ", pdtable->grammarrules[i-1]->productionID, pdtable->grammarrules[i - 1]->LHS->tokenID, pdtable->grammarrules[i - 1]->LHS->lexeme);
         grammarElement *ptr = pdtable->grammarrules[i - 1]->RHSHead;
         while(ptr!=NULL) {
-            printf("%s", ptr->lexeme);
+            printf("(%d)%s", ptr->tokenID, ptr->lexeme);
             // if(ptr->isTerminal)
             //     printf("*"); // Print a star, if the element is a terminal
             printf(" ");
@@ -277,7 +277,7 @@ bool findFirst(int tokenID) {
             }
             // loop if epsilon
             bool isEpsilon = false;
-            while (isEpsilon = findFirst(RHS->tokenID - base)) {
+            while ((isEpsilon = findFirst(RHS->tokenID - base))) {
                 unionSet(firstSetsRules[head->productionID], firstSets[RHS->tokenID - base]);
                 RHS = RHS->next;
                 if (RHS == NULL) { break; }
@@ -581,7 +581,102 @@ void computeParseTable() {
     return;
 }
 
-int main() {
+
+// PARSE TREE SECTION
+
+ParseTree* parseTree;
+const int ROOT = 618;
+
+#define MAX(a, b) (((a) >= (b)) ? (a) : (b))
+
+void initRootNode() {
+    parseTree->sz++;
+    parseTree->treeDepth++;
+    TreeNode* root = malloc(sizeof(TreeNode));
+    root->tok = NULL;
+    root->depth = 1;
+    root->tokenID = pdtable->grammarrules[0]->LHS->tokenID;
+    root->productionID = -1;
+    root->tokenDerivedFrom = -1;
+    root->isLeaf = false;
+    root->next = NULL;
+    root->child = NULL;
+    parseTree->root = root;
+    return;
+}
+
+void initParseTree() {
+    parseTree = malloc(sizeof(ParseTree));
+    parseTree->sz = 0;
+    parseTree->treeDepth = 0;
+    initRootNode();
+    return;
+}
+
+void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok) {
+    // if (parent->tokenID != pdtable->grammarrules[productionID]->LHS->tokenID) {
+    //     printf("ERROR: Invalid Rule Insertion\n");
+    //     exit(1);
+    // }
+
+    TreeNode* sentinel = malloc(sizeof(TreeNode));
+    TreeNode* currNode = sentinel;
+
+    grammarElement* g = pdtable->grammarrules[productionID]->RHSHead;
+
+    while (g != NULL) {
+        currNode->next = malloc(sizeof(TreeNode));
+        parseTree->sz++;
+        currNode = currNode->next;
+        currNode->depth = parent->depth + 1;
+        currNode->tok = tok;
+        currNode->tokenID = g->tokenID;
+        currNode->productionID = productionID;
+        currNode->tokenDerivedFrom = parent->tokenID;
+        currNode->isLeaf = g->isTerminal;
+        currNode->next = NULL;
+        g = g->next;
+    }
+
+    parent->child = sentinel->next;
+    parseTree->treeDepth = MAX(parseTree->treeDepth, parent->depth + 1);
+    free(sentinel);
+    return;
+}
+
+void printParseTree() {
+    TreeNode* curr = parseTree->root;
+
+    while (curr != NULL) {
+        printf("Depth: %d\tProduction ID: %d\t", curr->depth, curr->productionID);
+        TreeNode* temp = curr;
+        
+        while (temp != NULL) {
+            printf("%s\t", elements[temp->tokenID]);
+            temp = temp->next;
+        }
+        printf("\n\n");
+        curr = curr->child;
+    }
+
+    return;
+}
+
+int main(int argc, char* argv[]) {
+    // Setup 
+    // if (argc != 2) {
+    //     printf("Usage: ./a.out <filename>\n");
+    //     return 1;
+    // }
+
+    FILE* fp = fopen("./testCases/testCase1", "r");
+    if (fp == NULL) {
+        printf("File Not Found.\n");
+        exit(1);
+    }
+
+    setupLexer(fp);
+
     grammarTrie = setupTrie();
     populateGrammarTrie(grammarTrie);
     int terminalTrieLen = grammarTrie->count; // it only contains terminals right now
@@ -680,19 +775,24 @@ int main() {
     
     attachFollowToRule();
 
-    // printProductionTable(pdtable);
+    printProductionTable(pdtable);
 
     computeParseTable();
-    // #####################################################
-    // TESTING FOR PARSER
-    FILE* fp = fopen("testCases/testCase1", "r");
-    if (fp == NULL) {
-        printf("File Not Found.\n");
-        exit(1);
-    }
 
-    setupLexer(fp);
-    parse();
+    initParseTree();
+    TreeNode* curr = parseTree->root;
+    for (int i = 0; i < 10; ++i) {
+        TOKEN* tok = getNextToken();
+        TOKEN* temp = malloc(sizeof(TOKEN));
+        memcpy(temp, tok, sizeof(TOKEN));
+        tok = temp;
+
+        insertRuleInParseTree(curr, i, tok);
+        curr = curr->child;
+    }
+    printParseTree();
+
+
 
     fclose(fp);
     // #####################################################
@@ -719,5 +819,6 @@ int main() {
     freeTrie(grammarTrie);
     
     fclose(f);
+    fclose(fp);
     return 0;
 }

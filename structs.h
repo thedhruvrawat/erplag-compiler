@@ -22,7 +22,12 @@ extern const char* token_types[];
 
 typedef struct TOKEN {
     TOK_TYPE tok;
-    char lexeme[20];
+    union{
+        int num;
+        double rnum;
+    };
+    //Lexeme outside union as requirement to print lexeme for evaluation
+    char lexeme[20]; 
     int linenum;
 } TOKEN;
 
@@ -69,3 +74,20 @@ typedef struct ProductionTable {
     int maxRules, ruleCount;
     ProductionRule **grammarrules; 
 } ProductionTable;
+
+typedef struct TreeNode {
+    TOKEN* tok;
+    int depth;
+    int tokenID;
+    int productionID;
+    int tokenDerivedFrom;
+    bool isLeaf;
+    struct TreeNode* next;
+    struct TreeNode* child;
+} TreeNode;
+
+typedef struct ParseTree {
+    TreeNode* root;
+    int sz;
+    int treeDepth;
+} ParseTree;
