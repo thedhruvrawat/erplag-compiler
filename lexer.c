@@ -624,7 +624,7 @@ TOKEN* getNextToken(){
                         printf("Expected = after ! \n");
                         break;
                     case 6:
-                        printf("Expected .. for range operator\n");
+                        printf("Invalid .\n");
                         break;
                     case 7:
                         printf("Unclosed comment\n");
@@ -645,7 +645,7 @@ TOKEN* getNextToken(){
                     state = 0;
                     LINE_NUM++;
                 } 
-                else if(curr==';' || curr==' '){
+                else if(curr==';' || curr==' '||curr=='.'){
                     state = 0;
                 }
                 else{
