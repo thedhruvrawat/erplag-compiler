@@ -92,6 +92,22 @@ void differenceSet(Set* a, Set* b) {
     return;
 }
 
+void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
+    switch(p_errno){
+        case 1:
+            {
+                // printf("Stream has ended but the stack is non-empty\n\n");
+                printf("Parse Error: Expected %s \n\n",top->GE->lexeme);
+                break;
+            }
+        case 2:
+        {
+            // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
+            printf("Parse error: Expected %s \n\n",top->GE->lexeme);
+        }
+    }
+}
+
 
 void printProductionTable(ProductionTable *pdtable) {
     printf("Printing Production Table\n");
@@ -656,7 +672,7 @@ void parse(){
     curTok = createTokenCopy(curTok);
 
     if (curTok == NULL) { 
-        printf("Stream has ended but the stack is non-empty\n\n");
+        printParseError(1,st->top,curTok);
     }
 
     stackNode * topStack = peekStack(st);
@@ -692,10 +708,11 @@ void parse(){
                 curTok = createTokenCopy(curTok);
 
                 if (curTok == NULL) { 
-                    printf("Stream has ended but the stack is non-empty\n\n");
+                    printParseError(1,st->top,curTok);
                 }
             } else {
-                printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
+                // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
+                printParseError(2,st->top,curTok);
 
                 // TODO: REPORT ERROR
                 // reportError();
@@ -718,7 +735,6 @@ void parse(){
                 
                 // TODO: REPORT ERROR
                 // reportError()
-
                 Set* synchronizingSet = initSynchronizingSet(topStack->GE);
 
                 while (synchronizingSet->contains[curTok->tok] == false) {
@@ -734,7 +750,8 @@ void parse(){
                 curTok = createTokenCopy(curTok); 
 
                 if (curTok == NULL) { 
-                    printf("Stream has ended but the stack is non-empty\n");
+                    // printf("Stream has ended but the stack is non-empty\n");
+                    printParseError(1,st->top,curTok);
                 }
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
@@ -752,12 +769,12 @@ void parse(){
 
 int main(int argc, char* argv[]) {
     // Setup 
-    if (argc != 2) {
-        printf("Usage: ./a.out <filename>\n");
-        return 1;
-    }
+    // if (argc != 2) {
+    //     printf("Usage: ./a.out <filename>\n");
+    //     return 1;
+    // }
 
-    FILE* fp = fopen(argv[1], "r");
+    FILE* fp = fopen("test_cases/t6_errors.txt", "r");
     if (fp == NULL) {
         printf("File Not Found.\n");
         exit(1);
@@ -899,3 +916,4 @@ int main(int argc, char* argv[]) {
     fclose(fp);
     return 0;
 }
+

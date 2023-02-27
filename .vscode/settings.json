@@ -14,6 +14,11 @@
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/grammar",
             "binaryArgs": []
+        },
+        {
+            "cwd": "/Users/srshr/Desktop/sem 8/Compiler/Project/erplag-compiler",
+            "binaryPath": "/Users/srshr/Desktop/sem 8/Compiler/Project/erplag-compiler/grammar",
+            "binaryArgs": []
         }
     ]
 }

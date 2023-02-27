@@ -8,6 +8,7 @@ stackNode *getStackNode(grammarElement *GE)
     node->GE = GE;
     node->next = NULL;
     node->nodeAddr = NULL;
+    return node;
 }
 
 // Returns a new Stack 
