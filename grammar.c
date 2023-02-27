@@ -543,9 +543,9 @@ void printParseTreeRec(TreeNode* node, FILE* fp) {
     }
 
     if (node->tokenDerivedFrom >= 0) {
-        fprintf(fp, "%-25s", elements[node->tokenDerivedFrom]);
+        fprintf(fp, "%-40s", elements[node->tokenDerivedFrom]);
     } else {
-        fprintf(fp, "%-25s", "ROOT");
+        fprintf(fp, "%-40s", "ROOT");
     }
     fprintf(fp, "%-5s", (node->isLeaf ? "Yes" : "No"));
     
@@ -657,6 +657,7 @@ void parse(){
 
     if (curTok == NULL) { 
         printf("Stream has ended but the stack is non-empty\n\n");
+        return;
     }
 
     stackNode * topStack = peekStack(st);
@@ -687,12 +688,12 @@ void parse(){
                 // #####################
 
                 // Move Ahead i.e. Fetch another Token
-                free(curTok);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok);
 
                 if (curTok == NULL) { 
                     printf("Stream has ended but the stack is non-empty\n\n");
+                    return;
                 }
             } else {
                 printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
@@ -725,16 +726,20 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
+                    if (curTok == NULL) { 
+                        printf("Stream has ended but the stack is non-empty\n");
+                        return;
+                    }
                 } 
 
                 popStack(st);
                 topStack = peekStack(st);
-                free(curTok);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
 
                 if (curTok == NULL) { 
                     printf("Stream has ended but the stack is non-empty\n");
+                    return;
                 }
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
