@@ -1,49 +1,107 @@
-declare                  1         DECLARE        ---------------     <moduleDeclaration>      Yes  
-module                   1         MODULE         ---------------     <moduleDeclaration>      Yes  
-readArr                  1         ID             ---------------     <moduleDeclaration>      Yes  
-;                        1         SEMICOL        ---------------     <moduleDeclaration>      Yes  
+break                    17        BREAK          ---------------     <moduleDeclaration>      Yes  
+break                    17        BREAK          ---------------     <moduleDeclaration>      Yes  
+break                    17        BREAK          ---------------     <moduleDeclaration>      Yes  
+break                    17        BREAK          ---------------     <moduleDeclaration>      Yes  
 --------------------     ---       ----------     ---------------     <moduleDeclarations>     No   <moduleDeclaration> 
 --------------------     ---       ----------     ---------------     <moduleDeclarations>     No   e                   
 --------------------     ---       ----------     ---------------     <moduleDeclarations>     No   <moduleDeclarations>
 --------------------     ---       ----------     ---------------     <program>                No   <moduleDeclarations>
-<<                       3         DEF            ---------------     <module>                 Yes  
-module                   3         MODULE         ---------------     <module>                 Yes  
-arraySum                 3         ID             ---------------     <module>                 Yes  
->>                       3         ENDDEF         ---------------     <module>                 Yes  
-takes                    4         TAKES          ---------------     <module>                 Yes  
-input                    4         INPUT          ---------------     <module>                 Yes  
-[                        4         SQBO           ---------------     <module>                 Yes  
-list                     4         ID             ---------------     <input_plist>            Yes  
-:                        4         COLON          ---------------     <input_plist>            Yes  
-array                    4         ARRAY          ---------------     <dataType>               Yes  
-[                        4         SQBO           ---------------     <dataType>               Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <input_plist>            Yes  
+break                    17        BREAK          ---------------     <input_plist>            Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
 --------------------     ---       ----------     ---------------     <sign>                   No   e                   
 --------------------     ---       ----------     ---------------     <index_arr>              No   <sign>              
-1                        4         NUM            0                   <new_index>              Yes  
+break                    17        BREAK          ---------------     <new_index>              Yes  
 --------------------     ---       ----------     ---------------     <index_arr>              No   <new_index>         
 --------------------     ---       ----------     ---------------     <range_arrays>           No   <index_arr>         
-..                       4         RANGEOP        ---------------     <range_arrays>           Yes  
+break                    17        BREAK          ---------------     <range_arrays>           Yes  
 --------------------     ---       ----------     ---------------     <sign>                   No   e                   
 --------------------     ---       ----------     ---------------     <index_arr>              No   <sign>              
-15                       4         NUM            15                  <new_index>              Yes  
+break                    17        BREAK          ---------------     <new_index>              Yes  
 --------------------     ---       ----------     ---------------     <index_arr>              No   <new_index>         
 --------------------     ---       ----------     ---------------     <range_arrays>           No   <index_arr>         
 --------------------     ---       ----------     ---------------     <dataType>               No   <range_arrays>      
-]                        4         SQBC           ---------------     <dataType>               Yes  
-of                       4         OF             ---------------     <dataType>               Yes  
-real                     4         REAL           ---------------     <type>                   Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
+break                    17        BREAK          ---------------     <type>                   Yes  
 --------------------     ---       ----------     ---------------     <dataType>               No   <type>              
 --------------------     ---       ----------     ---------------     <input_plist>            No   <dataType>          
-,                        4         COMMA          ---------------     <N1>                     Yes  
-n                        4         ID             ---------------     <N1>                     Yes  
-,                        4         COMMA          ---------------     <N1>                     Yes  
+break                    17        BREAK          ---------------     <N1>                     Yes  
+break                    17        BREAK          ---------------     <N1>                     Yes  
+break                    17        BREAK          ---------------     <N1>                     Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
 --------------------     ---       ----------     ---------------     <N1>                     No   <dataType>          
+--------------------     ---       ----------     ---------------     <N1>                     No   e                   
 --------------------     ---       ----------     ---------------     <N1>                     No   <N1>                
 --------------------     ---       ----------     ---------------     <input_plist>            No   <N1>                
 --------------------     ---       ----------     ---------------     <module>                 No   <input_plist>       
-<<                       3         DEF            ---------------     <module>                 Yes  
-<<                       3         DEF            ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <module>                 Yes  
+break                    17        BREAK          ---------------     <ret>                    Yes  
+break                    17        BREAK          ---------------     <ret>                    Yes  
+break                    17        BREAK          ---------------     <output_plist>           Yes  
+break                    17        BREAK          ---------------     <output_plist>           Yes  
+break                    17        BREAK          ---------------     <type>                   Yes  
+--------------------     ---       ----------     ---------------     <output_plist>           No   <type>              
+--------------------     ---       ----------     ---------------     <N2>                     No   e                   
+--------------------     ---       ----------     ---------------     <output_plist>           No   <N2>                
+--------------------     ---       ----------     ---------------     <ret>                    No   <output_plist>      
+break                    17        BREAK          ---------------     <ret>                    Yes  
+break                    17        BREAK          ---------------     <ret>                    Yes  
 --------------------     ---       ----------     ---------------     <module>                 No   <ret>               
+break                    17        BREAK          ---------------     <moduleDef>              Yes  
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+break                    17        BREAK          ---------------     <idList>                 Yes  
+--------------------     ---       ----------     ---------------     <N3>                     No   e                   
+--------------------     ---       ----------     ---------------     <idList>                 No   <N3>                
+--------------------     ---       ----------     ---------------     <declareStmt>            No   <idList>            
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
+--------------------     ---       ----------     ---------------     <declareStmt>            No   <dataType>          
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+--------------------     ---       ----------     ---------------     <statement>              No   <declareStmt>       
+--------------------     ---       ----------     ---------------     <statements>             No   <statement>         
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+break                    17        BREAK          ---------------     <idList>                 Yes  
+--------------------     ---       ----------     ---------------     <N3>                     No   e                   
+--------------------     ---       ----------     ---------------     <idList>                 No   <N3>                
+--------------------     ---       ----------     ---------------     <declareStmt>            No   <idList>            
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+break                    17        BREAK          ---------------     <dataType>               Yes  
+--------------------     ---       ----------     ---------------     <declareStmt>            No   <dataType>          
+break                    17        BREAK          ---------------     <declareStmt>            Yes  
+--------------------     ---       ----------     ---------------     <statement>              No   <declareStmt>       
+--------------------     ---       ----------     ---------------     <statements>             No   <statement>         
+break                    17        BREAK          ---------------     <assignmentStmt>         Yes  
+--------------------     ---       ----------     ---------------     <assignmentStmt>         No   <whichStmt>         
+--------------------     ---       ----------     ---------------     <simpleStmt>             No   <assignmentStmt>    
+--------------------     ---       ----------     ---------------     <statement>              No   <simpleStmt>        
+--------------------     ---       ----------     ---------------     <statements>             No   <statement>         
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+--------------------     ---       ----------     ---------------     <iterativeStmt>          No   <range_for_loop>    
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+--------------------     ---       ----------     ---------------     <iterativeStmt>          No   <statements>        
+break                    17        BREAK          ---------------     <iterativeStmt>          Yes  
+--------------------     ---       ----------     ---------------     <statement>              No   <iterativeStmt>     
+--------------------     ---       ----------     ---------------     <statements>             No   <statement>         
+--------------------     ---       ----------     ---------------     <statements>             No   <statements>        
+--------------------     ---       ----------     ---------------     <statements>             No   <statements>        
+--------------------     ---       ----------     ---------------     <statements>             No   <statements>        
+--------------------     ---       ----------     ---------------     <statements>             No   <statements>        
+--------------------     ---       ----------     ---------------     <moduleDef>              No   <statements>        
+break                    17        BREAK          ---------------     <moduleDef>              Yes  
 --------------------     ---       ----------     ---------------     <module>                 No   <moduleDef>         
 --------------------     ---       ----------     ---------------     <otherModules>           No   <module>            
 --------------------     ---       ----------     ---------------     <otherModules>           No   <otherModules>      

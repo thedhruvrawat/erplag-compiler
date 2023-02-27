@@ -676,7 +676,7 @@ TOKEN* getNextToken(){
                         state = 0;
                         break;
                     case 4:
-                        printf("Expected == for equality operator\n");
+                        printf("Invalid character after \"=\" \n");
                         state = 0;
                         break;
                     case 5:

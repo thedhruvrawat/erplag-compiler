@@ -620,6 +620,29 @@ void initParseStack(stack * st){
 // Input Buffer contains string to be parsed followed by $ (ENDMARKER) 
 // Program -> Considers X=>stack(top), a=>current(inputSymbol)
 
+TOKEN* createTokenCopy(TOKEN* curTok) {
+    TOKEN* temp = malloc(sizeof(TOKEN));
+    if(curTok == NULL){
+        printf("End of Stream of Tokens\n");
+        return curTok;
+    }
+    memcpy(temp, curTok, sizeof(TOKEN));
+    curTok = temp;
+    return curTok;
+}
+
+Set* initSynchronizingSet(grammarElement* g) {
+    Set* res = initSet(base);
+    int SEMCOL = searchGrammar(grammarTrie, "SEMICOL");
+    unionSet(res, firstSets[g->tokenID - base]);
+    if (followSets[g->tokenID - base] != NULL) {
+        unionSet(res, followSets[g->tokenID - base]);
+    }
+    res->contains[SEMCOL] = true;
+
+    return res;
+}
+
 // Parse Table Check
 void parse(){
 
@@ -630,12 +653,10 @@ void parse(){
     
     // Checking the Current Token and Top of the Stack
     TOKEN* curTok = getNextToken();
-    TOKEN* temp = malloc(sizeof(TOKEN));
-    memcpy(temp, curTok, sizeof(TOKEN));
-    curTok = temp;
-    if(curTok == NULL){
-        printf("End of Stream of Tokens\n");
-        return ;
+    curTok = createTokenCopy(curTok);
+
+    if (curTok == NULL) { 
+        printf("Stream has ended but the stack is non-empty\n\n");
     }
 
     stackNode * topStack = peekStack(st);
@@ -650,7 +671,7 @@ void parse(){
         // top of the stack is terminal
         if(topStack->GE->isTerminal){
             
-            if(topStack->GE->tokenID == curTok->tok){ // Match
+            if (topStack->GE->tokenID == curTok->tok) { // Match
                 // Pop Stack, Update topStack variable
                 printf("terminal\t");
                 printf("Top Stack: %-30s", topStack->GE->lexeme);
@@ -666,28 +687,23 @@ void parse(){
                 // #####################
 
                 // Move Ahead i.e. Fetch another Token
+                free(curTok);
                 curTok = getNextToken();
-                if(curTok == NULL){
-                    printf("End of Stream of Tokens\n");
-                    return;
+                curTok = createTokenCopy(curTok);
+
+                if (curTok == NULL) { 
+                    printf("Stream has ended but the stack is non-empty\n\n");
                 }
+            } else {
+                printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
 
-                temp = malloc(sizeof(TOKEN));
-                // Free this mem or reuse it
-                memcpy(temp, curTok, sizeof(TOKEN));
-                curTok = temp;
-
-                // continue;
-            }
-            else{
-                printf("Top of Stack is Terminal, Token is not!\n");
-                // REPORT ERROR 1 !!
-                // Currently breaking
-                break;
+                // TODO: REPORT ERROR
+                // reportError();
+                popStack(st);
+                topStack = peekStack(st);
             }
 
-        }
-        else{
+        } else {
             printf("nonTerminal\t");
             printf("Top Stack: %-30s", topStack->GE->lexeme);
             printf("Current Token: %-20s\n", curTok->lexeme);
@@ -698,12 +714,29 @@ void parse(){
             printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
             if(ruleID == -1){
-                printf("No Rule can be applied\n");
-                // REPORT ERROR 2 !!
-                // Currently breaking
-                break;
-            }
-            else{
+                printf("No entry in parseTable[%s][%s]\n\n", topStack->GE->lexeme, elements[curTok->tok]);
+                
+                // TODO: REPORT ERROR
+                // reportError()
+
+                Set* synchronizingSet = initSynchronizingSet(topStack->GE);
+
+                while (synchronizingSet->contains[curTok->tok] == false) {
+                    free(curTok);
+                    curTok = getNextToken();
+                    curTok = createTokenCopy(curTok);
+                } 
+
+                popStack(st);
+                topStack = peekStack(st);
+                free(curTok);
+                curTok = getNextToken();
+                curTok = createTokenCopy(curTok); 
+
+                if (curTok == NULL) { 
+                    printf("Stream has ended but the stack is non-empty\n");
+                }
+            } else {
                 // Pop current nonTerminal, push Rule, update topStack
                 TreeNode* topStackAddr = topStack->nodeAddr;
                 popStack(st);
