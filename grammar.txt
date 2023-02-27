@@ -92,7 +92,7 @@
 <term> = <factor> <N5>
 <N5> = <op2> <factor> <N5> 
 <N5> = e 
-<factor> = BO <arithmeticExpr> BC 
+<factor> = BO <arithmeticOrBooleanExpr> BC 
 <factor> = NUM
 <factor> = RNUM
 <factor> = ID <N_11>
@@ -108,9 +108,7 @@
 <arrFactor> = NUM
 <arrFactor> = <boolConstt> 
 <arrFactor> = BO <arrExpr> BC 
-<element_index_with_expressions> = <sign> <N_10>
-<N_10> = <new_index>
-<N_10> = BO <arrExpr> BC 
+<element_index_with_expressions> = <sign> <arrExpr>
 <op1> = PLUS 
 <op1> = MINUS 
 <op2> = MUL 

@@ -712,13 +712,28 @@ void parse(){
                     return;
                 }
             } else {
-                // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
+                // printf("Top of Stack is Terminal: %s, Token is not the same terminal!\n\n", topStack->GE->lexeme);
                 printParseError(2,st->top,curTok);
 
                 // TODO: REPORT ERROR
                 // reportError();
+                // popStack(st);
+                // topStack = peekStack(st);
+                // curTok = getNextToken();
+                // curTok = createTokenCopy(curTok);
+
+                // if (curTok == NULL) { 
+                //     printParseError(1,st->top,curTok);
+                //     return;
+                // }
+
                 popStack(st);
-                topStack = peekStack(st);
+                while ((topStack = peekStack(st))) {
+                    if (topStack->GE->isTerminal) {
+                        break;
+                    }
+                    popStack(st);
+                }
             }
 
         } else {
@@ -774,12 +789,12 @@ void parse(){
 
 int main(int argc, char* argv[]) {
     // Setup 
-    // if (argc != 2) {
-    //     printf("Usage: ./a.out <filename>\n");
-    //     return 1;
-    // }
+    if (argc != 2) {
+        printf("Usage: ./a.out <filename>\n");
+        return 1;
+    }
 
-    FILE* fp = fopen("test_cases/t6_errors.txt", "r");
+    FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) {
         printf("File Not Found.\n");
         exit(1);
