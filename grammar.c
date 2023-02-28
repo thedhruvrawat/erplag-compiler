@@ -538,12 +538,12 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
     return;
 }
 
-void printParseTreeRec(TreeNode* node, FILE* fp) {
+void printParseTreeRec(TreeNode* node, FILE* fp, bool firstChild) {
     if (node == NULL) { 
         return;
     }
 
-    printParseTreeRec(node->child, fp);
+    printParseTreeRec(node->child, fp, true);
 
     if (node->isLeaf) {
         fprintf(fp, "%-25s%-10d%-15s", node->tok->lexeme, node->tok->linenum, elements[node->tok->tok]);
@@ -572,7 +572,14 @@ void printParseTreeRec(TreeNode* node, FILE* fp) {
 
     fprintf(fp, "\n");
 
-    printParseTreeRec(node->next, fp);
+    if (node->child != NULL) {
+        printParseTreeRec(node->child->next, fp, false);
+    }
+
+    if (!firstChild) {
+        printParseTreeRec(node->next, fp, false);
+    }
+
     return;
 }
 
@@ -584,7 +591,7 @@ void printParseTree(ParseTree* parseTree, char* outFile) {
         exit(1);
     }
 
-    printParseTreeRec(parseTree->root, fp);
+    printParseTreeRec(parseTree->root, fp, false);
     return;
 }
 //############################################
@@ -741,7 +748,7 @@ void parse(){
                 }
 
                 while ((topStack = peekStack(st))) {
-                    if (topStack->GE->tokenID == curTok->tok) {
+                    if (topStack->GE->tokenID ==- curTok->tok) {
                         break;
                     }
                     popStack(st);
