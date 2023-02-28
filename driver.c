@@ -1,14 +1,14 @@
 #include "lexer.h"
 
 int main(int argc, char* argv[]){
-    // if (argc != 2) {
-    //     printf("Usage: ./a.out <filename>\n");
-    //     return 1;
-    // }
+    if (argc != 2) {
+        printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
+        return 1;
+    }
 
-    FILE* fp = fopen("test_cases/t1.txt", "r");
+    FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) {
-        printf("File Not Found.\n");
+        printf(RED BOLD "File Not Found.\n" RESET);
         exit(1);
     }
 

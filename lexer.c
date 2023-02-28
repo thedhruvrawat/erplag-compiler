@@ -118,7 +118,7 @@ int setupLexer(FILE* fpointer){
     terminalTrie = setupTrie();
     populateTerminalTrie(terminalTrie);
     if(terminalTrie == NULL){
-        printf("Trie not set up");
+        printf(RED BOLD "Trie not set up" RESET);
     }
     bufferLoader(fp, true);
 
@@ -185,7 +185,7 @@ TOKEN* getNextToken(){
                 } else if(curr == EOF){
                     if(errno==0){
                         // Should we add this at all curr==EOF?
-                        printf("Input source code is syntactically correct\n");
+                        printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
                     }
                     return NULL;
                 } else {
@@ -657,7 +657,7 @@ TOKEN* getNextToken(){
                 // printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
                 // Prevent printing for unlosed comment
                 if(errno!=7){
-                    printf("Syntax error at line number %d: \"%s\"; ",LINE_NUM,invalidLex);
+                    printf(RED BOLD "Syntax error at line number %d: \"%s\"; " RESET,LINE_NUM,invalidLex);
                 }
 
                 state = 101;
@@ -665,38 +665,38 @@ TOKEN* getNextToken(){
 
                 switch(errno){
                     case 1:
-                        printf("Invalid character after '.'\n");
+                        printf(RED BOLD "Invalid character after '.'\n" RESET);
                         state = 0;
                         break;
                     case 2:
-                        printf("Invalid character after start of exponent\n");
+                        printf(RED BOLD "Invalid character after start of exponent\n" RESET);
                         break;
                     case 3:
-                        printf("Expected integer after exponent\n");
+                        printf(RED BOLD "Expected integer after exponent\n" RESET);
                         state = 0;
                         break;
                     case 4:
-                        printf("Invalid character after \"=\" \n");
+                        printf(RED BOLD "Invalid character after \"=\" \n" RESET);
                         state = 0;
                         break;
                     case 5:
-                        printf("Expected = after ! \n");
+                        printf(RED BOLD "Expected = after ! \n" RESET);
                         break;
                     case 6:
-                        printf("Invalid .\n");
+                        printf(RED BOLD "Invalid '.'\n" RESET);
                         break;
                     case 7:
-                        printf("Unclosed comment\n");
+                        printf(RED BOLD "Unclosed comment\n" RESET);
                         return NULL;   
                         break;
                     case 8:
-                        printf("Invalid character found\n");
+                        printf(RED BOLD "Invalid character found\n" RESET);
                         break;
                     case 9:
-                        printf("ID size exeeds limit\n");
+                        printf(RED BOLD "ID size exeeds limit\n" RESET);
                         break;
                     default:
-                        printf("Undetected Syntax Error\n");
+                        printf(RED BOLD "Undetected Syntax Error\n" RESET);
                         break;
                 }
                 

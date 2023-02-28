@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "structs.h"
 
 int removeComments(char *testCaseFile, char* outputFile) {
     FILE *input, *output;
     input = fopen(testCaseFile, "r");
     output = fopen(output, "w");
-    if(input == NULL) printf("Error in opening Test Case File\n");
-    if(output == NULL) printf("Error in opening Output File\n");
+    if(input == NULL) printf(RED BOLD "Error in opening Test Case File\n" RESET);
+    if(output == NULL) printf(RED BOLD "Error in opening Output File\n" RESET);
     int state = 0;
     char ch;
     while ((ch = fgetc(input))!=EOF) {        
@@ -54,6 +55,6 @@ int removeComments(char *testCaseFile, char* outputFile) {
             }
         }
     }
-    printf("File: %s cleaned of comments, stored in %s", testCaseFile, outputFile);
+    printf(GREEN BOLD "File: %s cleaned of comments, stored in %s" RESET, testCaseFile, outputFile);
     return 0;
 }

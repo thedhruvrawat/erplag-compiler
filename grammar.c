@@ -42,7 +42,7 @@ char** findNullableTerminals(ProductionTable *nullpdtable) {
 
 void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
     if(pdtable->ruleCount == pdtable->maxRules - 1) {
-        printf("Sorry, table is full\n");
+        printf(RED BOLD "Sorry, table is full\n" RESET);
         return;
     }
     pdtable->grammarrules[pdtable->ruleCount] = p;
@@ -97,13 +97,13 @@ void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
         case 1:
             {
                 // printf("Stream has ended but the stack is non-empty\n\n");
-                printf("Parse Error: Expected %s \n\n",top->GE->lexeme);
+                printf(RED BOLD "Parse Error: Expected %s \n\n" RESET,top->GE->lexeme);
                 break;
             }
         case 2:
         {
             // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
-            printf("Parse error: Expected %s \n\n",top->GE->lexeme);
+            printf(RED BOLD "Parse error: Expected %s \n\n" RESET,top->GE->lexeme);
         }
     }
 }
@@ -123,15 +123,15 @@ void printProductionTable(ProductionTable *pdtable) {
             ptr = ptr->next;
         }
         printf("\n");
-        printf("FIRST SET = ");
+        printf(CYAN BOLD "FIRST SET = ");
         for (int j = 0; j < base; ++j) {
             if (pdtable->grammarrules[i-1]->firstSet->contains[j]) {
                 printf("%s, ", elements[j]);
             }
         }
-        printf("\n");
+        printf("\n" RESET);
         if(pdtable->grammarrules[i-1]->firstSet->contains[EPSILON]) {
-            printf("FOLLOW SET = ");
+            printf(YELLOW BOLD "FOLLOW SET = ");
             // int currNT = pdtable->grammarrules[i-1]->LHS->tokenID;
             // printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
             for (int j = 0; j < base; ++j) {
@@ -139,7 +139,7 @@ void printProductionTable(ProductionTable *pdtable) {
                     printf("%s, ", elements[j]);
                 }
             }
-            printf("\n");
+            printf("\n" RESET);
         }
     }
     return;
@@ -184,15 +184,15 @@ bool findFirst(int tokenID) {
             computed[head->productionID] = true;
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
             if (flag) {
-                printf("LL(1) violated\n");
-                printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
+                printf(RED BOLD "LL(1) violated\n" RESET);
+                printf(RED BOLD "Rule Number %d with token %s\n" RESET, head->productionID, elements[tokenID + base]);
                 exit(1);
             }
         } else {
             bool flag = unionSet(firstSets[tokenID], firstSetsRules[head->productionID]);
             if (flag) { 
-                printf("LL(1) violated\n");
-                printf("Rule Number %d with token %s\n", head->productionID, elements[tokenID + base]);
+                printf(RED BOLD "LL(1) violated\n" RESET);
+                printf(RED BOLD "Rule Number %d with token %s\n" RESET, head->productionID, elements[tokenID + base]);
                 exit(1);
             }
         }
@@ -579,7 +579,7 @@ void printParseTree(ParseTree* parseTree, char* outFile) {
     FILE* fp = fopen(outFile, "w");
 
     if (fp == NULL) {
-        printf("Unable to open the file to write parseTree.\n");
+        printf(RED BOLD "Unable to open the file to write parseTree.\n" RESET);
         exit(1);
     }
 
@@ -639,7 +639,7 @@ void initParseStack(stack * st){
 TOKEN* createTokenCopy(TOKEN* curTok) {
     TOKEN* temp = malloc(sizeof(TOKEN));
     if(curTok == NULL){
-        printf("End of Stream of Tokens\n");
+        printf(GREEN BOLD "End of Stream of Tokens\n" RESET);
         return curTok;
     }
     memcpy(temp, curTok, sizeof(TOKEN));
@@ -662,7 +662,7 @@ Set* initSynchronizingSet(grammarElement* g) {
 // Parse Table Check
 void parse(){
 
-    printf("Into Parser\n");
+    printf(UNDERLINE BOLD "Into Parser\n" RESET);
 
     stack * st = initStack();
     initParseStack(st);
@@ -691,9 +691,9 @@ void parse(){
             if (topStack->GE->tokenID == curTok->tok) { // Match
                 // Pop Stack, Update topStack variable
                 printf("terminal\t");
-                printf("Top Stack: %-30s", topStack->GE->lexeme);
+                printf(GREEN BOLD "Top Stack: %-30s" RESET, topStack->GE->lexeme);
                 printf("Current Token: %-20s\t", curTok->lexeme);
-                printf("MATCHED\n");
+                printf(GREEN BOLD "MATCHED\n" RESET);
 
                 topStack->nodeAddr->tok = curTok;
 
@@ -747,7 +747,7 @@ void parse(){
             printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
             if(ruleID == -1){
-                printf("No entry in parseTable[%s][%s]\n\n", topStack->GE->lexeme, elements[curTok->tok]);
+                printf(YELLOW BOLD "No entry in parseTable[%s][%s]\n" RESET, topStack->GE->lexeme, elements[curTok->tok]);
                 
                 // TODO: REPORT ERROR
                 // reportError()
@@ -758,7 +758,7 @@ void parse(){
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
                     if (curTok == NULL) { 
-                        printf("Stream has ended but the stack is non-empty\n");
+                        printf(RED BOLD "Stream has ended but the stack is non-empty\n" RESET);
                         return;
                     }
                 } 
@@ -790,13 +790,13 @@ void parse(){
 int main(int argc, char* argv[]) {
     // Setup 
     if (argc != 2) {
-        printf("Usage: ./a.out <filename>\n");
+        printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
         return 1;
     }
 
     FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) {
-        printf("File Not Found.\n");
+        printf(RED BOLD "File Not Found.\n" RESET);
         exit(1);
     }
 
@@ -810,7 +810,7 @@ int main(int argc, char* argv[]) {
     char *grammarFile = "grammar.txt";
     FILE *f = fopen(grammarFile, "r");
     if(f==NULL)
-        printf("File error\n");
+        printf(RED BOLD "File error: Unable to open Grammar File\n" RESET);
     char *line = NULL;
     size_t len = 0;
     ssize_t read = 0; // number of bytes read in a line
