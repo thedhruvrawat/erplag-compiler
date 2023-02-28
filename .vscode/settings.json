@@ -13,7 +13,14 @@
         {
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/grammar",
-            "binaryArgs": ["  /home/vaibhav/Documents/Compiler/erplag-compiler/test_cases/t3.txt" ]
+            "binaryArgs": [
+                "  /home/vaibhav/Documents/Compiler/erplag-compiler/test_cases/t3.txt"
+            ]
+        },
+        {
+            "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
+            "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/grammar",
+            "binaryArgs": []
         }
     ]
 }

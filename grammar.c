@@ -104,6 +104,13 @@ void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
         {
             // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
             printf(RED BOLD "[Parser] Line: %d Error in the input as expected token is %s \n" RESET, tok->linenum, top->GE->lexeme);
+            break;
+        }
+        case 3:
+        {
+            // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
+            printf(RED BOLD "[Parser] Stream has ended but the stack is non-empty\n" RESET);
+            break;
         }
     }
 }
@@ -130,7 +137,7 @@ void printProductionTable(ProductionTable *pdtable) {
             }
         }
         printf("\n" RESET);
-        if(pdtable->grammarrules[i-1]->firstSet->contains[EPSILON]) {
+        // if(pdtable->grammarrules[i-1]->firstSet->contains[EPSILON]) {
             printf(YELLOW BOLD "FOLLOW SET = ");
             // int currNT = pdtable->grammarrules[i-1]->LHS->tokenID;
             // printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
@@ -140,7 +147,7 @@ void printProductionTable(ProductionTable *pdtable) {
                 }
             }
             printf("\n" RESET);
-        }
+        // }
     }
     return;
 }
@@ -391,9 +398,9 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
     // base is terminalLen + 2, which is the length of firstSets
     // epsilon at terminalLen
     for (int i = 0; i < nonTerminalLen; ++i) {
-        if (firstSets[i]->contains[EPSILON]) {
+        // if (firstSets[i]->contains[EPSILON]) {
             findFollow(i);
-        }   
+        // }   
     }
 
     /* // Printing FOLLOW Sets
@@ -414,7 +421,7 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
 
 void attachFollowToRule() {
     for (int i = 0; i < pdtable->ruleCount; ++i) {
-        if(pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
+        // if(pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
             int currNT = pdtable->grammarrules[i]->LHS->tokenID;
             /* printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
             for (int j = 0; j < base; ++j) {
@@ -424,7 +431,7 @@ void attachFollowToRule() {
             }
             printf("\n"); */
             pdtable->grammarrules[i]->followSet = followSets[currNT - base];
-        }
+        // }
     }
 }
 
@@ -602,7 +609,7 @@ void initParseStack(stack * st){
     grammarElement *dollar = (grammarElement*) malloc(sizeof(grammarElement));
     dollar->isTerminal = true;
     dollar->tokenID = DOLLAR;
-    strcpy(dollar->lexeme, "$");
+    strcpy(dollar->lexeme, "EOF");
     dollar->next = NULL; dollar->prev = NULL;
 
     pushStackGE(st, dollar, NULL);
@@ -663,7 +670,17 @@ Set* initSynchronizingSet(grammarElement* g) {
     if (followSets[g->tokenID - base] != NULL) {
         unionSet(res, followSets[g->tokenID - base]);
     }
-    res->contains[SEMCOL] = true;
+    res->contains[START] = true;
+    res->contains[END] = true;
+    res->contains[SEMICOL] = true;
+    res->contains[DECLARE] = true;
+    res->contains[DRIVERDEF] = true;
+    res->contains[DRIVERENDDEF] = true;
+    res->contains[DEF] = true;
+    res->contains[ENDDEF] = true;
+    res->contains[FOR] = true;
+    res->contains[SWITCH] = true;
+    res->contains[WHILE] = true;
 
     return res;
 }
@@ -680,8 +697,8 @@ void parse(){
     TOKEN* curTok = getNextToken();
     curTok = createTokenCopy(curTok);
 
-    if (curTok == NULL) { 
-        printParseError(1,st->top,curTok);
+    if (curTok->tok == DOLLAR) { 
+        printParseError(3,st->top,curTok);
         return;
     }
 
@@ -717,8 +734,8 @@ void parse(){
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok);
 
-                if (curTok == NULL && !isEmpty(st)) { 
-                    printParseError(1,st->top,curTok);
+                if (curTok->tok == DOLLAR && st->size > 1) { 
+                    printParseError(3,st->top,curTok);
                     return;
                 }
             } else {
@@ -741,14 +758,16 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    if (curTok == NULL  && !isEmpty(st)) { 
-                        printf(RED BOLD "Stream has ended but the stack is non-empty\n" RESET);
+                    if (curTok->tok == DOLLAR && st->size > 1) { 
+                        printParseError(3,st->top,curTok);
                         return;
                     }
                 }
 
                 while ((topStack = peekStack(st))) {
-                    if (topStack->GE->tokenID == curTok->tok) {
+                    if (topStack->GE->isTerminal && topStack->GE->tokenID == curTok->tok) {
+                        break;
+                    } else if (!topStack->GE->isTerminal && parseTable[topStack->GE->tokenID - base][curTok->tok] != -1) {
                         break;
                     }
                     popStack(st);
@@ -776,8 +795,8 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    if (curTok == NULL  && !isEmpty(st)) { 
-                        printf(RED BOLD "Stream has ended but the stack is non-empty\n" RESET);
+                    if (curTok->tok == DOLLAR && st->size > 1) { 
+                        printParseError(3,st->top,curTok);
                         return;
                     }
                 } 
@@ -787,9 +806,8 @@ void parse(){
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
 
-                if (curTok == NULL && !isEmpty(st)) { 
-                    // printf("Stream has ended but the stack is non-empty\n");
-                    printParseError(1,st->top,curTok);
+                if (curTok->tok == DOLLAR && st->size > 1) { 
+                    printParseError(3,st->top,curTok);
                     return;
                 }
             } else {
@@ -803,18 +821,23 @@ void parse(){
 
     }
 
+    if (curTok->tok != DOLLAR) {
+        printf(RED BOLD "The stack is empty but the stream has not ended.\n" RESET);
+    }
+
     free(st);
 }
 //##########################################
 
 int main(int argc, char* argv[]) {
     // Setup 
-    if (argc != 2) {
+    /* if (argc != 2) {
         printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
         return 1;
-    }
+    } */
 
-    FILE* fp = fopen(argv[1], "r");
+    // FILE* fp = fopen(argv[1], "r");
+    FILE* fp = fopen("test_cases/t6_errors.txt", "r");
     if (fp == NULL) {
         printf(RED BOLD "File Not Found.\n" RESET);
         exit(1);

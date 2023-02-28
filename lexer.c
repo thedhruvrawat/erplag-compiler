@@ -187,7 +187,7 @@ TOKEN* getNextToken(){
                         // Should we add this at all curr==EOF?
                         printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
                     }
-                    strcpy(token->lexeme, "$");
+                    strcpy(token->lexeme, "EOF");
                     token->linenum = LINE_NUM;
                     token->tok = EOF_SYMBOL;
                     return token;

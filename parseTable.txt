@@ -59,16 +59,10 @@ real                     5         REAL           ---------------     <type>    
 ;                        5         SEMICOL        ---------------     <ret>                                   Yes  
 start                    6         START          ---------------     <moduleDef>                             Yes  
 --------------------     ---       ----------     ---------------     <module>                                No   <moduleDef>         
-declare                  7         DECLARE        ---------------     <declareStmt>                           Yes  
---------------------     ---       ----------     ---------------     <statement>                             No   <declareStmt>       
-index                    7         ID             ---------------     <idList>                                Yes  
---------------------     ---       ----------     ---------------     <declareStmt>                           No   <idList>            
---------------------     ---       ----------     ---------------     <N3>                                    No   e                   
---------------------     ---       ----------     ---------------     <idList>                                No   <N3>                
-:                        7         COLON          ---------------     <declareStmt>                           Yes  
-integer                  7         INTEGER        ---------------     <dataType>                              Yes  
---------------------     ---       ----------     ---------------     <declareStmt>                           No   <dataType>          
-;                        7         SEMICOL        ---------------     <declareStmt>                           Yes  
+index                    7         ID             ---------------     <assignmentStmt>                        Yes  
+--------------------     ---       ----------     ---------------     <simpleStmt>                            No   <assignmentStmt>    
+--------------------     ---       ----------     ---------------     <assignmentStmt>                        No   <whichStmt>         
+--------------------     ---       ----------     ---------------     <statement>                             No   <simpleStmt>        
 --------------------     ---       ----------     ---------------     <statements>                            No   <statement>         
 --------------------     ---       ----------     ---------------     <moduleDef>                             No   <statements>        
 declare                  8         DECLARE        ---------------     <declareStmt>                           Yes  
@@ -229,7 +223,7 @@ end                      26        END            ---------------     <moduleDef
 --------------------     ---       ----------     ---------------     <program>                               No   <driverModule>      
 driver                   27        DRIVER         ---------------     <driverModule>                          Yes  
 program                  27        PROGRAM        ---------------     <driverModule>                          Yes  
->>>                      27        DRIVERENDDEF   ---------------     <driverModule>                          Yes  
+<<<                      27        DRIVERDEF      ---------------     <driverModule>                          Yes  
 start                    28        START          ---------------     <moduleDef>                             Yes  
 --------------------     ---       ----------     ---------------     <driverModule>                          No   <moduleDef>         
 declare                  29        DECLARE        ---------------     <declareStmt>                           Yes  
@@ -330,48 +324,23 @@ k                        34        ID             ---------------     <actual_pa
 --------------------     ---       ----------     ---------------     <N_12>                                  No   <actual_para_list>  
 --------------------     ---       ----------     ---------------     <N_11>                                  No   e                   
 --------------------     ---       ----------     ---------------     <actual_para_list>                      No   <N_11>              
---------------------     ---       ----------     ---------------     <N_12>                                  No   e                   
 --------------------     ---       ----------     ---------------     <actual_para_list>                      No   <N_12>              
-;                        34        SEMICOL        ---------------     <moduleReuseStmt>                       Yes  
+;                        35        SEMICOL        ---------------     <moduleReuseStmt>                       Yes  
 --------------------     ---       ----------     ---------------     <statement>                             No   <simpleStmt>        
 --------------------     ---       ----------     ---------------     <statements>                            No   <statement>         
 --------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
-s                        35        ID             ---------------     <assignmentStmt>                        Yes  
---------------------     ---       ----------     ---------------     <simpleStmt>                            No   <assignmentStmt>    
-:=                       35        ASSIGNOP       ---------------     <lvalueIDStmt>                          Yes  
---------------------     ---       ----------     ---------------     <whichStmt>                             No   <lvalueIDStmt>      
-s                        35        ID             ---------------     <factor>                                Yes  
---------------------     ---       ----------     ---------------     <term>                                  No   <factor>            
---------------------     ---       ----------     ---------------     <N_11>                                  No   e                   
---------------------     ---       ----------     ---------------     <factor>                                No   <N_11>              
---------------------     ---       ----------     ---------------     <arithmeticExpr>                        No   <term>              
---------------------     ---       ----------     ---------------     <N5>                                    No   e                   
---------------------     ---       ----------     ---------------     <term>                                  No   <N5>                
---------------------     ---       ----------     ---------------     <AnyTerm>                               No   <arithmeticExpr>    
---------------------     ---       ----------     ---------------     <N4>                                    No   e                   
---------------------     ---       ----------     ---------------     <arithmeticExpr>                        No   <N4>                
---------------------     ---       ----------     ---------------     <arithmeticOrBooleanExpr>               No   <AnyTerm>           
-<=                       35        LE             ---------------     <relationalOp>                          Yes  
---------------------     ---       ----------     ---------------     <N8>                                    No   <relationalOp>      
---------------------     ---       ----------     ---------------     <AnyTerm>                               No   <N8>                
-n                        35        ID             ---------------     <factor>                                Yes  
---------------------     ---       ----------     ---------------     <term>                                  No   <factor>            
---------------------     ---       ----------     ---------------     <N_11>                                  No   e                   
---------------------     ---       ----------     ---------------     <factor>                                No   <N_11>              
---------------------     ---       ----------     ---------------     <arithmeticExpr>                        No   <term>              
---------------------     ---       ----------     ---------------     <N5>                                    No   e                   
---------------------     ---       ----------     ---------------     <term>                                  No   <N5>                
---------------------     ---       ----------     ---------------     <N8>                                    No   <arithmeticExpr>    
---------------------     ---       ----------     ---------------     <N4>                                    No   e                   
---------------------     ---       ----------     ---------------     <arithmeticExpr>                        No   <N4>                
---------------------     ---       ----------     ---------------     <expression>                            No   <arithmeticOrBooleanExpr>
---------------------     ---       ----------     ---------------     <arithmeticOrBooleanExpr>               No   <N7>                
---------------------     ---       ----------     ---------------     <lvalueIDStmt>                          No   <expression>        
-:=                       35        ASSIGNOP       ---------------     <lvalueIDStmt>                          Yes  
---------------------     ---       ----------     ---------------     <assignmentStmt>                        No   <whichStmt>         
---------------------     ---       ----------     ---------------     <statement>                             No   <simpleStmt>        
+print                    36        PRINT          ---------------     <ioStmt>                                Yes  
+--------------------     ---       ----------     ---------------     <statement>                             No   <ioStmt>            
+(                        36        BO             ---------------     <ioStmt>                                Yes  
+s                        36        ID             ---------------     <var_print>                             Yes  
+--------------------     ---       ----------     ---------------     <ioStmt>                                No   <var_print>         
+--------------------     ---       ----------     ---------------     <P1>                                    No   e                   
+--------------------     ---       ----------     ---------------     <var_print>                             No   <P1>                
+)                        36        BC             ---------------     <ioStmt>                                Yes  
+print                    36        PRINT          ---------------     <ioStmt>                                Yes  
 --------------------     ---       ----------     ---------------     <statements>                            No   <statement>         
 --------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
+--------------------     ---       ----------     ---------------     <statements>                            No   e                   
 --------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
 end                      37        END            ---------------     <moduleDef>                             Yes  
 <<                       44        DEF            ---------------     <module>                                Yes  
@@ -511,9 +480,26 @@ i                        53        ID             ---------------     <arrFactor
 ]                        53        SQBC           ---------------     <lvalueARRStmt>                         Yes  
 :=                       53        ASSIGNOP       ---------------     <lvalueARRStmt>                         Yes  
 --------------------     ---       ----------     ---------------     <lvalueARRStmt>                         No   <expression>        
-;                        54        SEMICOL        ---------------     <lvalueARRStmt>                         Yes  
+;                        53        SEMICOL        ---------------     <lvalueARRStmt>                         Yes  
 --------------------     ---       ----------     ---------------     <assignmentStmt>                        No   <whichStmt>         
 --------------------     ---       ----------     ---------------     <statement>                             No   <simpleStmt>        
+--------------------     ---       ----------     ---------------     <statements>                            No   <statement>         
+--------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
+print                    54        PRINT          ---------------     <ioStmt>                                Yes  
+--------------------     ---       ----------     ---------------     <statement>                             No   <ioStmt>            
+(                        54        BO             ---------------     <ioStmt>                                Yes  
+list                     54        ID             ---------------     <var_print>                             Yes  
+--------------------     ---       ----------     ---------------     <ioStmt>                                No   <var_print>         
+[                        54        SQBO           ---------------     <P1>                                    Yes  
+--------------------     ---       ----------     ---------------     <var_print>                             No   <P1>                
+--------------------     ---       ----------     ---------------     <sign>                                  No   e                   
+--------------------     ---       ----------     ---------------     <index_arr>                             No   <sign>              
+--------------------     ---       ----------     ---------------     <P1>                                    No   <index_arr>         
+P                        54        ID             ---------------     <new_index>                             Yes  
+--------------------     ---       ----------     ---------------     <index_arr>                             No   <new_index>         
+[                        54        SQBO           ---------------     <P1>                                    Yes  
+print                    54        PRINT          ---------------     <ioStmt>                                Yes  
+;                        54        SEMICOL        ---------------     <ioStmt>                                Yes  
 --------------------     ---       ----------     ---------------     <statements>                            No   <statement>         
 --------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
 i                        55        ID             ---------------     <assignmentStmt>                        Yes  
@@ -559,5 +545,4 @@ end                      57        END            ---------------     <iterative
 --------------------     ---       ----------     ---------------     <statements>                            No   <statements>        
 end                      58        END            ---------------     <moduleDef>                             Yes  
 --------------------     ---       ----------     ---------------     <program>                               No   <otherModules>      
---------------------     ---       ----------     ---------------     <otherModules>                          No   e                   
 --------------------     ---       ----------     ---------------     <otherModules>                          No   <otherModules>      
