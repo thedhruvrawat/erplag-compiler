@@ -125,6 +125,32 @@ int setupLexer(FILE* fpointer){
     return 0;
 }
 
+void cleanLexer() {
+    memset(buf, '\0', sizeof(buf));
+    // Line Number
+    LINE_NUM = 1;
+
+    // Pointers for the buffer (DFA)
+    begin = 0;
+    forward = 0;
+    state = 0;
+    errno = 0;
+
+    terminalTrie = NULL;
+
+    // Buffer to store tokens
+    // free(token);
+    // TOKEN tokenBuffer[TOK_BUF_SIZE];
+
+    //Program file pointer
+    // fclose(fp);
+
+    count = 0;
+    lastBufLoad = 0;
+    twice = false;
+    return;
+}
+
 
 /**
  * Creates the token from the file;

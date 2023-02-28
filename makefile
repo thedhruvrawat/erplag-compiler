@@ -1,6 +1,10 @@
 # grammarNew: grammar.o trie.o stackADT.o lexer.o
 # 	gcc grammar.o trie.o stackADT.o lexer.o -g -o grammarNew
 
+
+driver: driver.o grammar.o lexer.o trie.o stackADT.o structs.o
+	gcc driver.o grammar.o trie.o lexer.o structs.o stackADT.o -g -o stage1exe
+
 grammar: grammar.o lexer.o trie.o stackADT.o
 	gcc grammar.o trie.o lexer.o stackADT.o -g -o grammar
 
@@ -19,8 +23,8 @@ stackADT.o: stackADT.c
 grammar.o: grammar.c grammar.h
 	gcc -c -g grammar.c
 
-lexer: driver.o lexer.o trie.o structs.o
-	gcc -g driver.o lexer.o trie.o structs.o -o lexer 
+lexer: lexer.o trie.o structs.o
+	gcc -g lexer.o trie.o structs.o -o lexer 
 
 driver.o: driver.c
 	gcc -c -g driver.c

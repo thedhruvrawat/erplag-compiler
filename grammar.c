@@ -21,6 +21,20 @@ int base;
 int EPSILON;
 int DOLLAR;
 
+void cleanParser() {
+    memset(parseTable, '\0', sizeof(parseTable));
+    firstSets = NULL;
+    followSets = NULL;
+    elements = NULL;
+    computed = NULL;
+    LHSLoc = NULL;
+    RHSLoc = NULL;
+    base = 0;
+    pdtable = NULL;
+    nullpdtable = NULL;
+    grammarTrie = NULL;
+    return;
+}
 
 ProductionTable *initializeProductionTable(ProductionTable *pdtable, int maxRules) {
     pdtable = malloc(sizeof(ProductionTable));
@@ -848,15 +862,15 @@ void parse(){
 }
 //##########################################
 
-int main(int argc, char* argv[]) {
+void parserMain(char *userSourceCode, char* parseTreeOutput) {
     // Setup 
-    if (argc != 2) {
-        printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
-        return 1;
-    }
+    // if (argc != 2) {
+    //     printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
+    //     return 1;
+    // }
 
     // FILE* fp = fopen(argv[1], "r");
-    FILE* fp = fopen(argv[1], "r");
+    FILE* fp = fopen(userSourceCode, "r");
     if (fp == NULL) {
         printf(RED BOLD "File Not Found.\n" RESET);
         exit(1);
@@ -962,13 +976,13 @@ int main(int argc, char* argv[]) {
     
     attachFollowToRule();
 
-    printProductionTable(pdtable);
+    // printProductionTable(pdtable);
 
     computeParseTable();
 
     initParseTree();
     parse();
-    printParseTree(parseTree, "parseTable.txt");
+    printParseTree(parseTree, parseTreeOutput);
     
 
     // #####################################################
@@ -996,6 +1010,6 @@ int main(int argc, char* argv[]) {
     
     fclose(f);
     fclose(fp);
-    return 0;
+    return;
 }
 

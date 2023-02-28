@@ -1,4 +1,6 @@
 #include<stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // ANSI Colors used 
 #define RED   		"\033[0;31m"

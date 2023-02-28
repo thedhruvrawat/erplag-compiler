@@ -3,3 +3,4 @@
 
 int setupLexer(FILE* fp);
 TOKEN* getNextToken();
+void cleanLexer();
