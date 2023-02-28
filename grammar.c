@@ -748,7 +748,7 @@ void parse(){
                 }
 
                 while ((topStack = peekStack(st))) {
-                    if (topStack->GE->tokenID ==- curTok->tok) {
+                    if (topStack->GE->tokenID == curTok->tok) {
                         break;
                     }
                     popStack(st);

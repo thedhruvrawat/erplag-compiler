@@ -83,8 +83,8 @@
 <N7> = <logicalOp> <AnyTerm> <N7>
 <N7> = e 
 <AnyTerm> = <arithmeticExpr> <N8> 
-<AnyTerm> = <boolConstt> <N8>
-<N8> = <relationalOp> <arithmeticExpr> <N8> 
+<AnyTerm> = <boolConstt>
+<N8> = <relationalOp> <arithmeticExpr>
 <N8> = e 
 <arithmeticExpr> = <term> <N4>
 <N4> = <op1> <term> <N4>
