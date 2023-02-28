@@ -260,6 +260,7 @@ TOKEN* getNextToken(){
                 state = 0;
                 token = createToken();
                 token->tok = NUM;
+                setLexeme();
                 forward--;
                 tokenCreated = true;;
                 break;

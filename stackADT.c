@@ -65,3 +65,11 @@ bool isEmpty(stack * st){
     else
         return true;
 }
+
+void destroyStack(stack* st) {
+    while (!isEmpty(st)) {
+        popStack(st);
+    }
+
+    free(st);
+}

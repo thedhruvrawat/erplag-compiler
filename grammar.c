@@ -92,6 +92,12 @@ void differenceSet(Set* a, Set* b) {
     return;
 }
 
+void destroySet(Set* s) {
+    free(s->contains);
+    free(s);
+    return;
+}
+
 void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
     switch(p_errno){
         case 1:
@@ -137,7 +143,7 @@ void printProductionTable(ProductionTable *pdtable) {
             }
         }
         printf("\n" RESET);
-        // if(pdtable->grammarrules[i-1]->firstSet->contains[EPSILON]) {
+        if(pdtable->grammarrules[i-1]->firstSet->contains[EPSILON]) {
             printf(YELLOW BOLD "FOLLOW SET = ");
             // int currNT = pdtable->grammarrules[i-1]->LHS->tokenID;
             // printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
@@ -147,7 +153,7 @@ void printProductionTable(ProductionTable *pdtable) {
                 }
             }
             printf("\n" RESET);
-        // }
+        }
     }
     return;
 }
@@ -398,9 +404,9 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
     // base is terminalLen + 2, which is the length of firstSets
     // epsilon at terminalLen
     for (int i = 0; i < nonTerminalLen; ++i) {
-        // if (firstSets[i]->contains[EPSILON]) {
+        if (firstSets[i]->contains[EPSILON]) {
             findFollow(i);
-        // }   
+        }   
     }
 
     /* // Printing FOLLOW Sets
@@ -421,7 +427,7 @@ void computeFollowSet(int nonTerminalLen, int terminalLen) {
 
 void attachFollowToRule() {
     for (int i = 0; i < pdtable->ruleCount; ++i) {
-        // if(pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
+        if(pdtable->grammarrules[i]->firstSet->contains[EPSILON]) {
             int currNT = pdtable->grammarrules[i]->LHS->tokenID;
             /* printf("FOLLOW(LHS(%d) = %s): ", currNT, pdtable->grammarrules[i]->LHS->lexeme);
             for (int j = 0; j < base; ++j) {
@@ -431,7 +437,7 @@ void attachFollowToRule() {
             }
             printf("\n"); */
             pdtable->grammarrules[i]->followSet = followSets[currNT - base];
-        // }
+        }
     }
 }
 
@@ -665,7 +671,6 @@ TOKEN* createTokenCopy(TOKEN* curTok) {
 
 Set* initSynchronizingSet(grammarElement* g) {
     Set* res = initSet(base);
-    int SEMCOL = searchGrammar(grammarTrie, "SEMICOL");
     unionSet(res, firstSets[g->tokenID - base]);
     if (followSets[g->tokenID - base] != NULL) {
         unionSet(res, followSets[g->tokenID - base]);
@@ -699,6 +704,8 @@ void parse(){
 
     if (curTok->tok == DOLLAR) { 
         printParseError(3,st->top,curTok);
+
+        destroyStack(st);
         return;
     }
 
@@ -734,10 +741,12 @@ void parse(){
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok);
 
-                if (curTok->tok == DOLLAR && st->size > 1) { 
-                    printParseError(3,st->top,curTok);
-                    return;
-                }
+                // if (curTok->tok == DOLLAR && st->size > 1) { 
+                //     printParseError(3,st->top,curTok);
+
+                //     destroyStack(st);
+                //     return;
+                // }
             } else {
                 // printf("Top of Stack is Terminal: %s, Token is not the same terminal!\n\n", topStack->GE->lexeme);
                 printParseError(2,st->top,curTok);
@@ -758,10 +767,12 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    if (curTok->tok == DOLLAR && st->size > 1) { 
-                        printParseError(3,st->top,curTok);
-                        return;
-                    }
+                    // if (curTok->tok == DOLLAR && st->size > 1) { 
+                    //     printParseError(3,st->top,curTok);
+
+                    //     destroyStack(st);
+                    //     return;
+                    // }
                 }
 
                 while ((topStack = peekStack(st))) {
@@ -795,21 +806,28 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    if (curTok->tok == DOLLAR && st->size > 1) { 
-                        printParseError(3,st->top,curTok);
-                        return;
-                    }
+                    // if (curTok->tok == DOLLAR && st->size > 1) { 
+                    //     printParseError(3,st->top,curTok);
+
+                    //     destroyStack(st);
+                    //     destroySet(synchronizingSet);
+                    //     return;
+                    // }
                 } 
 
+                destroySet(synchronizingSet);
                 popStack(st);
                 topStack = peekStack(st);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
 
-                if (curTok->tok == DOLLAR && st->size > 1) { 
-                    printParseError(3,st->top,curTok);
-                    return;
-                }
+                // if (curTok->tok == DOLLAR && st->size > 1) { 
+                //     printParseError(3,st->top,curTok);
+
+                //     destroyStack(st);
+                //     return;
+                // }
+
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
                 TreeNode* topStackAddr = topStack->nodeAddr;
@@ -825,19 +843,20 @@ void parse(){
         printf(RED BOLD "The stack is empty but the stream has not ended.\n" RESET);
     }
 
-    free(st);
+    destroyStack(st);
+    return;
 }
 //##########################################
 
 int main(int argc, char* argv[]) {
     // Setup 
-    /* if (argc != 2) {
+    if (argc != 2) {
         printf(YELLOW BOLD "Usage: ./a.out <filename>\n" RESET);
         return 1;
-    } */
+    }
 
     // FILE* fp = fopen(argv[1], "r");
-    FILE* fp = fopen("test_cases/t6_errors.txt", "r");
+    FILE* fp = fopen(argv[1], "r");
     if (fp == NULL) {
         printf(RED BOLD "File Not Found.\n" RESET);
         exit(1);
