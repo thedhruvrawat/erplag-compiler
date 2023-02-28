@@ -527,6 +527,7 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
         currNode->tokenDerivedFrom = parent->tokenID;
         currNode->isLeaf = g->isTerminal;
         currNode->next = head;
+        currNode->child = NULL;
         head = currNode;
         pushStackGE(st, g, currNode);
         g = g->prev;
@@ -639,6 +640,7 @@ void initParseStack(stack * st){
 TOKEN* createTokenCopy(TOKEN* curTok) {
     TOKEN* temp = malloc(sizeof(TOKEN));
     if(curTok == NULL){
+        free(temp);
         printf(GREEN BOLD "End of Stream of Tokens\n" RESET);
         return curTok;
     }
@@ -692,9 +694,10 @@ void parse(){
                 // Pop Stack, Update topStack variable
                 printf("terminal\t");
                 printf(GREEN BOLD "Top Stack: %-30s" RESET, topStack->GE->lexeme);
-                printf("Current Token: %-20s\t", curTok->lexeme);
+                printf(GREEN BOLD "Current Token: %-20s\t" RESET, curTok->lexeme);
                 printf(GREEN BOLD "MATCHED\n" RESET);
 
+                if (curTok->tok == DOLLAR) { break; }
                 topStack->nodeAddr->tok = curTok;
 
                 popStack(st);
@@ -707,7 +710,7 @@ void parse(){
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok);
 
-                if (curTok == NULL) { 
+                if (curTok == NULL && !isEmpty(st)) { 
                     printParseError(1,st->top,curTok);
                     return;
                 }
@@ -727,9 +730,18 @@ void parse(){
                 //     return;
                 // }
 
-                popStack(st);
+                while (curTok->tok != SEMICOL && curTok->tok != START && curTok->tok != END) {
+                    free(curTok);
+                    curTok = getNextToken();
+                    curTok = createTokenCopy(curTok);
+                    if (curTok == NULL  && !isEmpty(st)) { 
+                        printf(RED BOLD "Stream has ended but the stack is non-empty\n" RESET);
+                        return;
+                    }
+                }
+
                 while ((topStack = peekStack(st))) {
-                    if (topStack->GE->isTerminal) {
+                    if (topStack->GE->tokenID == curTok->tok) {
                         break;
                     }
                     popStack(st);
@@ -757,7 +769,7 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    if (curTok == NULL) { 
+                    if (curTok == NULL  && !isEmpty(st)) { 
                         printf(RED BOLD "Stream has ended but the stack is non-empty\n" RESET);
                         return;
                     }
@@ -768,7 +780,7 @@ void parse(){
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
 
-                if (curTok == NULL) { 
+                if (curTok == NULL && !isEmpty(st)) { 
                     // printf("Stream has ended but the stack is non-empty\n");
                     printParseError(1,st->top,curTok);
                     return;
@@ -783,7 +795,8 @@ void parse(){
         }
 
     }
-    
+
+    free(st);
 }
 //##########################################
 

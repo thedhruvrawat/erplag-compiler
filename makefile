@@ -2,6 +2,9 @@
 # 	gcc grammar.o trie.o stackADT.o lexer.o -g -o grammarNew
 
 grammar: grammar.o lexer.o trie.o stackADT.o
+	gcc grammar.o trie.o lexer.o stackADT.o -g -o grammar
+
+sanitized: grammar.o lexer.o trie.o stackADT.o
 	gcc -fsanitize=address grammar.o trie.o lexer.o stackADT.o -g -o grammar
 
 # set.o: set.c

@@ -28,7 +28,8 @@ typedef enum {
     COLON, RANGEOP, SEMICOL, COMMA, ASSIGNOP, 
     SQBO, SQBC, BO, BC, COMMENTMARK, 
     // Boolean Operators
-    TRUE, FALSE, AND, OR
+    TRUE, FALSE, AND, OR,
+    EPS, EOF_SYMBOL
 } TOK_TYPE;
 
 extern const char* token_types[];
