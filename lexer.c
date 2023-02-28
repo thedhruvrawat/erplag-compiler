@@ -660,7 +660,7 @@ TOKEN* getNextToken(){
                 // printf("forward : %c\t", buf[forward % (2 * BUF_SIZE)]);
                 // Prevent printing for unlosed comment
                 if(errno!=7){
-                    printf(RED BOLD "Syntax error at line number %d: \"%s\"; " RESET,LINE_NUM,invalidLex);
+                    printf(RED BOLD "[Lexer] Line: %d Error in the input as \"%s\"; " RESET, LINE_NUM, invalidLex);
                 }
 
                 state = 101;

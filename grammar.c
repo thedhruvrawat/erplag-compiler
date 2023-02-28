@@ -97,13 +97,13 @@ void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
         case 1:
             {
                 // printf("Stream has ended but the stack is non-empty\n\n");
-                printf(RED BOLD "Parse Error: Expected %s \n\n" RESET,top->GE->lexeme);
+                printf(RED BOLD "[Parser] Line: %d Error in the input as expected token is %s \n" RESET, tok->linenum, top->GE->lexeme);
                 break;
             }
         case 2:
         {
             // printf("Top of Stack is Terminal: %s, Token is not!\n\n", topStack->GE->lexeme);
-            printf(RED BOLD "Parse error: Expected %s \n\n" RESET,top->GE->lexeme);
+            printf(RED BOLD "[Parser] Line: %d Error in the input as expected token is %s \n" RESET, tok->linenum, top->GE->lexeme);
         }
     }
 }
@@ -699,10 +699,10 @@ void parse(){
             
             if (topStack->GE->tokenID == curTok->tok) { // Match
                 // Pop Stack, Update topStack variable
-                printf("terminal\t");
-                printf(GREEN BOLD "Top Stack: %-30s" RESET, topStack->GE->lexeme);
-                printf(GREEN BOLD "Current Token: %-20s\t" RESET, curTok->lexeme);
-                printf(GREEN BOLD "MATCHED\n" RESET);
+                // printf("terminal\t");
+                // printf(GREEN BOLD "Top Stack: %-30s" RESET, topStack->GE->lexeme);
+                // printf(GREEN BOLD "Current Token: %-20s\t" RESET, curTok->lexeme);
+                // printf(GREEN BOLD "MATCHED\n" RESET);
 
                 if (curTok->tok == DOLLAR) { break; }
                 topStack->nodeAddr->tok = curTok;
@@ -756,17 +756,17 @@ void parse(){
             }
 
         } else {
-            printf("nonTerminal\t");
-            printf("Top Stack: %-30s", topStack->GE->lexeme);
-            printf("Current Token: %-20s\n", curTok->lexeme);
+            // printf("nonTerminal\t");
+            // printf("Top Stack: %-30s", topStack->GE->lexeme);
+            // printf("Current Token: %-20s\n", curTok->lexeme);
             // Use curToken, parseTable to pop current Element and Push Rule
             int nonTerminalID = topStack->GE->tokenID;
             int terminalID = curTok->tok;
             int ruleID = parseTable[nonTerminalID - base][terminalID];
-            printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
+            // printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
             if(ruleID == -1){
-                printf(YELLOW BOLD "No entry in parseTable[%s][%s]\n" RESET, topStack->GE->lexeme, elements[curTok->tok]);
+                printf(RED BOLD "[Parser] Line: %d Error in the input as No entry found in parseTable[%s][%s]\n" RESET, curTok->linenum, topStack->GE->lexeme, elements[curTok->tok]);
                 
                 // TODO: REPORT ERROR
                 // reportError()
