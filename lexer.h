@@ -4,3 +4,5 @@
 int setupLexer(FILE* fp);
 TOKEN* getNextToken();
 void cleanLexer();
+void initbuf(void);
+void setBufferSize(int newBufSize);

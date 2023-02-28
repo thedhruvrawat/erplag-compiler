@@ -97,6 +97,7 @@ int main(int argc, char* argv[]){
     char *treeOutput = argv[2];
 
     int buf_size = atoi(argv[3]);
+    setBufferSize(buf_size); // Sets BufferSize to the CLI argument
 
     printf("---------------------- COMPILER DETAILS GROUP 2 ----------------------\n");
     printf("Team Members: Dhruv, Vaibhav, Shreyas, Swastik, Chirag\n");

@@ -1,12 +1,23 @@
 #include "lexer.h"
 
 // Buffers
-#define BUF_SIZE 512
+int BUF_SIZE = 512;
+// Sets value of BUF_SIZE
+void setBufferSize(int newBufSize){
+    BUF_SIZE = newBufSize;
+}
+
 #define TOK_BUF_SIZE 512
 #define MAX_LEXEME_SIZE 20
 
-// make it on heap
-static char buf[BUF_SIZE * 2];
+// made it on heap
+char * buf;
+void initbuf(void){
+    buf = malloc(sizeof(char) * (BUF_SIZE * 2));
+    memset(buf, 0, BUF_SIZE * 2);
+    return;
+}
+// memory free at the EOF State
 
 // Line Number
 static unsigned int LINE_NUM = 1;
@@ -120,8 +131,8 @@ int setupLexer(FILE* fpointer){
     if(terminalTrie == NULL){
         printf(RED BOLD "Trie not set up" RESET);
     }
+    initbuf(); // Malloc memory to Buffer based on BUF_SIZE value
     bufferLoader(fp, true);
-
     return 0;
 }
 
@@ -216,6 +227,8 @@ TOKEN* getNextToken(){
                     strcpy(token->lexeme, "EOF");
                     token->linenum = LINE_NUM;
                     token->tok = EOF_SYMBOL;
+                    // Clear buf malloced memory
+                    free(buf);
                     return token;
                 } else {
                     state = 100;
