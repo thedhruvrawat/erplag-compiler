@@ -6,7 +6,7 @@ start
     **   array once inside function to check if it is reveived correctly**
     print(A);
 
-    declare lo: integer;
+    declare l o: integer;  ** ERROR **
     declare hi: integer;
     declare mid: integer;
     declare flag : boolean;
@@ -14,7 +14,7 @@ start
     declare b : integer;
     b := 1;
 
-    index := -(b);
+    index == -(b); ** ERROR **
 
     lo := 1;
     hi := m;
@@ -25,14 +25,14 @@ start
         
         flag := x == A[mid];
         print(flag);
-        switch(flag)
+        switch (flag)
         start
             case true : 
                 index := mid;
                 lo := hi+1;
                         break;
             case false :
-                break;
+                br eak; ** ERROR **
         end
 
         flag := x < A[mid];
@@ -62,7 +62,7 @@ start
     declare m: integer;     **size of array**
     m := 5;
     **get_value(m);**
-	declare A: array [1..IF] of integer;
+	declare A: array [1..while] of integer; ** ERROR **
 
     **insert array in sorted order (I am not gonna write mergesort in ERPLAG, it is not as easy as C++)**
     ** Refer: https://github.com/vismit2000/compCode-II/blob/master/CompCode%20-%20I.docx for simple code of merge sort in CPP**
