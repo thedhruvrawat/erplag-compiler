@@ -88,7 +88,6 @@ typedef struct grammarElement {
 typedef struct ProductionRule {
     int productionID;
     int RHScount;
-    bool isEpsilon;
     grammarElement *LHS; // pointer to LHS of a rule
     grammarElement *RHSHead, *RHSTail; // pointer to first element in RHS
     Set *firstSet, *followSet;

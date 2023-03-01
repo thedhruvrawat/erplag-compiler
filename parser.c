@@ -820,14 +820,6 @@ void parse(){
                 free(curTok);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
-
-                // if (curTok->tok == DOLLAR && st->size > 1) { 
-                //     printParseError(3,st->top,curTok);
-
-                //     destroyStack(st);
-                //     return;
-                // }
-
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
                 TreeNode* topStackAddr = topStack->nodeAddr;
@@ -998,7 +990,6 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
         if(line[read-1]=='\n') line[read-1] = '\0';
         // printf("%s\n", line);
         ProductionRule *p = (ProductionRule*)malloc(sizeof(ProductionRule));
-        p->isEpsilon = false;
         char temp[read];
         strcpy(temp, line);
         char *tok = strtok(temp, " ");
@@ -1025,8 +1016,6 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
         while(tok) {
             count++;
             if(count>2) {
-                if(strcmp(tok, "e")==0)
-                    p->isEpsilon = true;
                 grammarElement *newElement = (grammarElement *)malloc(sizeof(grammarElement)); //allocate memory for a new element
                 newElement->next = NULL;
                 newElement->prev = NULL;
