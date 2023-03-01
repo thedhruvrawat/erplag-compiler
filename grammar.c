@@ -6,7 +6,6 @@ Trie *grammarTrie;
 #define NULL_RULES 50       //expected number of nullable rules
 
 ProductionTable *pdtable;           //stores all rules
-ProductionTable *nullpdtable;       //stores only NULLABLE rules
 
 int parseTable[TOTAL_RULES][TOTAL_RULES]; 
 
@@ -21,37 +20,12 @@ int base;
 int EPSILON;
 int DOLLAR;
 
-void cleanParser() {
-    memset(parseTable, '\0', sizeof(parseTable));
-    firstSets = NULL;
-    followSets = NULL;
-    elements = NULL;
-    computed = NULL;
-    LHSLoc = NULL;
-    RHSLoc = NULL;
-    base = 0;
-    pdtable = NULL;
-    nullpdtable = NULL;
-    grammarTrie = NULL;
-    return;
-}
-
 ProductionTable *initializeProductionTable(ProductionTable *pdtable, int maxRules) {
     pdtable = malloc(sizeof(ProductionTable));
     pdtable->maxRules = maxRules;
     pdtable->ruleCount = 0;
-    pdtable->grammarrules = malloc(maxRules * (sizeof(ProductionRule)));
+    pdtable->grammarrules = malloc(maxRules * (sizeof(ProductionRule*)));
     return pdtable;
-}
-
-char** findNullableTerminals(ProductionTable *nullpdtable) {
-    int sz = nullpdtable->ruleCount;
-    char **str = (char**)malloc(sz*sizeof(char*));
-    for (int i = 0; i < sz; i++) {
-        str[i] = (char *)malloc(100 * sizeof(char));
-        strcpy(str[i], nullpdtable->grammarrules[i]->LHS->lexeme);
-    }
-    return str;
 }
 
 void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
@@ -860,6 +834,97 @@ void parse(){
     destroyStack(st);
     return;
 }
+
+void freePDTable(ProductionTable* pdtable) {
+    int cnt = pdtable->ruleCount;
+    for (int i = 0; i < cnt; ++i) {
+        free(pdtable->grammarrules[i]->LHS);
+        grammarElement* head = pdtable->grammarrules[i]->RHSHead;
+        while (head != NULL) {
+            grammarElement* temp = head->next;
+            free(head);
+            head = temp;
+        }
+        destroySet(pdtable->grammarrules[i]->firstSet);
+        free(pdtable->grammarrules[i]);
+    }
+    free(pdtable->grammarrules);
+    free(firstSetsRules);
+    free(pdtable);
+    return;
+}
+
+void freeFirstAndFollowSets(int nonTerminalLen) {
+    for (int i = 0; i < nonTerminalLen; ++i) {
+        destroySet(firstSets[i]);
+        if (followSets[i] != NULL) {
+            destroySet(followSets[i]);
+        } 
+    }
+
+    free(firstSets);
+    free(followSets);
+}
+
+void freeElements(char** elements, int count) {
+    for (int i = 0; i < count; ++i) {
+        free(elements[i]);
+    }
+
+    free(elements);
+    return;
+}
+
+void freeRuleLocs(int nonTerminalLen) {
+    for (int i = 0; i < nonTerminalLen; ++i) {
+        listElement* LHSHead = LHSLoc[i];
+        while (LHSHead != NULL) {
+            listElement* temp = LHSHead->next;
+            free(LHSHead);
+            LHSHead = temp;
+        }
+        listElement* RHSHead = RHSLoc[i];
+        while (RHSHead != NULL) {
+            listElement* temp = RHSHead->next;
+            free(RHSHead);
+            RHSHead = temp;
+        }
+    }
+
+    free(LHSLoc);
+    free(RHSLoc);
+}
+
+void cleanParser() {
+    int nonTerminalLen = grammarTrie->count - base;
+    int trSize = grammarTrie->count;
+    // freeParseTree(parseTree);
+    freePDTable(pdtable);
+    pdtable = NULL;
+    firstSetsRules = NULL;
+
+    freeTrie(grammarTrie);
+    grammarTrie = NULL;
+
+    freeFirstAndFollowSets(nonTerminalLen);
+    firstSets = NULL;
+    followSets = NULL;
+
+    freeElements(elements, trSize);
+    elements = NULL;
+
+    free(computed);
+    computed = NULL;
+
+    freeRuleLocs(nonTerminalLen);
+    LHSLoc = NULL;
+    RHSLoc = NULL;
+
+    base = 0;
+    return;
+}
+
+
 //##########################################
 
 void parserMain(char *userSourceCode, char* parseTreeOutput) {
@@ -882,7 +947,6 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
     populateGrammarTrie(grammarTrie);
     int terminalTrieLen = grammarTrie->count; // it only contains terminals right now
     pdtable = initializeProductionTable(pdtable, TOTAL_RULES);
-    nullpdtable = initializeProductionTable(nullpdtable, NULL_RULES);
     char *grammarFile = "grammar.txt";
     FILE *f = fopen(grammarFile, "r");
     if(f==NULL)
@@ -964,18 +1028,11 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
         p->productionID = productionRuleID; // set unique ID to each rule
         insertRuleInProductionTable(pdtable, p);
         productionRuleID++;
-        if (p->isEpsilon)
-            insertRuleInProductionTable(nullpdtable, p);
-        // printf("Done rule\n");
     }
-    // printProductionTable(pdtable);
-    // printProductionTable(nullpdtable);
-
     computeFirstSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
     computeFollowSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
-    
     attachFollowToRule();
-
+    
     // printProductionTable(pdtable);
 
     computeParseTable();
@@ -983,30 +1040,6 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
     initParseTree();
     parse();
     printParseTree(parseTree, parseTreeOutput);
-    
-
-    // #####################################################
-    // //Listing all non-terminals for which FOLLOW needs to be calculated
-    // char **listNullables = findNullableTerminals(nullpdtable);
-    // printf("{");
-    // for (int i = 0; i < nullpdtable->ruleCount; i++) {        
-    //     printf("%s,", listNullables[i]);        
-    // }
-    // printf("}\n");
-
-    // Testing trie
-    // printf("%d\t%d\n", terminalTrieLen, searchWord(grammarTrie, "e"));
-    // printf("%s\t%d\n", "<moduleDef>", searchWord(grammarTrie, "<moduleDef>"));
-
-    /* // Printing Trie
-    int grammarTrieLen = grammarTrie->count;
-    printf("grammarTrie Len: %d\n", grammarTrieLen);
-    Tuple* elements = getElements(grammarTrie);
-    for (int i = 0; i < grammarTrieLen; ++i) {
-        printf("%d\t%s\n", elements[i].enumID, elements[i].token);
-    } */
-
-    freeTrie(grammarTrie);
     
     fclose(f);
     fclose(fp);
