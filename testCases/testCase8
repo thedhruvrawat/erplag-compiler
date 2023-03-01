@@ -12,6 +12,5 @@ start
         break;
         case false: abcdefghijklmnopqrstu:= -100;
         break;
-    end
-    **
+    end**
 end
