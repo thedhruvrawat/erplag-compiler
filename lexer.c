@@ -1,3 +1,11 @@
+/*
+Group Number : 2
+1 	Dhruv Rawat 	2019B3A70537P 	thedhruvrawat
+2 	Chirag Gupta 	2019B3A70555P 	Chirag5128
+3 	Swastik Mantry 	2019B1A71019P 	Swastik-Mantry
+4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
+5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
+*/
 #include "lexer.h"
 
 // Buffers
@@ -39,7 +47,7 @@ static FILE* fp;
 static int count = 0;
 static int lastBufLoad = 0;
 static bool twice = false;
-
+static bool LexCorrPrint = true; // Printed Lexically Correct
 // checking for character in sync set
 bool inSyncSetA(char c){
     switch(c){
@@ -105,7 +113,7 @@ TOKEN* createToken() {
         token = malloc(sizeof(TOKEN));
     }
     int pos = 0;
-    char lexeme[MAX_LEXEME_SIZE];
+    char lexeme[MAX_LEXEME_SIZE + 1]; // +1 To incorporate \0 at the end of char lexeme[]
     while (begin < forward) {
         lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
         begin++;
@@ -221,9 +229,10 @@ TOKEN* getNextToken(){
                 } else if (curr == '.') {
                     state = 43;
                 } else if(curr == EOF){
-                    if(errno==0){
+                    if(errno==0 && LexCorrPrint){
                         // Should we add this at all curr==EOF?
-                        printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
+                        printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
+                        LexCorrPrint = false;
                     }
                     strcpy(token->lexeme, "EOF");
                     token->linenum = LINE_NUM;
@@ -238,7 +247,7 @@ TOKEN* getNextToken(){
             }
             case 1: {
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z') || (curr >= '0' && curr <= '9')) {
-                    if(forward - begin >= 20){
+                    if(forward - begin >= MAX_LEXEME_SIZE){
                         state = 100;
                         errno = 9;
                         forward--;

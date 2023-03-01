@@ -1,3 +1,11 @@
+/*
+Group Number : 2
+1 	Dhruv Rawat 	2019B3A70537P 	thedhruvrawat
+2 	Chirag Gupta 	2019B3A70555P 	Chirag5128
+3 	Swastik Mantry 	2019B1A71019P 	Swastik-Mantry
+4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
+5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
+*/
 #include<stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,7 +88,6 @@ typedef struct grammarElement {
 typedef struct ProductionRule {
     int productionID;
     int RHScount;
-    bool isEpsilon;
     grammarElement *LHS; // pointer to LHS of a rule
     grammarElement *RHSHead, *RHSTail; // pointer to first element in RHS
     Set *firstSet, *followSet;
