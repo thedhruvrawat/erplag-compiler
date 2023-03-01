@@ -809,14 +809,6 @@ void parse(){
                 free(curTok);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
-
-                // if (curTok->tok == DOLLAR && st->size > 1) { 
-                //     printParseError(3,st->top,curTok);
-
-                //     destroyStack(st);
-                //     return;
-                // }
-
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
                 TreeNode* topStackAddr = topStack->nodeAddr;
