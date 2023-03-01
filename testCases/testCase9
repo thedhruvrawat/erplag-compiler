@@ -7,10 +7,10 @@ start
     b:=23;
     c:=(b-a>3);
     switch(c)
-    start
+    start**
         case true: b:=100;
         break;
         case false: abcdefghijklmnopqrstu:= -100;
         break;
-    end
+    end**
 end

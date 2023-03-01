@@ -154,6 +154,7 @@ void cleanLexer() {
     forward = 0;
     state = 0;
     errno = 0;
+    LexCorrPrint = true;
 
     freeTrie(terminalTrie);
     terminalTrie = NULL;
@@ -229,7 +230,7 @@ TOKEN* getNextToken(){
                 } else if (curr == '.') {
                     state = 43;
                 } else if(curr == EOF){
-                    if(errno==0 && LexCorrPrint){
+                    if(errno==0 && (LexCorrPrint)){
                         // Should we add this at all curr==EOF?
                         printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
                         LexCorrPrint = false;

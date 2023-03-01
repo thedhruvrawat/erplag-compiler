@@ -27,7 +27,7 @@ listElement** RHSLoc;
 int base;
 int EPSILON;
 int DOLLAR;
-
+static bool synCorrPrint = true;
 ProductionTable *initializeProductionTable(ProductionTable *pdtable, int maxRules) {
     pdtable = malloc(sizeof(ProductionTable));
     pdtable->maxRules = maxRules;
@@ -95,6 +95,7 @@ void destroySet(Set* s) {
 }
 
 void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
+    synCorrPrint = false;
     switch(p_errno){
         case 1:
             {
@@ -688,7 +689,6 @@ Set* initSynchronizingSet(grammarElement* g) {
 
 // Parse Table Check
 void parse(){
-
     printf(UNDERLINE BOLD "Into Parser\n" RESET);
 
     stack * st = initStack();
@@ -702,6 +702,7 @@ void parse(){
         printParseError(3,st->top,curTok);
 
         destroyStack(st);
+        if(synCorrPrint) {printf(GREEN BOLD "Input source code is syntactically correct\n" RESET); synCorrPrint = true;}
         return;
     }
 
@@ -787,6 +788,7 @@ void parse(){
             // printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
             if(ruleID == -1){
+                synCorrPrint = false;
                 printf(RED BOLD "[Parser] Line: %d Error in the input as no entry found in parseTable[%s][%s]\n" RESET, curTok->linenum, topStack->GE->lexeme, elements[curTok->tok]);
                 
                 // TODO: REPORT ERROR
@@ -807,6 +809,7 @@ void parse(){
 
                         destroyStack(st);
                         destroySet(synchronizingSet);
+                        if(synCorrPrint) {printf(GREEN BOLD "Input source code is syntactically correct\n" RESET); synCorrPrint = true;}
                         return;
                     }
                 } 
@@ -842,6 +845,7 @@ void parse(){
 
     free(curTok);
     destroyStack(st);
+    if(synCorrPrint) {printf(GREEN BOLD "Input source code is syntactically correct\n" RESET); synCorrPrint = true;}
     return;
 }
 
@@ -925,6 +929,8 @@ void freeParseTree(ParseTree* parseTree) {
 }
 
 void cleanParser() {
+    synCorrPrint = true;
+
     int nonTerminalLen = grammarTrie->count - base;
     int trSize = grammarTrie->count;
     freePDTable(pdtable);
