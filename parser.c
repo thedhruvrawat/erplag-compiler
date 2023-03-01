@@ -753,12 +753,9 @@ void parse(){
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    // if (curTok->tok == DOLLAR && st->size > 1) { 
-                    //     printParseError(3,st->top,curTok);
-
-                    //     destroyStack(st);
-                    //     return;
-                    // }
+                    if (curTok->tok == DOLLAR) { 
+                        break;
+                    }
                 }
 
                 while ((topStack = peekStack(st))) {
@@ -782,23 +779,28 @@ void parse(){
             // printf("(%d)%s, (%d)%s, %d\n", nonTerminalID - base, elements[nonTerminalID], terminalID, elements[terminalID], ruleID);
             
             if(ruleID == -1){
-                printf(RED BOLD "[Parser] Line: %d Error in the input as No entry found in parseTable[%s][%s]\n" RESET, curTok->linenum, topStack->GE->lexeme, elements[curTok->tok]);
+                printf(RED BOLD "[Parser] Line: %d Error in the input as no entry found in parseTable[%s][%s]\n" RESET, curTok->linenum, topStack->GE->lexeme, elements[curTok->tok]);
                 
                 // TODO: REPORT ERROR
                 // reportError()
                 Set* synchronizingSet = initSynchronizingSet(topStack->GE);
 
+                bool once = true;
                 while (synchronizingSet->contains[curTok->tok] == false) {
                     free(curTok);
                     curTok = getNextToken();
                     curTok = createTokenCopy(curTok);
-                    // if (curTok->tok == DOLLAR && st->size > 1) { 
-                    //     printParseError(3,st->top,curTok);
+                    if (curTok->tok == DOLLAR && st->size > 1) { 
+                        if (once) {
+                            once = false;
+                            continue;
+                        }
+                        printParseError(3,st->top,curTok);
 
-                    //     destroyStack(st);
-                    //     destroySet(synchronizingSet);
-                    //     return;
-                    // }
+                        destroyStack(st);
+                        destroySet(synchronizingSet);
+                        return;
+                    }
                 } 
 
                 destroySet(synchronizingSet);

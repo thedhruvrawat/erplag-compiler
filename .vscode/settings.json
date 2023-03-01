@@ -9,7 +9,7 @@
         {
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
-            "binaryArgs": ["test_cases/t6_errors.txt", "parseTable.txt", "12"]
+            "binaryArgs": ["test_cases/t4.txt", "parseTable.txt", "12"]
         }
     ]
 }

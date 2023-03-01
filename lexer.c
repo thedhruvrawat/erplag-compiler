@@ -728,7 +728,7 @@ TOKEN* getNextToken(){
                         printf(RED BOLD "Invalid '.'\n" RESET);
                         break;
                     case 7:
-                        printf(RED BOLD "Unclosed comment\n" RESET);
+                        printf(RED BOLD "[Lexer] Unclosed Comment\n" RESET);
                         strcpy(token->lexeme, "EOF");
                         token->linenum = LINE_NUM;
                         token->tok = EOF_SYMBOL;
