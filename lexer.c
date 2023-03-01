@@ -222,7 +222,7 @@ TOKEN* getNextToken(){
                 } else if(curr == EOF){
                     if(errno==0){
                         // Should we add this at all curr==EOF?
-                        printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
+                        printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
                     }
                     strcpy(token->lexeme, "EOF");
                     token->linenum = LINE_NUM;

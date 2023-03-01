@@ -10,7 +10,7 @@ start
     start**
         case true: b:=100;
         break;
-        case false: abcdefghijklmnopqrst:= -100;
+        case false: abcdefghijklmnopqrstu:= -100;
         break;
     end
     **

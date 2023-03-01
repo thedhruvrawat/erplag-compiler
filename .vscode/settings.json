@@ -9,7 +9,20 @@
         {
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
-            "binaryArgs": ["test_cases/t6_errors.txt", "parseTable.txt", "12"]
+            "binaryArgs": [
+                "test_cases/t6_errors.txt",
+                "parseTable.txt",
+                "12"
+            ]
+        },
+        {
+            "cwd": "/home/swastik/Downloads/BITS/4-2/Compiler/erplag-compiler",
+            "binaryPath": "/home/swastik/Downloads/BITS/4-2/Compiler/erplag-compiler/stage1exe",
+            "binaryArgs": [
+                "testCases/testCase8",
+                "parseTable.txt",
+                "20"
+            ]
         }
     ]
 }
