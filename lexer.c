@@ -136,6 +136,7 @@ int setupLexer(FILE* fpointer){
 }
 
 void cleanLexer() {
+    free(buf);
     buf = NULL;
     // Line Number
     LINE_NUM = 1;
@@ -227,8 +228,6 @@ TOKEN* getNextToken(){
                     strcpy(token->lexeme, "EOF");
                     token->linenum = LINE_NUM;
                     token->tok = EOF_SYMBOL;
-                    // Clear buf malloced memory
-                    free(buf);
                     return token;
                 } else {
                     state = 100;
@@ -730,7 +729,10 @@ TOKEN* getNextToken(){
                         break;
                     case 7:
                         printf(RED BOLD "Unclosed comment\n" RESET);
-                        return NULL;   
+                        strcpy(token->lexeme, "EOF");
+                        token->linenum = LINE_NUM;
+                        token->tok = EOF_SYMBOL;
+                        return token;
                         break;
                     case 8:
                         printf(RED BOLD "Invalid character found\n" RESET);
