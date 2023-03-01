@@ -68,10 +68,10 @@ void printTokenList(char *userCode) {
     TOKEN* newToken;
     TOKEN* arr[1024];
     int pos = 0;
+    printf(UNDERLINE "%-10s%-25s%-10s\n" RESET, "Line No.", "Lexeme", "Token Type");
     while((newToken = getNextToken())->tok != EOF_SYMBOL){
         // Not checking for lexeme type as requirement is to print lexeme as it is
-        printf("%-5d%-25s%-10s\n", newToken->linenum, newToken->lexeme, *(token_types + (newToken->tok)));
-        // printf("TOKEN object location: %p\n", newToken);
+        printf("%-10d%-25s%-10s\n", newToken->linenum, newToken->lexeme, *(token_types + (newToken->tok)));
         arr[pos++] = newToken;
     }
     cleanLexer();
@@ -96,7 +96,6 @@ int main(int argc, char* argv[]){
 
     char *userCode = argv[1];
     char *treeOutput = argv[2];
-
 
     if (strlen(argv[3]) >= 18) {
         printf(RED BOLD "Buffer Size too large.\n" RESET);
