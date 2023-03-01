@@ -1,14 +1,14 @@
-driver: driver.o grammar.o lexer.o trie.o stackADT.o structs.o
-	gcc driver.o grammar.o trie.o lexer.o structs.o stackADT.o -g -o stage1exe
+driver: driver.o parser.o lexer.o trie.o stackADT.o structs.o
+	gcc driver.o parser.o trie.o lexer.o structs.o stackADT.o -g -o stage1exe
 
-sanitized: driver.o grammar.o lexer.o trie.o stackADT.o structs.o
-	gcc -fsanitize=address driver.o grammar.o trie.o lexer.o structs.o stackADT.o -g -o stage1exe
+sanitized: driver.o parser.o lexer.o trie.o stackADT.o structs.o
+	gcc -fsanitize=address driver.o parser.o trie.o lexer.o structs.o stackADT.o -g -o stage1exe
 
 stackADT.o: stackADT.c
 	gcc -c -g stackADT.c
 
-grammar.o: grammar.c grammar.h
-	gcc -c -g grammar.c
+parser.o: parser.c parser.h
+	gcc -c -g parser.c
 
 driver.o: driver.c
 	gcc -c -g driver.c
@@ -23,4 +23,4 @@ structs.o: structs.c structs.h
 	gcc -c -g structs.c
 
 clean:
-	rm -f *.o lexer grammar a.out stage1exe vgcore*
+	rm -f *.o lexer parser a.out stage1exe vgcore*
