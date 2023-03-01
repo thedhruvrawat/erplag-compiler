@@ -522,7 +522,11 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
         currNode = malloc(sizeof(TreeNode));
         parseTree->sz++;
         currNode->depth = parent->depth + 1;
-        currNode->tok = tok;
+        if (g->isTerminal) {
+            currNode->tok = tok;
+        } else {
+            currNode->tok = NULL;
+        }
         currNode->tokenID = g->tokenID;
         currNode->productionID = productionID;
         currNode->tokenDerivedFrom = parent->tokenID;
@@ -609,11 +613,7 @@ void initParseStack(stack * st){
     pushStackGE(st, dollar, NULL);
 
     // push <program> into stack
-    grammarElement * S = (grammarElement*) malloc(sizeof(grammarElement));
-    S->isTerminal = false;
-    S->tokenID = searchWord(grammarTrie, "<program>");
-    strcpy(S->lexeme, "<program>");
-    S->next = NULL; S->prev = NULL;
+    grammarElement* S = pdtable->grammarrules[0]->LHS;
 
     pushStackGE(st, S, parseTree->root);
 }
@@ -716,14 +716,13 @@ void parse(){
                 // printf(GREEN BOLD "Current Token: %-20s\t" RESET, curTok->lexeme);
                 // printf(GREEN BOLD "MATCHED\n" RESET);
 
-                if (curTok->tok == DOLLAR) { break; }
+                if (curTok->tok == DOLLAR) { 
+                    break; 
+                }
                 topStack->nodeAddr->tok = curTok;
 
                 popStack(st);
                 topStack = peekStack(st);
-                // Need to add the relation of GrammarElement to TOKEN
-                // Add to ParseTree
-                // #####################
 
                 // Move Ahead i.e. Fetch another Token
                 curTok = getNextToken();
@@ -736,7 +735,6 @@ void parse(){
                 //     return;
                 // }
             } else {
-                // printf("Top of Stack is Terminal: %s, Token is not the same terminal!\n\n", topStack->GE->lexeme);
                 printParseError(2,st->top,curTok);
 
                 // TODO: REPORT ERROR
@@ -806,6 +804,7 @@ void parse(){
                 destroySet(synchronizingSet);
                 popStack(st);
                 topStack = peekStack(st);
+                free(curTok);
                 curTok = getNextToken();
                 curTok = createTokenCopy(curTok); 
 
@@ -831,6 +830,7 @@ void parse(){
         printf(RED BOLD "The stack is empty but the stream has not ended.\n" RESET);
     }
 
+    free(curTok);
     destroyStack(st);
     return;
 }
@@ -895,10 +895,28 @@ void freeRuleLocs(int nonTerminalLen) {
     free(RHSLoc);
 }
 
+void freeParseTreeRec(TreeNode* node) {
+    if (node == NULL) { return; }
+
+    freeParseTreeRec(node->child);
+    if (node->tok != NULL) {
+        free(node->tok);
+    }
+
+    freeParseTreeRec(node->next);
+    free(node);
+    return;
+}
+
+void freeParseTree(ParseTree* parseTree) {
+    freeParseTreeRec(parseTree->root);
+    free(parseTree);
+    return;
+}
+
 void cleanParser() {
     int nonTerminalLen = grammarTrie->count - base;
     int trSize = grammarTrie->count;
-    // freeParseTree(parseTree);
     freePDTable(pdtable);
     pdtable = NULL;
     firstSetsRules = NULL;
@@ -920,6 +938,7 @@ void cleanParser() {
     LHSLoc = NULL;
     RHSLoc = NULL;
 
+    freeParseTree(parseTree);
     base = 0;
     return;
 }
@@ -970,6 +989,7 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
 
         //Left side of Production Rule
         p->LHS = (grammarElement*)malloc(sizeof(grammarElement));
+        p->LHS->isTerminal = false;
         strcpy(p->LHS->lexeme, tok);
         p->LHS->next = NULL;
         int nonTerminalCheck = searchGrammar(grammarTrie, tok); //Check if non-terminal already exists in NT Trie
@@ -1029,6 +1049,8 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
         insertRuleInProductionTable(pdtable, p);
         productionRuleID++;
     }
+
+    free(line);
     computeFirstSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
     computeFollowSet(grammarTrie->count - terminalTrieLen - 2, terminalTrieLen);
     attachFollowToRule();

@@ -257,7 +257,7 @@ TOKEN* getNextToken(){
                     state = 0;
                     token = createToken();
                     // token->tok = ID;
-                    tokenCreated = true;;
+                    tokenCreated = true;
                 
                 forward--;
                 break;
@@ -279,7 +279,7 @@ TOKEN* getNextToken(){
                 token->tok = NUM;
                 setLexeme();
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 5: {
@@ -301,7 +301,7 @@ TOKEN* getNextToken(){
                 token->tok = NUM;
                 setLexeme();
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 7: {
@@ -321,7 +321,7 @@ TOKEN* getNextToken(){
                 token->tok = RNUM;
                 setLexeme();
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             } 
             case 9: {
@@ -369,7 +369,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = PLUS;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 14: { // Accept State for MINUS
@@ -377,7 +377,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = MINUS;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 15: {
@@ -394,7 +394,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = MUL;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 17: { // Accept State for DIV
@@ -402,7 +402,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = DIV;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 18: {
@@ -421,7 +421,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = LT;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 20: { // Accept State for LE
@@ -430,7 +430,7 @@ TOKEN* getNextToken(){
                 token->tok = LE;
                 
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 21: {
@@ -447,7 +447,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = DEF;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 23: { // Accept State for DRIVERDEF
@@ -455,7 +455,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = DRIVERDEF;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 24: {
@@ -474,7 +474,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = GT;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 26: { // Accept State for GE
@@ -482,7 +482,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = GE;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;                
             }
             case 27: {
@@ -499,7 +499,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = ENDDEF;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             } 
             case 29: { // Accept State for DRIVERENDDEF
@@ -507,7 +507,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = DRIVERENDDEF;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 30: {
@@ -525,7 +525,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = EQ;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 32: {
@@ -543,7 +543,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = NE;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 34: {
@@ -560,7 +560,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = ASSIGNOP;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 36: { // Accept State for COLON
@@ -568,7 +568,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = COLON;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             } 
             case 37: { // Accept State for SEMICOL
@@ -576,7 +576,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = SEMICOL;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             } 
             case 38: { // Accept State for COMMA
@@ -584,7 +584,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = COMMA;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             } 
             case 39: { // Accept State for SQBO
@@ -592,7 +592,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = SQBO;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 40: { // Accept State for SQBC
@@ -600,7 +600,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = SQBC;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 41: { // Accept State for BO
@@ -608,7 +608,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = BO;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 42: { // Accept State for BC
@@ -616,7 +616,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = BC;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 43: {
@@ -634,7 +634,7 @@ TOKEN* getNextToken(){
                 token = createToken();
                 token->tok = RANGEOP;
                 forward--;
-                tokenCreated = true;;
+                tokenCreated = true;
                 break;
             }
             case 45: { // Comment starts here
@@ -642,7 +642,7 @@ TOKEN* getNextToken(){
                 // token = createToken();
                 // token->tok = COMMENTMARK;
                 forward--;
-                // tokenCreated = true;;
+                // tokenCreated = true;
                 break;
             }
             case 46: {
@@ -684,7 +684,7 @@ TOKEN* getNextToken(){
                 // token->tok = COMMENTMARK;
                 begin = forward;
                 forward--;
-                // tokenCreated = true;;
+                // tokenCreated = true;
                 break;
             }
             case 100:{

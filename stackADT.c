@@ -33,12 +33,15 @@ void popStack(stack * st)
     {
         printf("Stack is empty!\n");
         return ;
-    }// top of the stack is non-terminal
+    }
 
     stackNode *currTop = st->top;
 
     st->top = st->top->next;
     st->size--;
+    if (st->size == 0) {
+        free(currTop->GE);
+    }
     free(currTop);
     
     return;

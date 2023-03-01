@@ -70,7 +70,7 @@ void printTokenList(char *userCode) {
     int pos = 0;
     while((newToken = getNextToken())->tok != EOF_SYMBOL){
         // Not checking for lexeme type as requirement is to print lexeme as it is
-        printf("%d\t%s\t\t%s\n", newToken->linenum, newToken->lexeme, *(token_types + (newToken->tok)));
+        printf("%-5d%-25s%-10s\n", newToken->linenum, newToken->lexeme, *(token_types + (newToken->tok)));
         // printf("TOKEN object location: %p\n", newToken);
         arr[pos++] = newToken;
     }
