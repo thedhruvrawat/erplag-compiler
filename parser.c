@@ -606,6 +606,7 @@ void printParseTree(ParseTree* parseTree, char* outFile) {
     }
 
     printParseTreeRec(parseTree->root, fp, false);
+    fclose(fp);
     return;
 }
 //############################################
