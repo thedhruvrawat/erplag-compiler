@@ -5,7 +5,7 @@ void removeComments(char *testCaseFile) {
     FILE *input, *output;
     input = fopen(testCaseFile, "r");
     // output = fopen(output, "w");
-    if(input == NULL) printf(RED BOLD "Error in opening Test Case File\n" RESET);
+    if(input == NULL) {printf(RED BOLD "Error in opening Test Case File\n" RESET); return;}
     // if(output == NULL) printf(RED BOLD "Error in opening Output File\n" RESET);
     int state = 0;
     char ch;

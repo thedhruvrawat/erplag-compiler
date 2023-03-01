@@ -105,7 +105,7 @@ TOKEN* createToken() {
         token = malloc(sizeof(TOKEN));
     }
     int pos = 0;
-    char lexeme[MAX_LEXEME_SIZE];
+    char lexeme[MAX_LEXEME_SIZE + 1]; // +1 To incorporate \0 at the end of char lexeme[]
     while (begin < forward) {
         lexeme[pos++] = buf[begin % (2 * BUF_SIZE)];
         begin++;
@@ -239,7 +239,7 @@ TOKEN* getNextToken(){
             }
             case 1: {
                 if (curr == '_' || (curr >= 'a' && curr <= 'z') || (curr >= 'A' && curr <= 'Z') || (curr >= '0' && curr <= '9')) {
-                    if(forward - begin >= 20){
+                    if(forward - begin >= MAX_LEXEME_SIZE){
                         state = 100;
                         errno = 9;
                         forward--;
