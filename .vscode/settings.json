@@ -4,5 +4,12 @@
         "*.rmd": "markdown",
         "grammar.h": "c",
         "lexer.h": "c"
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
+            "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
+            "binaryArgs": ["test_cases/t6_errors.txt", "parseTable.txt", "12"]
+        }
+    ]
 }

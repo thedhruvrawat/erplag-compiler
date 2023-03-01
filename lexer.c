@@ -136,7 +136,7 @@ int setupLexer(FILE* fpointer){
 }
 
 void cleanLexer() {
-    memset(buf, '\0', sizeof(buf));
+    buf = NULL;
     // Line Number
     LINE_NUM = 1;
 
@@ -146,6 +146,7 @@ void cleanLexer() {
     state = 0;
     errno = 0;
 
+    freeTrie(terminalTrie);
     terminalTrie = NULL;
 
     // Buffer to store tokens
