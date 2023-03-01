@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.pl": "prolog",
+        "*.rmd": "markdown",
+        "grammar.h": "c",
+        "lexer.h": "c"
+    }
+}

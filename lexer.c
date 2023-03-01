@@ -1,13 +1,12 @@
 #include "lexer.h"
 
 // Buffers
-int BUF_SIZE = 512;
-// Sets value of BUF_SIZE
-void setBufferSize(int newBufSize){
+long long BUF_SIZE = 512;
+
+void setBufferSize(long long newBufSize){
     BUF_SIZE = newBufSize;
 }
 
-#define TOK_BUF_SIZE 512
 #define MAX_LEXEME_SIZE 20
 
 // made it on heap

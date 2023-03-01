@@ -96,7 +96,18 @@ int main(int argc, char* argv[]){
     char *userCode = argv[1];
     char *treeOutput = argv[2];
 
-    int buf_size = atoi(argv[3]);
+
+    if (strlen(argv[3]) >= 18) {
+        printf(RED BOLD "Buffer Size too large.\n" RESET);
+        return 1;
+    }
+    long long buf_size = atoll(argv[3]);
+    if (buf_size <= 0) {
+        printf(RED BOLD "Invalid buffer size. Should be a positive number.\n" RESET);
+        return 1;
+    } else if (buf_size <= 20) {
+        printf(YELLOW BOLD "Warning: The buffer size should be set to more than 20 for the lexer to work as expected. (Identifiers' length limit is 20).\n" RESET);
+    }
     setBufferSize(buf_size); // Sets BufferSize to the CLI argument
 
     printf("---------------------- COMPILER DETAILS GROUP 2 ----------------------\n");
@@ -124,12 +135,14 @@ int main(int argc, char* argv[]){
                 break;
             }
             case 1: {
+                printf("\e[1;1H\e[2J");
                 printf("-------------------------------------------------------------------------------------\n");
                 removeComments(userCode);
                 printf("-------------------------------------------------------------------------------------\n");
                 break;
             }
             case 2: {
+                printf("\e[1;1H\e[2J");
                 printf("-------------------------------------------------------------------------------------\n");
                 printTokenList(userCode);
                 printf(GREEN BOLD "Token Stream Over\n" RESET);
@@ -137,6 +150,7 @@ int main(int argc, char* argv[]){
                 break;
             }
             case 3: {
+                printf("\e[1;1H\e[2J");
                 printf("-------------------------------------------------------------------------------------\n");
                 parseInput(userCode, treeOutput);
                 printf(GREEN BOLD "Parsing Over\n" RESET);
@@ -144,6 +158,7 @@ int main(int argc, char* argv[]){
                 break;
             }
             case 4: {
+                printf("\e[1;1H\e[2J");
                 clock_t start_time, end_time;
                 double total_CPU_time, total_CPU_time_in_seconds;
                 start_time = clock();
