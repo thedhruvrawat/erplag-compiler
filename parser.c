@@ -522,11 +522,7 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
         currNode = malloc(sizeof(TreeNode));
         parseTree->sz++;
         currNode->depth = parent->depth + 1;
-        if (g->isTerminal) {
-            currNode->tok = tok;
-        } else {
-            currNode->tok = NULL;
-        }
+        currNode->tok = NULL;
         currNode->tokenID = g->tokenID;
         currNode->productionID = productionID;
         currNode->tokenDerivedFrom = parent->tokenID;
@@ -550,13 +546,17 @@ void printParseTreeRec(TreeNode* node, FILE* fp, bool firstChild) {
 
     printParseTreeRec(node->child, fp, true);
 
-    if (node->isLeaf) {
+    if (node->isLeaf && node->tok != NULL) {
         fprintf(fp, "%-25s%-10d%-15s", node->tok->lexeme, node->tok->linenum, elements[node->tok->tok]);
+    } else if (node->isLeaf) {
+        fprintf(fp, "%-25s%-10s%-15s", "(null)", "(null)", "(null)");
     } else {
         fprintf(fp, "%-25s%-10s%-15s", "--------------------", "---", "----------");
     }
 
-    if (node->isLeaf && node->tok->tok == NUM) {
+    if (node->isLeaf && node->tok == NULL) {
+        fprintf(fp, "%-20s", "(null)");
+    } else if (node->isLeaf && node->tok->tok == NUM) {
         fprintf(fp, "%-20d", node->tok->num);
     } else if (node->isLeaf && node->tok->tok == RNUM) {
         fprintf(fp, "%-20lf", node->tok->rnum);
