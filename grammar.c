@@ -1,4 +1,4 @@
-#include "grammar.h"
+#include "parser.h"
 
 Trie *grammarTrie;
 

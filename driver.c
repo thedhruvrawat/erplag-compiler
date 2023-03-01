@@ -1,5 +1,5 @@
 #include <time.h>
-#include  "grammar.h"
+#include  "parser.h"
 
 void removeComments(char *testCaseFile) {
     FILE *input, *output;
