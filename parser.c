@@ -790,8 +790,13 @@ void parse(){
 
     }
 
-    if (curTok->tok != DOLLAR) {
+    if (curTok->tok != EOF_SYMBOL) {
         printf(RED BOLD "The stack is empty but the stream has not ended.\n" RESET);
+    }
+
+    while(curTok->tok != EOF_SYMBOL){
+        curTok = getNextToken();
+        
     }
 
     free(curTok);
