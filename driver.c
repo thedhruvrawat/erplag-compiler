@@ -83,16 +83,13 @@ void printTokenList(char *userCode) {
     }
     setupLexer(lexerIP);    
     TOKEN* newToken;
-    TOKEN* arr[1024];
     int pos = 0;
     printf(UNDERLINE "%-10s%-25s%-10s\n" RESET, "Line No.", "Lexeme", "Token Type");
     while((newToken = getNextToken())->tok != EOF_SYMBOL){
         // Not checking for lexeme type as requirement is to print lexeme as it is
         printf("%-10d%-25s%-10s\n", newToken->linenum, newToken->lexeme, *(token_types + (newToken->tok)));
-        arr[pos++] = newToken;
     }
     cleanLexer();
-    fseek(lexerIP, 0, SEEK_SET);
     fclose(lexerIP);
     return;
 }

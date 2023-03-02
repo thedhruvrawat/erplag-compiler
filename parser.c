@@ -565,6 +565,8 @@ void printParseTree(ParseTree* parseTree, char* outFile) {
 
     printParseTreeRec(parseTree->root, fp, false);
     fclose(fp);
+
+    printf(GREEN BOLD "Parse Tree printed to %s\n" RESET, outFile);
     return;
 }
 //############################################
