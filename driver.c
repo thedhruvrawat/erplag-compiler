@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
     char* userCode = argv[1];
     char* treeOutput = argv[2];
 
-    if (strlen(argv[3]) >= 18) {
+    if (strlen(argv[3]) >= 17) {
         printf(RED BOLD "Buffer Size too large.\n" RESET);
         return 1;
     }
@@ -141,6 +141,9 @@ int main(int argc, char* argv[])
         return 1;
     } else if (buf_size <= 20) {
         printf(YELLOW BOLD "WARNING: Buffer size not adequate for literals of size 20.\n" RESET);
+    } else if (buf_size >= (1 << 20)) {
+        printf(RED BOLD "Buffer Size too large.\n" RESET);
+        return 1;
     }
     setBufferSize(buf_size); // Sets BufferSize to the CLI argument
 
