@@ -699,6 +699,7 @@ void parse()
     if (curTok->tok == EOF_SYMBOL) {
         printParseError(3, st->top, curTok);
 
+        free(curTok);
         destroyStack(st);
         if (synCorrPrint) {
             printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
