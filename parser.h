@@ -6,19 +6,14 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <sys/types.h>
-#include "lexer.h"
+#ifndef PARSER
+#define PARSER
+#include "parserDef.h"
+#include "trie.h"
 
 extern ProductionTable* pdtable;
 extern Trie* grammarTrie;
 
-
-Set* initSet(int sz);
-bool unionSet(Set* a, Set* b);
 
 void computeFirstSet(int nonTerminalLen, int terminalLen);
 bool findFirst(int tokenID);
@@ -27,3 +22,5 @@ bool findFollow(int tokenID);
 
 void parserMain(char *userSourceCode, char *parseTreeOutput);
 void cleanParser();
+
+#endif

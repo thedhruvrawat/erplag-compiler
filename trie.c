@@ -7,6 +7,8 @@ Group Number : 2
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
 // #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 #include "trie.h"
 
 Trie* setupTrie() {

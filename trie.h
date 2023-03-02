@@ -6,10 +6,17 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#ifndef TRIE
+#define TRIE
+
 #include "stackADT.h"
+
+typedef struct Trie {
+    int count;
+    bool end;
+    TOK_TYPE tok;
+    struct Trie* next[128];
+} Trie;
 
 Trie* setupTrie();
 void populateTerminalTrie(Trie* trie);
@@ -21,3 +28,5 @@ int searchGrammar(Trie *tr, char *word);
 void getElement(Trie* tr, char* tok, int pos, char** elements);
 char** getElements(Trie* tr);
 void freeTrie(Trie* tr);
+
+#endif

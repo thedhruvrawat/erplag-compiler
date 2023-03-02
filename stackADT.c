@@ -6,6 +6,9 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include "stackADT.h"
 // TESTING IS LEFT
 

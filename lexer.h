@@ -6,11 +6,15 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
-#include <stdio.h>
-#include "trie.h"
+#ifndef LEXER
+#define LEXER
+
+#include "lexerDef.h"
 
 int setupLexer(FILE* fp);
 TOKEN* getNextToken();
 void cleanLexer();
 void initbuf(void);
 void setBufferSize(long long newBufSize);
+
+#endif

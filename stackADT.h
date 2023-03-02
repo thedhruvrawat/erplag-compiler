@@ -6,9 +6,9 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
-#include <stdio.h>
-#include <stdlib.h>
-#include "structs.h"
+#ifndef STACK_ADT
+#define STACK_ADT
+#include "parserDef.h"
 
 typedef struct stackNode{
     grammarElement  * GE;
@@ -27,3 +27,5 @@ void popStack(stack *S);
 void pushStackGE(stack *S, grammarElement *GE, TreeNode* nodeAddr);
 bool isEmpty(stack * S);
 void destroyStack(stack* st);
+
+#endif

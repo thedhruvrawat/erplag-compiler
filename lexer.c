@@ -6,10 +6,34 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "trie.h"
 #include "lexer.h"
+#include "colorCodes.h"
 
 // Buffers
 long long BUF_SIZE = 512;
+
+const char *token_types[] =  {
+    "INTEGER", "REAL", "BOOLEAN", "OF", "ARRAY", "START",
+    "END", "DECLARE", "MODULE", "DRIVER", "PROGRAM", "GET_VALUE",
+    "PRINT", "USE", "WITH", "PARAMETERS", "TAKES", "INPUT",
+    "RETURNS", "FOR", "IN", "SWITCH", "CASE", "BREAK",
+    "DEFAULT", "WHILE",
+    // Non-Keywords
+    "ID", "NUM", "RNUM", 
+    "PLUS", "MINUS", "MUL", "DIV", 
+    "LT", "LE", "GE", "GT", "EQ", "NE", 
+    "DEF", "ENDDEF", "DRIVERDEF", "DRIVERENDDEF", 
+    "COLON", "RANGEOP", "SEMICOL", "COMMA", "ASSIGNOP", 
+    "SQBO", "SQBC", "BO", "BC", "COMMENTMARK", 
+    // Boolean Operators
+    "TRUE", "FALSE", "AND", "OR",
+    "EPS", "EOF_SYMBOL"
+};
 
 void setBufferSize(long long newBufSize){
     BUF_SIZE = newBufSize;

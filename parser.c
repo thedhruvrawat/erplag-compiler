@@ -6,7 +6,14 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "parser.h"
+#include "lexer.h"
+#include "Set.h"
+#include "colorCodes.h"
+#include "stackADT.h"
 
 Trie *grammarTrie;
 
@@ -43,55 +50,6 @@ void insertRuleInProductionTable(ProductionTable *pdtable, ProductionRule *p) {
     }
     pdtable->grammarrules[pdtable->ruleCount] = p;
     pdtable->ruleCount++;
-}
-
-Set* initSet(int sz) {
-    Set* s = malloc(sizeof(Set));
-    s->sz = sz;
-    s->contains = malloc(sz * sizeof(bool));
-    memset(s->contains, false, sz * sizeof(bool));
-
-    return s;
-}
-
-bool unionSet(Set* a, Set* b) {
-    int sz = a->sz;
-    // Flag for checking LL(1)
-    bool flag = false;
-    for (int i = 0; i < sz; ++i) {
-        if (a->contains[i] && b->contains[i]) {
-            flag = true;
-        }
-        a->contains[i] = a->contains[i] || b->contains[i];
-    }
-
-    return flag;
-}
-
-void intersectionSet(Set* a, Set* b) {
-    int sz = a->sz;
-    for (int i = 0; i < sz; ++i) {
-        a->contains[i] = a->contains[i] && b->contains[i];
-    }
-
-    return;
-}
-
-void differenceSet(Set* a, Set* b) {
-    int sz = a->sz;
-    for (int i = 0; i < sz; ++i) {
-        if (b->contains[i]) {
-            a->contains[i] = false;
-        }
-    }
-
-    return;
-}
-
-void destroySet(Set* s) {
-    free(s->contains);
-    free(s);
-    return;
 }
 
 void printParseError(int p_errno, stackNode * top ,TOKEN* tok){
@@ -981,7 +939,7 @@ void parserMain(char *userSourceCode, char* parseTreeOutput) {
         printf(RED BOLD "File error: Unable to open Grammar File\n" RESET);
     char *line = NULL;
     size_t len = 0;
-    ssize_t read = 0; // number of bytes read in a line
+    size_t read = 0; // number of bytes read in a line
     int nonTerminalID = grammarTrie->count;
     // Adding epsilon and $ to allow easier indexing in first and follow sets;
     nonTerminalID = insertWord(grammarTrie, "e", nonTerminalID);

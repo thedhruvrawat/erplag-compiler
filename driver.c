@@ -7,6 +7,12 @@ Group Number : 2
 5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 */
 #include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "Set.h"
+#include "colorCodes.h"
+#include "lexer.h"
 #include  "parser.h"
 
 void removeComments(char *testCaseFile) {
