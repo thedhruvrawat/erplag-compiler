@@ -696,7 +696,7 @@ void parse()
     TOKEN* curTok = getNextToken();
     curTok = createTokenCopy(curTok);
 
-    if (curTok->tok == DOLLAR) {
+    if (curTok->tok == EOF_SYMBOL) {
         printParseError(3, st->top, curTok);
 
         destroyStack(st);

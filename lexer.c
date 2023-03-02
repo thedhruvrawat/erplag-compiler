@@ -304,6 +304,7 @@ TOKEN* getNextToken()
                     printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
                     LexCorrPrint = false;
                 }
+                token = createToken();
                 strcpy(token->lexeme, "EOF");
                 token->linenum = LINE_NUM;
                 token->tok = EOF_SYMBOL;
