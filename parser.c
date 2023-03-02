@@ -771,6 +771,7 @@ void parse(){
                         destroyStack(st);
                         destroySet(synchronizingSet);
                         if(synCorrPrint) {printf(GREEN BOLD "Input source code is syntactically correct\n" RESET); synCorrPrint = true;}
+                        free(curTok);
                         return;
                     }
                 } 
