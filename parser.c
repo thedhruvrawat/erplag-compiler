@@ -795,8 +795,9 @@ void parse(){
     }
 
     while(curTok->tok != EOF_SYMBOL){
+        free(curTok);
         curTok = getNextToken();
-        
+        curTok = createTokenCopy(curTok);
     }
 
     free(curTok);

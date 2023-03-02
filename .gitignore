@@ -8,3 +8,4 @@ vgcore*
 parseTable.txt
 stage1exe
 *.json
+.DS_Store
