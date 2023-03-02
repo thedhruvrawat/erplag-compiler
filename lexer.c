@@ -804,6 +804,7 @@ TOKEN* getNextToken()
                 break;
             case 7:
                 printf(RED BOLD "[Lexer] Unclosed Comment\n" RESET);
+                token = createToken();
                 strcpy(token->lexeme, "EOF");
                 token->linenum = LINE_NUM;
                 token->tok = EOF_SYMBOL;
