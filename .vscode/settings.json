@@ -3,7 +3,9 @@
         "*.pl": "prolog",
         "*.rmd": "markdown",
         "grammar.h": "c",
-        "lexer.h": "c"
+        "lexer.h": "c",
+        "set.h": "c",
+        "colorcodes.h": "c"
     },
     "makefile.launchConfigurations": [
         {

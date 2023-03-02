@@ -1,22 +1,33 @@
 /*
 Group Number : 2
-1 	Dhruv Rawat 	2019B3A70537P 	thedhruvrawat
-2 	Chirag Gupta 	2019B3A70555P 	Chirag5128
-3 	Swastik Mantry 	2019B1A71019P 	Swastik-Mantry
+1 	Dhruv Rawat 	    2019B3A70537P 	thedhruvrawat
+2 	Chirag Gupta 	    2019B3A70555P 	Chirag5128
+3 	Swastik Mantry 	    2019B1A71019P 	Swastik-Mantry
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
-5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
+5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
-// #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include "trie.h"
 
-Trie* setupTrie() {
+/**
+ * @brief Creates a new trie
+ *
+ * @return Trie*
+ */
+Trie* setupTrie()
+{
     Trie* trie = createTrieNode();
     return trie;
 }
 
-void populateTerminalTrie(Trie* trie) {
+/**
+ * @brief Populates the given trie with terminals for keyword matching for lexer
+ *
+ * @param trie
+ */
+void populateTerminalTrie(Trie* trie)
+{
     insertWord(trie, "integer", INTEGER);
     insertWord(trie, "real", REAL);
     insertWord(trie, "boolean", BOOLEAN);
@@ -28,7 +39,7 @@ void populateTerminalTrie(Trie* trie) {
     insertWord(trie, "module", MODULE);
     insertWord(trie, "driver", DRIVER);
     // "program" specified in the language specifications but "Program" in the test cases
-    insertWord(trie, "program", PROGRAM); 
+    insertWord(trie, "program", PROGRAM);
     insertWord(trie, "get_value", GET_VALUE);
     insertWord(trie, "print", PRINT);
     insertWord(trie, "use", USE);
@@ -50,7 +61,13 @@ void populateTerminalTrie(Trie* trie) {
     insertWord(trie, "false", FALSE);
 }
 
-void populateGrammarTrie(Trie* trie) {
+/**
+ * @brief Populates the given terminals with the token names of all the terminals for the parser
+ *
+ * @param trie
+ */
+void populateGrammarTrie(Trie* trie)
+{
     insertWord(trie, "INTEGER", INTEGER);
     insertWord(trie, "REAL", REAL);
     insertWord(trie, "BOOLEAN", BOOLEAN);
@@ -61,7 +78,7 @@ void populateGrammarTrie(Trie* trie) {
     insertWord(trie, "DECLARE", DECLARE);
     insertWord(trie, "MODULE", MODULE);
     insertWord(trie, "DRIVER", DRIVER);
-    insertWord(trie, "PROGRAM", PROGRAM); 
+    insertWord(trie, "PROGRAM", PROGRAM);
     insertWord(trie, "GET_VALUE", GET_VALUE);
     insertWord(trie, "PRINT", PRINT);
     insertWord(trie, "USE", USE);
@@ -110,7 +127,13 @@ void populateGrammarTrie(Trie* trie) {
     insertWord(trie, "OR", OR);
 }
 
-Trie* createTrieNode() {
+/**
+ * @brief Create a new trie node and initializes it
+ *
+ * @return Trie*
+ */
+Trie* createTrieNode()
+{
     Trie* res = malloc(sizeof(Trie));
     res->count = 0;
     res->tok = ID;
@@ -120,7 +143,16 @@ Trie* createTrieNode() {
     return res;
 }
 
-int insertWord(Trie* tr, char *word, int tok) {
+/**
+ * @brief Inserts a given string into the trie and associates that trie with the given tok
+ *
+ * @param tr
+ * @param word
+ * @param tok
+ * @return int
+ */
+int insertWord(Trie* tr, char* word, int tok)
+{
     Trie* head = tr;
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
@@ -139,7 +171,15 @@ int insertWord(Trie* tr, char *word, int tok) {
     return tok + 1;
 }
 
-int searchWord(Trie* tr, char* word) {
+/**
+ * @brief Search the trie for the given string and returns tok associated with it if present, else ID
+ *
+ * @param tr
+ * @param word
+ * @return int
+ */
+int searchWord(Trie* tr, char* word)
+{
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
         if (tr->next[word[i]] == NULL) {
@@ -150,7 +190,15 @@ int searchWord(Trie* tr, char* word) {
     return tr->tok;
 }
 
-int searchGrammar(Trie* tr, char* word) {
+/**
+ * @brief Search the trie for the given string and returns tok associated with it if present, else -1
+ *
+ * @param tr
+ * @param word
+ * @return int
+ */
+int searchGrammar(Trie* tr, char* word)
+{
     int len = strlen(word);
     for (int i = 0; i < len; ++i) {
         if (tr->next[word[i]] == NULL) {
@@ -161,21 +209,40 @@ int searchGrammar(Trie* tr, char* word) {
     return tr->tok;
 }
 
-void getElement(Trie* tr, char* tok, int pos, char** elements) {
+/**
+ * @brief Recursive function invoked by the getElement() function to form the elements array
+ *
+ * @param tr
+ * @param tok
+ * @param pos
+ * @param elements
+ */
+void getElement(Trie* tr, char* tok, int pos, char** elements)
+{
     if (tr->end) {
         tok[pos] = 0;
         elements[tr->tok] = malloc(sizeof(char) * (strlen(tok) + 1));
         strcpy(elements[tr->tok], tok);
     }
     for (int i = 0; i < 128; ++i) {
-        if (tr->next[i] == NULL) { continue; }
-        tok[pos] = (char) i;
+        if (tr->next[i] == NULL) {
+            continue;
+        }
+        tok[pos] = (char)i;
         getElement(tr->next[i], tok, pos + 1, elements);
     }
     return;
 }
 
-char** getElements(Trie* tr) {
+/**
+ * @brief Constructs the elements array which stores all the elements of the trie at their corresponding
+ * index given by the tok
+ *
+ * @param tr
+ * @return char**
+ */
+char** getElements(Trie* tr)
+{
     int sz = tr->count;
     char** elements = malloc(sz * sizeof(char*));
     char tok[100];
@@ -184,9 +251,17 @@ char** getElements(Trie* tr) {
     return elements;
 }
 
-void freeTrie(Trie* tr) {
+/**
+ * @brief Frees the memory allocated for the trie
+ *
+ * @param tr
+ */
+void freeTrie(Trie* tr)
+{
     for (int i = 0; i < 128; ++i) {
-        if (tr->next[i] == NULL) { continue; }
+        if (tr->next[i] == NULL) {
+            continue;
+        }
         freeTrie(tr->next[i]);
     }
     free(tr);
