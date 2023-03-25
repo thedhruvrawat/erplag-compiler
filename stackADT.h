@@ -13,7 +13,7 @@ Group Number : 2
 typedef struct stackNode{
     grammarElement  * GE;
     struct stackNode * next;
-    TreeNode * nodeAddr;
+    ParseTreeNode * nodeAddr;
 } stackNode;
 
 typedef struct stack{
@@ -24,7 +24,7 @@ stackNode *getStackNode(grammarElement *GE);
 stack *initStack(void);
 stackNode *peekStack(stack *st);
 void popStack(stack *S);
-void pushStackGE(stack *S, grammarElement *GE, TreeNode* nodeAddr);
+void pushStackGE(stack *S, grammarElement *GE, ParseTreeNode* nodeAddr);
 bool isEmpty(stack * S);
 void destroyStack(stack* st);
 

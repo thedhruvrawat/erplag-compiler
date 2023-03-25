@@ -14,6 +14,7 @@ Group Number : 2
 #include "colorCodes.h"
 #include "lexer.h"
 #include "parser.h"
+#include "ast.h"
 
 /**
  * @brief Removes the comments from the input file and outputs the same to console
@@ -112,12 +113,12 @@ void printTokenList(char* userCode)
  * @param sourceCode
  * @param parseTreeOutput
  */
-void parseInput(char* sourceCode, char* parseTreeOutput)
+ParseTree* parseInput(char* sourceCode, char* parseTreeOutput)
 {
-    parserMain(sourceCode, parseTreeOutput);
+    ParseTree* pt = parserMain(sourceCode, parseTreeOutput);
     cleanParser();
     cleanLexer();
-    return;
+    return pt;
 }
 
 int main(int argc, char* argv[])
@@ -205,12 +206,15 @@ int main(int argc, char* argv[])
             double total_CPU_time, total_CPU_time_in_seconds;
             printf("-------------------------------------------------------------------------------------\n");
             start_time = clock();
-            parseInput(userCode, treeOutput);
+            ParseTree* pt = parseInput(userCode, treeOutput);
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
             printf(YELLOW BOLD "TOTAL CPU TIME: %f\tTOTAL CPU TIME IN SECONDS: %f sec\n" RESET, total_CPU_time, total_CPU_time_in_seconds);
             printf("-------------------------------------------------------------------------------------\n");
+            // TESTING AST CREATION;;; TO BE REMOVED LATER
+            ASTCreator(pt);
+
             break;
         }
         default: {

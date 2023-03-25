@@ -5,13 +5,14 @@
         "grammar.h": "c",
         "lexer.h": "c",
         "set.h": "c",
-        "colorcodes.h": "c"
+        "colorcodes.h": "c",
+        "astdef.h": "c"
     },
     "makefile.launchConfigurations": [
         {
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
-            "binaryArgs": ["test_cases/t4.txt", "parseTable.txt", "12"]
+            "binaryArgs": ["./testCases/t10.txt", "parseTable.txt", "12"]
         }
     ]
 }

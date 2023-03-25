@@ -471,7 +471,7 @@ void initRootNode()
 {
     parseTree->sz++;
     parseTree->treeDepth++;
-    TreeNode* root = malloc(sizeof(TreeNode));
+    ParseTreeNode* root = malloc(sizeof(ParseTreeNode));
     root->tok = NULL;
     root->depth = 1;
     root->tokenID = pdtable->grammarrules[0]->LHS->tokenID;
@@ -505,15 +505,15 @@ void initParseTree()
  * @param tok
  * @param st
  */
-void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack* st)
+void insertRuleInParseTree(ParseTreeNode* parent, int productionID, TOKEN* tok, stack* st)
 {
-    TreeNode* head = NULL;
-    TreeNode* currNode;
+    ParseTreeNode* head = NULL;
+    ParseTreeNode* currNode;
 
     grammarElement* g = pdtable->grammarrules[productionID]->RHSTail;
 
     while (g != NULL) {
-        currNode = malloc(sizeof(TreeNode));
+        currNode = malloc(sizeof(ParseTreeNode));
         parseTree->sz++;
         currNode->depth = parent->depth + 1;
         currNode->tok = NULL;
@@ -540,7 +540,7 @@ void insertRuleInParseTree(TreeNode* parent, int productionID, TOKEN* tok, stack
  * @param fp
  * @param firstChild
  */
-void printParseTreeRec(TreeNode* node, FILE* fp, bool firstChild)
+void printParseTreeRec(ParseTreeNode* node, FILE* fp, bool firstChild)
 {
     if (node == NULL) {
         return;
@@ -814,7 +814,8 @@ void parse()
                 curTok = createTokenCopy(curTok);
             } else {
                 // Pop current nonTerminal, push Rule, update topStack
-                TreeNode* topStackAddr = topStack->nodeAddr;
+                ParseTreeNode* topStackAddr = topStack->nodeAddr;
+                topStackAddr->productionID = ruleID;
                 popStack(st);
                 insertRuleInParseTree(topStackAddr, ruleID, curTok, st);
                 topStack = peekStack(st);
@@ -931,7 +932,7 @@ void freeRuleLocs(int nonTerminalLen)
  *
  * @param node
  */
-void freeParseTreeRec(TreeNode* node)
+void freeParseTreeRec(ParseTreeNode* node)
 {
     if (node == NULL) {
         return;
@@ -990,18 +991,19 @@ void cleanParser()
     LHSLoc = NULL;
     RHSLoc = NULL;
 
-    freeParseTree(parseTree);
+    // freeParseTree(parseTree);
     base = 0;
     return;
 }
 
 /**
  * @brief Driver function of the parser; invoked by the parser to parse the user code
- *
- * @param userSourceCode
- * @param parseTreeOutput
+ * 
+ * @param userSourceCode 
+ * @param parseTreeOutput 
+ * @return ParseTree* 
  */
-void parserMain(char* userSourceCode, char* parseTreeOutput)
+ParseTree* parserMain(char* userSourceCode, char* parseTreeOutput)
 {
     // Setup
     // if (argc != 2) {
@@ -1118,5 +1120,5 @@ void parserMain(char* userSourceCode, char* parseTreeOutput)
 
     fclose(f);
     fclose(fp);
-    return;
+    return parseTree;
 }

@@ -60,7 +60,7 @@ void popStack(stack * st)
     if (st->size == 0)
     {
         printf("Stack is empty!\n");
-        return ;
+        return;
     }
 
     stackNode *currTop = st->top;
@@ -82,7 +82,7 @@ void popStack(stack * st)
  * @param GE 
  * @param nodeAddr 
  */
-void pushStackGE(stack *st, grammarElement *GE, TreeNode* nodeAddr)
+void pushStackGE(stack *st, grammarElement *GE, ParseTreeNode* nodeAddr)
 {
     
     stackNode *newTop = getStackNode(GE);

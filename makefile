@@ -4,17 +4,20 @@
 #3 	Swastik Mantry 	2019B1A71019P 	Swastik-Mantry
 #4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 #5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
-driver: driver.o parser.o lexer.o trie.o stackADT.o Set.o
-	gcc driver.o parser.o trie.o lexer.o Set.o stackADT.o -g -o stage1exe
+driver: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o
+	gcc driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o -g -o stage1exe
 
-sanitized: driver.o parser.o lexer.o trie.o stackADT.o Set.o
-	gcc -fsanitize=address driver.o parser.o trie.o lexer.o Set.o stackADT.o -g -o stage1exe
+sanitized: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o
+	gcc -fsanitize=address driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o -g -o stage1exe
 
 stackADT.o: stackADT.c
 	gcc -c -g stackADT.c
 
 parser.o: parser.c parser.h parserDef.h
 	gcc -c -g parser.c
+
+ast.o: ast.c ast.h astDef.h
+	gcc -c -g ast.c
 
 driver.o: driver.c
 	gcc -c -g driver.c
