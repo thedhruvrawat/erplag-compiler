@@ -12,7 +12,11 @@
         {
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
-            "binaryArgs": ["./testCases/t10.txt", "parseTable.txt", "12"]
+            "binaryArgs": [
+                "./testCases/testCase10.txt",
+                "parseTable.txt",
+                "12"
+            ]
         }
     ]
 }

@@ -11,10 +11,12 @@ Group Number : 2
 typedef struct ASTNode {
     char label[20];
     ParseTreeNode* parseTreeNode;
+    struct ASTNode* parent;
     struct ASTNode* leftMostChild;
     struct ASTNode* rightMostChild;
     struct ASTNode* next;
     struct ASTNode* prev;
+    int numChildren;
 } ASTNode;
 
 typedef struct AST {
