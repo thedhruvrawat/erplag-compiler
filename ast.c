@@ -603,7 +603,7 @@ void createAST(void) {
                     break;
                 }
                 case 74: { // <expression> = <arithmeticOrBooleanExpr> 
-                    
+                    break;
                 }
 
                 case 112: {
