@@ -219,7 +219,7 @@ void createAST(void) {
                     ASTNode* programNode = createASTNode("PROGRAM", node->parseTreeNode);
                     tree->root = programNode;
                     pushChildrenToASTStack(st, programNode, node->parseTreeNode->child);
-                    moduleDecNode = createASTNode("MODULEDEC", node->parseTreeNode);
+                    moduleDecNode = createASTNode("MODULE_DEC", node->parseTreeNode);
                     appendASTNodeAsChild(moduleDecNode, programNode);
                     printf("programNode: %p\n", programNode);
                     break;
@@ -265,7 +265,7 @@ void createAST(void) {
                     break;
                 }
                 case 10: { // <input_plist> = ID COLON <dataType> <N1>
-                    ASTNode* inputParaListNode = createASTNode("INPUTLIST", node->parseTreeNode);
+                    ASTNode* inputParaListNode = createASTNode("INPUT_LIST", node->parseTreeNode);
                     appendASTNodeAsChild(inputParaListNode, node->parent);
                     printf("inputParaListNode: %p\n", inputParaListNode);
                     ASTNode* idDataTypeNode = createASTNode("ID_DATATYPE", NULL);
@@ -287,7 +287,7 @@ void createAST(void) {
                     break;
                 }
                 case 13: { // <output_plist> = ID COLON <type> <N2>
-                    ASTNode* outputParaListNode = createASTNode("OUTPUTLIST", node->parseTreeNode);
+                    ASTNode* outputParaListNode = createASTNode("OUTPUT_LIST", node->parseTreeNode);
                     appendASTNodeAsChild(outputParaListNode, node->parent);
                     ASTNode* idDataTypeNode = createASTNode("ID_DATATYPE", NULL);
                     appendASTNodeAsChild(idDataTypeNode, outputParaListNode);
@@ -375,7 +375,7 @@ void createAST(void) {
                     break;
                 }
                 case 30: { // <moduleDef> = START <statements> END
-                    ASTNode* moduleDefNode = createASTNode("MODULEDEF", node->parseTreeNode);
+                    ASTNode* moduleDefNode = createASTNode("MODULE_DEF", node->parseTreeNode);
                     appendASTNodeAsChild(moduleDefNode, node->parent);
                     pushChildrenToASTStack(st, moduleDefNode, node->parseTreeNode->child);
                     break;
@@ -470,9 +470,55 @@ void createAST(void) {
                 }
                 case 53: { // <assignmentStmt> = ID <whichStmt>
                     ASTNode* assignmentNode = createASTNode("ASSIGN_STMT", node->parseTreeNode);
+                    appendASTNodeAsChild(assignmentNode, node->parent);
                     pushChildrenToASTStack(st, assignmentNode, node->parseTreeNode->child);
                     break;
                 }
+                case 54: { // <whichStmt> = <lvalueIDStmt> 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 55: { // <whichStmt> = <lvalueARRStmt> 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 56: { // <lvalueIDStmt> = ASSIGNOP <expression> SEMICOL 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 57: { // <lvalueARRStmt> = SQBO <element_index_with_expressions> SQBC ASSIGNOP <expression> SEMICOL 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 58: { // <moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <actual_para_list> SEMICOL 
+                    ASTNode* moduleReuseStmtNode = createASTNode("MODULE_REUSE_STMT", node->parseTreeNode);
+                    appendASTNodeAsChild(moduleDecNode, node->parent);
+                    pushChildrenToASTStack(st, moduleReuseStmtNode, node->parseTreeNode->child);
+                    break;
+                }
+                case 59: { // <actual_para_list> = MINUS <N_13>
+                    // Only create node when the parent is "MODULE_REUSE_STATEMENT"
+                    if (node->parent->label[0] == 'M') {
+                        ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
+                        appendASTNodeAsChild(paraListNode, node->parent);
+                    }
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 60: { // <N_13> = NUM <N_12>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 61: { // <N_13> = NUM <N_12>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 62: { // <N_13> = NUM <N_12>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                
+
                 default: {
                     continue;
                 }
