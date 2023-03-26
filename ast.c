@@ -201,7 +201,7 @@ void createAST(void) {
     pushASTStack(st, pt->root, NULL);
 
     ASTNode* moduleDecNode;
-
+    ASTNode* caseStmtsNode;
     while (st->size > 0) {
         ASTStackNode* node = peekASTStack(st);
         popASTStack(st);
@@ -234,7 +234,7 @@ void createAST(void) {
                     break;
                 }
                 case 3: { // <moduleDeclaration> = DECLARE MODULE ID SEMICOL
-                    ASTNode* moduleNode = createASTNode("ID", node->parseTreeNode->child->next->next);
+                    ASTNode* moduleNode = createASTNode("ID", node->parseTreeNode->child->next->next); // Why do we create "ID" node. Isn't it getting processed
                     appendASTNodeAsChild(moduleNode, moduleDecNode);
                     break;
                 }
@@ -470,7 +470,7 @@ void createAST(void) {
                 case 52: { // <simpleStmt> = <moduleReuseStmt> 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
-                }w
+                }
                 case 53: { // <assignmentStmt> = ID <whichStmt>
                     ASTNode* assignmentNode = createASTNode("ASSIGN_STMT", node->parseTreeNode);
                     appendASTNodeAsChild(assignmentNode, node->parent);
@@ -605,77 +605,95 @@ void createAST(void) {
                 case 74: { // <expression> = <arithmeticOrBooleanExpr> 
                     break;
                 }
-
+                case 80: { // <unary_op> = MINUS 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 94: { //<factor> = BO <arithmeticOrBooleanExpr> BC 
+                    ASTNode* factorNode = createASTNode("FACTOR", NULL);
+                    appendASTNodeAsChild(factorNode, node->parent);
+                    // pushChildrenToASTStack();
+                    // incomplete
+                    break;
+                }
+                case 95: { //<factor> = NUM
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 96: { //<factor> = RNUM
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
                 case 112: {
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 113: { // <op1> = MINUS
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 114: { // <op2> = MUL 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 115: { // <op2> = DIV 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 116: { // <logicalOp> = AND 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 117: { // <logicalOp> = OR 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 118: { // <relationalOp> = LT
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 119: { // <relationalOp> = LE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 120: { // <relationalOp> = GT
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 121: { // <relationalOp> = GE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 122: { // <relationalOp> = EQ
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 123: { // <relationalOp> = NE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child->child);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 124: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
-                    ASTNode* declareStmtNode = createASTNode("DECLARE", node->parseTreeNode);
+                    ASTNode* declareStmtNode = createASTNode("DECLARE", node->parseTreeNode->child);
                     appendASTNodeAsChild(declareStmtNode, node->parent);
-                    pushChildrenToASTStack(st, declareStmtNode, node->parseTreeNode->child);
+                    pushChildrenToASTStack(st, declareStmtNode, node->parseTreeNode->child->next); // We donot need to insert DECLARE
                     break;
                 }
                 case 125: { // <conditionalStmt> = SWITCH BO ID BC START <caseStmts> <default> END
-                    ASTNode* condStmtNode = createASTNode("SWITCH", node->parseTreeNode);
+                    ASTNode* condStmtNode = createASTNode("SWITCH", node->parseTreeNode->child);
                     appendASTNodeAsChild(condStmtNode, node->parent);
-                    pushChildrenToASTStack(st, condStmtNode, node->parseTreeNode->child);
+                    pushChildrenToASTStack(st, condStmtNode, node->parseTreeNode->child->next); // We donot need to insert SWITCH
                     break;
                 }
                 case 126: { // <caseStmts> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
-                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode);
-                    appendASTNodeAsChild(caseStmtNode, node->parent);
-                    pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child);
+                    ASTNode* caseStmtsNode = createASTNode("CASE_STMTS", node->parseTreeNode->child);
+                    appendASTNodeAsChild(caseStmtsNode, node->parent);
+                    pushChildrenToASTStack(st, caseStmtsNode, node->parseTreeNode->child->next); // We donot need to insert CASE
                     break;
                 }
                 case 127: { // <N9> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
-                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode);
-                    appendASTNodeAsChild(caseStmtNode, node->parent);
-                    pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child);
+                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode->child);
+                    appendASTNodeAsChild(caseStmtNode, node->parent->parent);
+                    pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child->next); // We donot need to insert CASE
                     break;
                 }
                 case 128: { // <N9> = e
