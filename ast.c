@@ -467,58 +467,58 @@ void createAST(void) {
                 case 52: { // <simpleStmt> = <moduleReuseStmt> 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
-                }
+                }w
                 case 53: { // <assignmentStmt> = ID <whichStmt>
                     ASTNode* assignmentNode = createASTNode("ASSIGN_STMT", node->parseTreeNode);
                     pushChildrenToASTStack(st, assignmentNode, node->parseTreeNode->child);
                     break;
                 }
-                case 112: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 112: { // <op1> = PLUS 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 113: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 113: { // <op1> = MINUS
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 114: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 114: { // <op2> = MUL 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 115: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 115: { // <op2> = DIV 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 116: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 116: { // <logicalOp> = AND 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 117: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 117: { // <logicalOp> = OR 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 118: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 118: { // <relationalOp> = LT
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 119: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 119: { // <relationalOp> = LE
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 120: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 120: { // <relationalOp> = GT
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 121: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 121: { // <relationalOp> = GE
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 122: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 122: { // <relationalOp> = EQ
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 123: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                case 123: { // <relationalOp> = NE
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 124: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
