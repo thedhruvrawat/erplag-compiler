@@ -209,10 +209,7 @@ void createAST(void) {
 
         if (node->parseTreeNode->isLeaf) {
             if (isUsefulTerminal(node)) {
-                printf("Terminal\n");
                 ASTNode* leafNode = createASTNode(token_types[node->parseTreeNode->tokenID], node->parseTreeNode);
-                printf("%p\n", node->parent);
-                printf("%s\n", node->parseTreeNode->tok->lexeme);
                 appendASTNodeAsChild(leafNode, node->parent);
             }
         } else {
@@ -221,21 +218,19 @@ void createAST(void) {
                     ASTNode* programNode = createASTNode("PROGRAM", node->parseTreeNode);
                     tree->root = programNode;
                     pushChildrenToASTStack(st, programNode, node->parseTreeNode->child);
-                    moduleDecNode = createASTNode("MODULE_DEC", node->parseTreeNode);
+                    moduleDecNode = createASTNode("MODULE_DEC", node->parseTreeNode->child);
                     appendASTNodeAsChild(moduleDecNode, programNode);
-                    printf("programNode: %p\n", programNode);
                     break;
                 }
                 case 1: { // <moduleDeclarations> = <moduleDeclaration> <moduleDeclarations>
-                    pushASTStack(st, node->parseTreeNode->child, moduleDecNode);
+                    pushChildrenToASTStack(st, moduleDecNode, node->parseTreeNode->child);
                     break;
                 }
                 case 2: { // <moduleDeclarations> = e
                     break;
                 }
                 case 3: { // <moduleDeclaration> = DECLARE MODULE ID SEMICOL
-                    ASTNode* moduleNode = createASTNode("ID", node->parseTreeNode->child->next->next); // Why do we create "ID" node. Isn't it getting processed
-                    appendASTNodeAsChild(moduleNode, moduleDecNode);
+                    pushChildrenToASTStack(st, moduleDecNode, node->parseTreeNode->child);
                     break;
                 }
                 case 4: { // <otherModules> = <module>  <otherModules>
@@ -247,14 +242,12 @@ void createAST(void) {
                 }
                 case 6: { // <driverModule> = DRIVERDEF DRIVER PROGRAM DRIVERENDDEF <moduleDef>
                     ASTNode* driverNode = createASTNode("DRIVER", node->parseTreeNode);
-                    printf("%p\n", node->parent);
                     appendASTNodeAsChild(driverNode, node->parent);
                     pushChildrenToASTStack(st, driverNode, node->parseTreeNode->child);
                     break;
                 }
                 case 7: { // <module> = DEF MODULE ID ENDDEF TAKES INPUT SQBO <input_plist> SQBC SEMICOL <ret> <moduleDef>
                     ASTNode* moduleNode = createASTNode("MODULE", node->parseTreeNode);
-                    printf("%p\n", node->parent);
                     appendASTNodeAsChild(moduleNode, node->parent);
                     pushChildrenToASTStack(st, moduleNode, node->parseTreeNode->child);
                     break;
@@ -269,18 +262,13 @@ void createAST(void) {
                 case 10: { // <input_plist> = ID COLON <dataType> <N1>
                     ASTNode* inputParaListNode = createASTNode("INPUT_LIST", node->parseTreeNode);
                     appendASTNodeAsChild(inputParaListNode, node->parent);
-                    printf("inputParaListNode: %p\n", inputParaListNode);
                     ASTNode* idDataTypeNode = createASTNode("ID_DATATYPE", NULL);
                     appendASTNodeAsChild(idDataTypeNode, inputParaListNode);
-                    printf("idDataTypeNode: %p\n", idDataTypeNode);
-                    printf("idDataTypeNode: %p\n", idDataTypeNode->parent);
                     pushChildrenToASTStack(st, idDataTypeNode, node->parseTreeNode->child);
                     break;
                 }
                 case 11: { // <N1> = COMMA ID COLON <dataType> <N1>
                     ASTNode* idDataTypeNode = createASTNode("ID_DATATYPE", NULL);
-                    printf("parent of N1: %p\n", node->parent);
-                    printf("parent of N1: %p\n", node->parent->parent);
                     appendASTNodeAsChild(idDataTypeNode, node->parent->parent);
                     pushChildrenToASTStack(st, idDataTypeNode, node->parseTreeNode->child);
                     break;
@@ -306,18 +294,15 @@ void createAST(void) {
                     break;
                 }
                 case 16: { // <dataType> = INTEGER
-                    ASTNode* intNode = createASTNode("INTEGER", node->parseTreeNode->child);
-                    appendASTNodeAsChild(intNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 17: { // <dataType> = REAL
-                    ASTNode* realNode = createASTNode("REAL", node->parseTreeNode->child);
-                    appendASTNodeAsChild(realNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 18: { // <dataType> = BOOLEAN
-                    ASTNode* boolNode = createASTNode("BOOLEAN", node->parseTreeNode->child);
-                    appendASTNodeAsChild(boolNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 19: { // <dataType> = ARRAY SQBO <range_arrays> SQBC OF <type>
@@ -339,41 +324,34 @@ void createAST(void) {
                     break;
                 }
                 case 22: { // <new_index> = NUM
-                    ASTNode* numNode = createASTNode("NUM", node->parseTreeNode->child);
-                    appendASTNodeAsChild(numNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 23: { // <new_index> = ID
-                    ASTNode* idNode = createASTNode("ID", node->parseTreeNode->child);
-                    appendASTNodeAsChild(idNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 24: { // <sign> = PLUS
-                    ASTNode* signNode = createASTNode("PLUS", node->parseTreeNode->child);
-                    appendASTNodeAsChild(signNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 25: { // <sign> = MINUS
-                    ASTNode* signNode = createASTNode("MINUS", node->parseTreeNode->child);
-                    appendASTNodeAsChild(signNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 26: { // <sign> = e
                     break;
                 }
                 case 27: { // <type> = INTEGER
-                    ASTNode* intNode = createASTNode("INTEGER", node->parseTreeNode->child);
-                    appendASTNodeAsChild(intNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 28: { // <type> = REAL
-                    ASTNode* realNode = createASTNode("REAL", node->parseTreeNode->child);
-                    appendASTNodeAsChild(realNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 29: { // <type> = BOOLEAN
-                    ASTNode* boolNode = createASTNode("BOOLEAN", node->parseTreeNode->child);
-                    appendASTNodeAsChild(boolNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 30: { // <moduleDef> = START <statements> END
@@ -624,141 +602,139 @@ void createAST(void) {
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 112: {
+                case 111: {
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 113: { // <op1> = MINUS
+                case 112: { // <op1> = MINUS
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 114: { // <op2> = MUL 
+                case 113: { // <op2> = MUL 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 115: { // <op2> = DIV 
+                case 114: { // <op2> = DIV 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 116: { // <logicalOp> = AND 
+                case 115: { // <logicalOp> = AND 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 117: { // <logicalOp> = OR 
+                case 116: { // <logicalOp> = OR 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 118: { // <relationalOp> = LT
+                case 117: { // <relationalOp> = LT
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 119: { // <relationalOp> = LE
+                case 118: { // <relationalOp> = LE
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 120: { // <relationalOp> = GT
+                case 119: { // <relationalOp> = GT
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 121: { // <relationalOp> = GE
+                case 120: { // <relationalOp> = GE
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 122: { // <relationalOp> = EQ
+                case 121: { // <relationalOp> = EQ
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 123: { // <relationalOp> = NE
+                case 122: { // <relationalOp> = NE
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 124: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
+                case 123: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
                     ASTNode* declareStmtNode = createASTNode("DECLARE", node->parseTreeNode->child);
                     appendASTNodeAsChild(declareStmtNode, node->parent);
                     pushChildrenToASTStack(st, declareStmtNode, node->parseTreeNode->child->next); // We donot need to insert DECLARE
                     break;
                 }
-                case 125: { // <conditionalStmt> = SWITCH BO ID BC START <caseStmts> <default> END
+                case 124: { // <conditionalStmt> = SWITCH BO ID BC START <caseStmts> <default> END
                     ASTNode* condStmtNode = createASTNode("SWITCH", node->parseTreeNode->child);
                     appendASTNodeAsChild(condStmtNode, node->parent);
                     pushChildrenToASTStack(st, condStmtNode, node->parseTreeNode->child);
                     break;
                 }
-                case 126: { // <caseStmts> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
-                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode);
+                case 125: { // <caseStmts> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
+                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode->child);
                     appendASTNodeAsChild(caseStmtNode, node->parent);
                     pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child);
                     break;
                 }
-                case 127: { // <N9> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
+                case 126: { // <N9> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
                     ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode->child);
                     appendASTNodeAsChild(caseStmtNode, node->parent->parent);
                     pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child->next); // We donot need to insert CASE
                     break;
                 }
-                case 128: { // <N9> = e
+                case 127: { // <N9> = e
                     break;
                 }
-                case 129: { // <value> = NUM
+                case 128: { // <value> = NUM
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 130: { // <value> = TRUE
+                case 129: { // <value> = TRUE
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 131: { // <value> = FALSE 
+                case 130: { // <value> = FALSE 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 132: { // <default> = DEFAULT COLON <statements> BREAK SEMICOL 
+                case 131: { // <default> = DEFAULT COLON <statements> BREAK SEMICOL 
                     ASTNode* defaultNode = createASTNode("DEFAULT", node->parseTreeNode->child);
                     appendASTNodeAsChild(defaultNode, node->parent);
                     pushChildrenToASTStack(st, defaultNode, node->parseTreeNode->child);
                     break; 
                 }
-                case 133: { // <default> = e 
+                case 132: { // <default> = e 
                     break;
                 }
-                case 134: { // <iterativeStmt> = FOR BO ID IN <range_for_loop> BC START <statements> END 
-
+                case 133: { // <iterativeStmt> = FOR BO ID IN <range_for_loop> BC START <statements> END 
                     ASTNode* iterStmt = createASTNode("FOR", node->parseTreeNode);
                     appendASTNodeAsChild(iterStmt, node->parent);
                     pushChildrenToASTStack(st, iterStmt, node->parseTreeNode->child);
                     break;
                 }
-                case 135: { // <iterativeStmt> = WHILE BO <arithmeticOrBooleanExpr> BC START <statements> END 
+                case 134: { // <iterativeStmt> = WHILE BO <arithmeticOrBooleanExpr> BC START <statements> END 
                     ASTNode* iterStmt = createASTNode("WHILE", node->parseTreeNode);
                     appendASTNodeAsChild(iterStmt, node->parent);
                     pushChildrenToASTStack(st, iterStmt, node->parseTreeNode->child);
                     break;
                 }
-                case 136: { // <range_for_loop> = <index_for_loop> RANGEOP <index_for_loop>
-                // Since we have done syntactic checking we aren't using RANGE_FOR_LOOP, But again we don't if we might need later.
+                case 135: { // <range_for_loop> = <index_for_loop> RANGEOP <index_for_loop>
                     ASTNode* rangeForLoop = createASTNode("RANGE_FOR_LOOP", node->parseTreeNode);
                     appendASTNodeAsChild(rangeForLoop, node->parent);
                     pushChildrenToASTStack(st, rangeForLoop, node->parseTreeNode->child);
                     break;
                 }
-                case 137: { // <index_for_loop> = <sign_for_loop> <new_index_for_loop> 
+                case 136: { // <index_for_loop> = <sign_for_loop> <new_index_for_loop> 
                     ASTNode* indexForLoop = createASTNode("INDEX_FOR_LOOP", node->parseTreeNode);
                     appendASTNodeAsChild(indexForLoop, node->parent);
                     pushChildrenToASTStack(st, indexForLoop, node->parseTreeNode->child);
                     break;
                 }
-                case 138: { //<new_index_for_loop> = NUM 
+                case 137: { //<new_index_for_loop> = NUM 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 139: { // <sign_for_loop> = PLUS
+                case 138: { // <sign_for_loop> = PLUS
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 140: { // <sign_for_loop> = MINUS
+                case 139: { // <sign_for_loop> = MINUS
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 141: { // <sign_for_loop> = e 
+                case 140: { // <sign_for_loop> = e 
                     break;
                 }
                 default: {
