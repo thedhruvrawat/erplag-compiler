@@ -1,0 +1,5 @@
+<<<driver program>>>
+start
+    print(A[k]);
+    print(num);
+end

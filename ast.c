@@ -20,6 +20,8 @@ ASTNodeList* initASTNodeList(void) {
     list->head = NULL;
     list->tail = NULL;
     list->sz = 0;
+
+    return list;
 }
 
 AST* initAST(void) {
@@ -229,7 +231,7 @@ void createAST(void) {
                     break;
                 }
                 case 2: { // <moduleDeclarations> = e
-                    continue;
+                    break;
                 }
                 case 3: { // <moduleDeclaration> = DECLARE MODULE ID SEMICOL
                     ASTNode* moduleNode = createASTNode("ID", node->parseTreeNode->child->next->next);
@@ -415,6 +417,7 @@ void createAST(void) {
                 case 39: { // <ioStmt> = PRINT BO <var_print> BC SEMICOL
                     ASTNode* printNode = createASTNode("PRINT", node->parseTreeNode->child);
                     appendASTNodeAsChild(printNode, node->parent);
+                    pushChildrenToASTStack(st, printNode, node->parseTreeNode->child->next);
                     break;
                 }
                 case 40: { // <boolConstt> = TRUE
@@ -492,7 +495,7 @@ void createAST(void) {
                 }
                 case 58: { // <moduleReuseStmt> = <optional> USE MODULE ID WITH PARAMETERS <actual_para_list> SEMICOL 
                     ASTNode* moduleReuseStmtNode = createASTNode("MODULE_REUSE_STMT", node->parseTreeNode);
-                    appendASTNodeAsChild(moduleDecNode, node->parent);
+                    appendASTNodeAsChild(moduleReuseStmtNode, node->parent);
                     pushChildrenToASTStack(st, moduleReuseStmtNode, node->parseTreeNode->child);
                     break;
                 }
@@ -501,70 +504,154 @@ void createAST(void) {
                     if (node->parent->label[0] == 'M') {
                         ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
                         appendASTNodeAsChild(paraListNode, node->parent);
+                        ASTNode* minusNode = createASTNode("MINUS_NODE", node->parseTreeNode->child);
+                        appendASTNodeAsChild(minusNode, paraListNode);
+                        pushChildrenToASTStack(st, minusNode, node->parseTreeNode->child->next);
+                    } else {
+                        ASTNode* minusNode = createASTNode("MINUS_NODE", node->parseTreeNode->child);
+                        appendASTNodeAsChild(minusNode, node->parent);
+                        pushChildrenToASTStack(st, minusNode, node->parseTreeNode->child->next);
                     }
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 60: { // <N_13> = NUM <N_12>
+                    ASTNode* numNode = createASTNode("NUM", node->parseTreeNode->child);
+                    appendASTNodeAsChild(numNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 61: { // <N_13> = RNUM <N_12>
+                    ASTNode* rnumNode = createASTNode("RNUM", node->parseTreeNode->child);
+                    appendASTNodeAsChild(rnumNode, node->parent);
+                    pushChildrenToASTStack(st, node->parent->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 62: { // <N_13> = ID <N_11> <N_12>
+                    ASTNode* idNode = createASTNode("ID", node->parseTreeNode->child);
+                    appendASTNodeAsChild(idNode, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, node->parent);
+                    pushChildrenToASTStack(st, node->parent->parent, node->parseTreeNode->child->next->next);
+                    break;
+                }
+                case 63: { // <actual_para_list> = NUM <N_12>
+                    if (node->parent->label[0] == 'M') {
+                        ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
+                        appendASTNodeAsChild(paraListNode, node->parent);
+                        pushChildrenToASTStack(st, paraListNode, node->parseTreeNode->child);
+                    } else {
+                        pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    }
+                    break;
+                }
+                case 64: { // <actual_para_list> = RNUM <N_12>
+                    if (node->parent->label[0] == 'M') {
+                        ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
+                        appendASTNodeAsChild(paraListNode, node->parent);
+                        pushChildrenToASTStack(st, paraListNode, node->parseTreeNode->child);
+                    } else {
+                        pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    }
+                    break;
+                }
+                case 65: { // <actual_para_list> = <boolConstt> <N_12>
+                    if (node->parent->label[0] == 'M') {
+                        ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
+                        appendASTNodeAsChild(paraListNode, node->parent);
+                        pushChildrenToASTStack(st, paraListNode, node->parseTreeNode->child);
+                    } else {
+                        pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    }
+                    break;
+                }
+                case 66: { // <actual_para_list> = ID <N_11> <N_12>
+                    if (node->parent->label[0] == 'M') {
+                        ASTNode* paraListNode = createASTNode("PARA_LIST", node->parseTreeNode);
+                        appendASTNodeAsChild(paraListNode, node->parent);
+                        pushChildrenToASTStack(st, paraListNode, node->parseTreeNode->child);
+                    } else {
+                        pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    }
+                    break;
+                }
+                case 67: { // <N_12> = COMMA <actual_para_list>
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 61: { // <N_13> = NUM <N_12>
+                case 68: { // <N_12> = e
+                    break;
+                }
+                case 69: { // <optional> = SQBO <idList> SQBC ASSIGNOP
+                    ASTNode* assignNode = createASTNode("ASSIGNOP_NODE", node->parseTreeNode->child->next->next->next);
+                    appendASTNodeAsChild(assignNode, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, assignNode);
+                    break;
+                }
+                case 70: { // <optional> = e 
+                    break;
+                }
+                case 71: { // <idList> = ID <N3>
+                    ASTNode* idListNode = createASTNode("ASSIGN_LIST", node->parseTreeNode);
+                    appendASTNodeAsChild(idListNode, node->parent);
+                    pushChildrenToASTStack(st, idListNode, node->parseTreeNode->child);
+                    break;
+                }
+                case 72: { // <N3> = COMMA ID <N3>
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 62: { // <N_13> = NUM <N_12>
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                case 73: { // <N3> = e 
                     break;
                 }
-                
+                case 74: { // <expression> = <arithmeticOrBooleanExpr> 
+                    
+                }
 
                 case 112: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 113: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 114: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 115: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 116: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 117: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 118: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 119: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 120: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 121: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 122: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 123: {
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 124: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
@@ -595,15 +682,15 @@ void createAST(void) {
                     break;
                 }
                 case 129: { // <value> = NUM
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 130: { // <value> = TRUE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 131: { // <value> = FALSE 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 132: { // <default> = DEFAULT COLON <statements> BREAK SEMICOL 
@@ -642,15 +729,15 @@ void createAST(void) {
                     break;
                 }
                 case 138: { //<new_index_for_loop> = NUM 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 139: { // <sign_for_loop> = PLUS
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 140: { // <sign_for_loop> = MINUS
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode);
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 141: { // <sign_for_loop> = e 
@@ -751,9 +838,9 @@ void prettyPrintAST(void) {
             QueueNode* qNode = peekQueue(q);
             ASTNode* node = qNode->node;
             if (node->parseTreeNode != NULL && node->parseTreeNode->isLeaf) {
-                printf("%s\t%s\t\t", node->label, node->parseTreeNode->tok->lexeme);
+                printf("(%s %s %s) ", node->parent->label, node->label, node->parseTreeNode->tok->lexeme);
             } else {
-                printf("%s\t\t", node->label);
+                printf("(%s %s) ", node->parent->label, node->label);
             }
             popQueue(q);
 
