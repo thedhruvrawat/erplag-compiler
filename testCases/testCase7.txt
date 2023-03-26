@@ -5,7 +5,7 @@ declare v, w, r :integer;
 get_value(v);
 w:=5;
 declare m:real;
-[r,m] := use module mod1 with parameters v, w;
+[r,m] := use module mod1 with parameters -v[k], w;
 print(r);
 print(m);
 end
