@@ -655,25 +655,30 @@ void createAST(void) {
                     break;
                 }
                 case 124: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
-                    ASTNode* declareStmtNode = createASTNode("DECLARE", node->parseTreeNode);
+                    ASTNode* declareStmtNode = createASTNode("DECLARE", node->parseTreeNode->child);
                     appendASTNodeAsChild(declareStmtNode, node->parent);
-                    pushChildrenToASTStack(st, declareStmtNode, node->parseTreeNode->child);
+                    pushASTStack(st, node->parseTreeNode->child->next, declareStmtNode);
+                    pushChildrenToASTStack(st, declareStmtNode, node->parseTreeNode->child->next->next);
                     break;
                 }
                 case 125: { // <conditionalStmt> = SWITCH BO ID BC START <caseStmts> <default> END
-                    ASTNode* condStmtNode = createASTNode("SWITCH", node->parseTreeNode);
+                    ASTNode* condStmtNode = createASTNode("SWITCH", node->parseTreeNode->child);
                     appendASTNodeAsChild(condStmtNode, node->parent);
-                    pushChildrenToASTStack(st, condStmtNode, node->parseTreeNode->child);
+                    ASTNode* valueNode = createASTNode("ID", node->parseTreeNode->child->next->next);
+                    appendASTNodeAsChild(valueNode, condStmtNode);
+                    pushChildrenToASTStack(st, condStmtNode, node->parseTreeNode->child->next->next->next);
                     break;
                 }
                 case 126: { // <caseStmts> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
-                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode);
+                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode->child);
                     appendASTNodeAsChild(caseStmtNode, node->parent);
+                    ASTNode* valueNode = createASTNode("VALUE", node->parseTreeNode->child);
+                    appendASTNodeAsChild(valueNode, caseStmtNode);
                     pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child);
                     break;
                 }
                 case 127: { // <N9> = CASE <value> COLON <statements> BREAK SEMICOL <N9>
-                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode);
+                    ASTNode* caseStmtNode = createASTNode("CASE", node->parseTreeNode->child);
                     appendASTNodeAsChild(caseStmtNode, node->parent);
                     pushChildrenToASTStack(st, caseStmtNode, node->parseTreeNode->child);
                     break;
