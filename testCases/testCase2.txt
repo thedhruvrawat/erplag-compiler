@@ -4,7 +4,7 @@ start
     declare c:boolean;
     a:=21;
     b:=23;
-    **c:=(b-a>3);**
+    c:=(b-a>3);
     switch(c)
     start
         case true: b:=100;

@@ -1,5 +1,4 @@
 <<<driver program>>>
 start
-    print(A[k]);
-    print(num);
+    c := a + 5 AND b + d AND (c + A[k + 43 * 2] * 5 + d > d);
 end

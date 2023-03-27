@@ -104,6 +104,22 @@ void appendASTNodeAsChild(ASTNode* node, ASTNode* parent) { // Appends node to l
     return;
 }
 
+void popASTRightMostChild(ASTNode* node) {
+    if (node->leftMostChild == NULL) {
+        printf("No leftMostChild in %s\n.", node->label);
+        exit(1);
+    }
+
+    node->rightMostChild = node->rightMostChild->prev;
+    node->numChildren--;
+    if (node->numChildren == 0) {
+        node->leftMostChild = NULL;
+    } else {
+        node->rightMostChild->next = NULL;
+    }
+    return;
+}
+
 ASTStackNode* createASTStackNode(ParseTreeNode* parseTreeNode, ASTNode* par) {
     ASTStackNode* newNode = malloc(sizeof(ASTStackNode));
     newNode->parseTreeNode = parseTreeNode;
@@ -559,9 +575,7 @@ void createAST(void) {
                     break;
                 }
                 case 69: { // <optional> = SQBO <idList> SQBC ASSIGNOP
-                    ASTNode* assignNode = createASTNode("ASSIGNOP_NODE", node->parseTreeNode->child->next->next->next);
-                    appendASTNodeAsChild(assignNode, node->parent);
-                    pushASTStack(st, node->parseTreeNode->child->next, assignNode);
+                    pushASTStack(st, node->parseTreeNode->child->next, node->parent);
                     break;
                 }
                 case 70: { // <optional> = e 
@@ -581,73 +595,237 @@ void createAST(void) {
                     break;
                 }
                 case 74: { // <expression> = <arithmeticOrBooleanExpr> 
+                    ASTNode* expressionNode = createASTNode("EXPR", node->parseTreeNode);
+                    appendASTNodeAsChild(expressionNode, node->parent);
+                    pushChildrenToASTStack(st, expressionNode, node->parseTreeNode->child);
+                    break;
+                }
+                case 75: { // <expression> = <U>
+                    ASTNode* expressionNode = createASTNode("EXPR", node->parseTreeNode);
+                    appendASTNodeAsChild(expressionNode, node->parent);
+                    pushChildrenToASTStack(st, expressionNode, node->parseTreeNode->child);
+                    break;
+                }
+                case 76: { // <U> = <unary_op> <new_NT>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 77: { // <new_NT> = BO <arithmeticExpr> BC 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 78: { // <new_NT> = <id_num_rnum>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 79: { // <unary_op> = PLUS
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
                 case 80: { // <unary_op> = MINUS 
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
+                case 81: { // <arithmeticOrBooleanExpr> = <AnyTerm> <N7>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 82: { // <N7> = <logicalOp> <AnyTerm> <N7>
+                    ParseTreeNode* logicalPTNode = node->parseTreeNode->child->child;
+                    ASTNode* logicalNode = createASTNode(token_types[logicalPTNode->tokenID], logicalPTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, logicalNode);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(logicalNode, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, logicalNode);
+                    pushASTStack(st, node->parseTreeNode->child->next->next, node->parent);
+                    break;
+                }
+                case 83: { // <N7> = e
+                    break;
+                }
+                case 84: { // <AnyTerm> = <arithmeticExpr> <N8>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 85: { // <AnyTerm> = <boolConstt>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 86: { // <N8> = <relationalOp> <arithmeticExpr>
+                    ParseTreeNode* relationalPTNode = node->parseTreeNode->child->child;
+                    ASTNode* relationalNode = createASTNode(token_types[relationalPTNode->tokenID], relationalPTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, relationalNode);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(relationalNode, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, relationalNode);
+                    break;
+                }
+                case 87: { // <N8> = e
+                    break;
+                }
+                case 88: { // <arithmeticExpr> = <term> <N4>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 89: { // <N4> = <op1> <term> <N4>
+                    ParseTreeNode* op1PTNode = node->parseTreeNode->child->child;
+                    ASTNode* op1Node = createASTNode(token_types[op1PTNode->tokenID], op1PTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, op1Node);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(op1Node, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, op1Node);
+                    pushASTStack(st, node->parseTreeNode->child->next->next, node->parent);
+                    break;
+                }
+                case 90: { // <N4> = e 
+                    break;
+                }
+                case 91: { // <term> = <factor> <N5>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 92: { // <N5> = <op2> <factor> <N5> 
+                    ParseTreeNode* op2PTNode = node->parseTreeNode->child->child;
+                    ASTNode* op2Node = createASTNode(token_types[op2PTNode->tokenID], op2PTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, op2Node);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(op2Node, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, op2Node);
+                    pushASTStack(st, node->parseTreeNode->child->next->next, node->parent);
+                    break;
+                }
+                case 93: { // <N5> = e 
+                    break;
+                }
                 case 94: { //<factor> = BO <arithmeticOrBooleanExpr> BC 
-                    ASTNode* factorNode = createASTNode("FACTOR", NULL);
-                    appendASTNodeAsChild(factorNode, node->parent);
-                    // pushChildrenToASTStack();
-                    // incomplete
-                    break;
-                }
-                case 95: { //<factor> = NUM
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 96: { //<factor> = RNUM
+                case 95: { // <factor> = NUM
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
                     break;
                 }
-                case 111: {
+                case 96: { // <factor> = RNUM
                     pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 97 : { // <factor> = ID <N_11>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 98: { // <N_11> = SQBO <element_index_with_expressions> SQBC
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 99: { // <N_11> = e 
+                    break;
+                }
+                case 100: { // <arrExpr> = <arrTerm> <arr_N4>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 101: { // <arr_N4> = <op1> <arrTerm> <arr_N4> 
+                    ParseTreeNode* op1PTNode = node->parseTreeNode->child->child;
+                    ASTNode* op1Node = createASTNode(token_types[op1PTNode->tokenID], op1PTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, op1Node);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(op1Node, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, op1Node);
+                    pushASTStack(st, node->parseTreeNode->child->next->next, node->parent);
+                    break;
+                }
+                case 102: { // <arr_N4> = e 
+                    break;
+                }
+                case 103: { // <arrTerm> = <arrFactor> <arr_N5>
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 104: { // <arr_N5> = <op2> <arrFactor> <arr_N5>
+                    ParseTreeNode* op2PTNode = node->parseTreeNode->child->child;
+                    ASTNode* op2Node = createASTNode(token_types[op2PTNode->tokenID], op2PTNode);
+                    appendASTNodeAsChild(node->parent->rightMostChild, op2Node);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(op2Node, node->parent);
+                    pushASTStack(st, node->parseTreeNode->child->next, op2Node);
+                    pushASTStack(st, node->parseTreeNode->child->next->next, node->parent);
+                    break;
+                }
+                case 105: { // <arr_N5> = e 
+                    break;
+                }
+                case 106: { // <arrFactor> = ID
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 107: { // <arrFactor> = NUM
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 108: { // <arrFactor> = <boolConstt> 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 109: { // <arrFactor> = BO <arrExpr> BC 
+                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    break;
+                }
+                case 110: { // <element_index_with_expressions> = <sign> <arrExpr>
+                    ASTNode* arrNode = createASTNode("ARRAY", NULL);
+                    appendASTNodeAsChild(node->parent->rightMostChild, arrNode);
+                    popASTRightMostChild(node->parent);
+                    appendASTNodeAsChild(arrNode, node->parent);
+                    ASTNode* elementIndex = createASTNode("ARRAY_INDEX", node->parseTreeNode);
+                    appendASTNodeAsChild(elementIndex, arrNode);
+                    pushChildrenToASTStack(st, elementIndex, node->parseTreeNode->child);
+                    break;
+                }
+                case 111: { // <op1> = PLUS 
+                    // Already handled wherever it expands
                     break;
                 }
                 case 112: { // <op1> = MINUS
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 113: { // <op2> = MUL 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 114: { // <op2> = DIV 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 115: { // <logicalOp> = AND 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 116: { // <logicalOp> = OR 
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 117: { // <relationalOp> = LT
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 118: { // <relationalOp> = LE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 119: { // <relationalOp> = GT
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 120: { // <relationalOp> = GE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 121: { // <relationalOp> = EQ
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 122: { // <relationalOp> = NE
-                    pushChildrenToASTStack(st, node->parent, node->parseTreeNode->child);
+                    // Already handled wherever it expands
                     break;
                 }
                 case 123: { // <declareStmt> = DECLARE <idList> COLON <dataType> SEMICOL
@@ -832,9 +1010,9 @@ void prettyPrintAST(void) {
             QueueNode* qNode = peekQueue(q);
             ASTNode* node = qNode->node;
             if (node->parseTreeNode != NULL && node->parseTreeNode->isLeaf) {
-                printf("(%s %s %s) ", node->parent->label, node->label, node->parseTreeNode->tok->lexeme);
+                printf("(%s %s %s)\n", node->parent->label, node->label, node->parseTreeNode->tok->lexeme);
             } else {
-                printf("(%s %s) ", node->parent->label, node->label);
+                printf("(%s %s)\n", node->parent->label, node->label);
             }
             popQueue(q);
 
@@ -848,6 +1026,8 @@ void prettyPrintAST(void) {
         printf("\n");
     }
 
+    printf("Number of nodes in AST: %d\n", tree->size);
+
     return;
 }
 
@@ -856,5 +1036,7 @@ void ASTCreator(ParseTree* parseTree) {
     createAST();
     // printAST(tree->root, false);
     prettyPrintAST();
+    printf("Number of nodes in Parse Tree: %d\n", pt->sz);
+    printf("Compression Ratio: %.2lf%%\n", (((double) tree->size) / pt->sz) * 100);
     return;
 }
