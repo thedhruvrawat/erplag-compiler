@@ -23,13 +23,13 @@ typedef struct Type {
                 char rightID[20];
                 int right;
             };
-        };
+        } array;
         struct function {
-            Type* inputList;
+            struct Type* inputList;
             unsigned int inputListSize;
-            Type* outputList;
+            struct Type* outputList;
             unsigned int outputListSize;
-        };
+        } function;
     };
 } Type;
 
