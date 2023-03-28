@@ -6,7 +6,8 @@
         "lexer.h": "c",
         "set.h": "c",
         "colorcodes.h": "c",
-        "astdef.h": "c"
+        "astdef.h": "c",
+        "stdint.h": "c"
     },
     "makefile.launchConfigurations": [
         {
