@@ -56,6 +56,16 @@ typedef struct ASTStack {
     int size;
 } ASTStack;
 
+typedef struct ASTQueueNode {
+    ASTNode* node;
+    struct ASTQueueNode* next;
+} ASTQueueNode;
+typedef struct ASTQueue {
+    ASTQueueNode* front;
+    ASTQueueNode* tail;
+    int sz;
+} ASTQueue;
+
 extern AST* tree;
 
 #endif

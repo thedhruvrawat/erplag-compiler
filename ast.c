@@ -15,14 +15,10 @@ AST* tree;
 ASTStack* st;
 ParseTree* pt;
 
-/* ASTNodeList* initASTNodeList(void) {
-    ASTNodeList* list = malloc(sizeof(ASTNodeList));
-    list->head = NULL;
-    list->tail = NULL;
-    list->sz = 0;
-
-    return list;
-}
+/**
+ * @brief Initialises and returns an AST 
+ * 
+ * @return AST* 
  */
 AST* initAST(void) {
     AST* tree = malloc(sizeof(AST));
@@ -32,6 +28,13 @@ AST* initAST(void) {
     return tree;
 }
 
+/**
+ * @brief Creates an AST Node given the corresponding label and parsetree node
+ * 
+ * @param label 
+ * @param node 
+ * @return ASTNode* 
+ */
 ASTNode* createASTNode(const char* label, ParseTreeNode* node) {
     ASTNode* newNode = malloc(sizeof(ASTNode));
     strcpy(newNode->label, label);
@@ -46,47 +49,14 @@ ASTNode* createASTNode(const char* label, ParseTreeNode* node) {
     tree->size++; // New Node created -> It WILL be added to AST
     return newNode;
 }
-/* 
-void insertAtEnd(ASTNodeList* list, ASTNode* node) {
-    if (list == NULL) {
-        list = initASTNodeList();
-    }
 
-    if (list->sz == 0) {
-        list->head = node;
-        list->tail = list->head;
-        list->sz++;
-        return;
-    }
-
-    list->tail->next = node;
-    list->tail = node;
-    list->sz++;
-
-    return;
-}
-
-void insertAtStart(ASTNodeList* list, ASTNode* node) {
-    if (list == NULL) {
-        list = initASTNodeList();
-    }
-
-    if (list->sz == 0) {
-        list->head = node;
-        list->tail = list->head;
-        list->sz++;
-        return;
-    }
-
-    list->head->prev = node;
-    node->next = list->head;
-    list->head = node;
-    list->sz++;
-
-    return;
-} */
-
-void appendASTNodeAsChild(ASTNode* node, ASTNode* parent) { // Appends node to list of children of ASTNode parent with start,end of list pointed by leftMostChild, rightMostChildren
+/**
+ * @brief Appends the node to the list of children of the other node
+ * 
+ * @param node 
+ * @param parent 
+ */
+void appendASTNodeAsChild(ASTNode* node, ASTNode* parent) {
     if (parent->leftMostChild == NULL) {
         parent->leftMostChild = node;
         parent->rightMostChild = node;
@@ -104,9 +74,14 @@ void appendASTNodeAsChild(ASTNode* node, ASTNode* parent) { // Appends node to l
     return;
 }
 
+/**
+ * @brief Pops the rightMostChild of the given node
+ * 
+ * @param node 
+ */
 void popASTRightMostChild(ASTNode* node) {
     if (node->leftMostChild == NULL) {
-        printf("No leftMostChild in %s\n.", node->label);
+        printf("No child in %s\n.", node->label);
         exit(1);
     }
 
@@ -120,6 +95,13 @@ void popASTRightMostChild(ASTNode* node) {
     return;
 }
 
+/**
+ * @brief Creates and initialises an AST Stack Node 
+ * 
+ * @param parseTreeNode 
+ * @param par 
+ * @return ASTStackNode* 
+ */
 ASTStackNode* createASTStackNode(ParseTreeNode* parseTreeNode, ASTNode* par) {
     ASTStackNode* newNode = malloc(sizeof(ASTStackNode));
     newNode->parseTreeNode = parseTreeNode;
@@ -129,6 +111,11 @@ ASTStackNode* createASTStackNode(ParseTreeNode* parseTreeNode, ASTNode* par) {
     return newNode;
 }
 
+/**
+ * @brief Initialises a stack used in AST creation
+ * 
+ * @return ASTStack* 
+ */
 ASTStack* initASTStack(void) {
     ASTStack* st = malloc(sizeof(ASTStack));
     st->top = NULL;
@@ -137,10 +124,21 @@ ASTStack* initASTStack(void) {
     return st;
 }
 
+/**
+ * @brief Peek the top element of the stack used in AST creation
+ * 
+ * @param st 
+ * @return ASTStackNode* 
+ */
 ASTStackNode* peekASTStack(ASTStack* st) {
     return st->top;
 }
 
+/**
+ * @brief Pop the stack used in AST creation
+ * 
+ * @param st 
+ */
 void popASTStack(ASTStack* st) {
     if (st->size == 0) {
         printf("AST Stack is empty!\n");
@@ -152,10 +150,16 @@ void popASTStack(ASTStack* st) {
     st->top = st->top->next;
     st->size--;
 
-    // free(currTop);
     return;
 }
 
+/**
+ * @brief Push a parsetree node with its corresponding AST parent to the stack used in AST creation
+ * 
+ * @param st 
+ * @param parseTreeNode 
+ * @param par 
+ */
 void pushASTStack(ASTStack* st, ParseTreeNode* parseTreeNode, ASTNode* par) {
     ASTStackNode* currTop = st->top;
     ASTStackNode* newNode = createASTStackNode(parseTreeNode, par);
@@ -167,6 +171,14 @@ void pushASTStack(ASTStack* st, ParseTreeNode* parseTreeNode, ASTNode* par) {
     return;
 }
 
+/**
+ * @brief Pushes a linked list of parsetree nodes with its corresponding AST parent to the stack
+ * used in AST creation recursively
+ * 
+ * @param st 
+ * @param par 
+ * @param curr 
+ */
 void pushChildrenToASTStack(ASTStack* st, ASTNode* par, ParseTreeNode* curr) { // Inserts "curr" parseTreeNode into ASTstack "st" along with its siblings with "par" ASTNode as parent
     if (curr == NULL) {
         return;
@@ -178,6 +190,13 @@ void pushChildrenToASTStack(ASTStack* st, ASTNode* par, ParseTreeNode* curr) { /
     return;
 }
 
+/**
+ * @brief Check whether the terminal should be preserved and used in the AST
+ * 
+ * @param node 
+ * @return true 
+ * @return false 
+ */
 bool isUsefulTerminal(ASTStackNode* node) {
     switch (node->parseTreeNode->tokenID) {
         case INTEGER:
@@ -208,6 +227,10 @@ bool isUsefulTerminal(ASTStackNode* node) {
     }
 }
 
+/**
+ * @brief Generates the AST
+ * 
+ */
 void createAST(void) {
     // Initializing the root node of the AST
     tree = initAST();
@@ -218,8 +241,12 @@ void createAST(void) {
 
     ASTNode* moduleDecNode;
     ASTNode* caseStmtsNode;
+    ASTStackNode* node = NULL;
     while (st->size > 0) {
-        ASTStackNode* node = peekASTStack(st);
+        if (node != NULL) {
+            free(node);
+        }
+        node = peekASTStack(st);
         popASTStack(st);
 
         if (node->parseTreeNode->isLeaf) {
@@ -924,6 +951,12 @@ void createAST(void) {
     return;
 }
 
+/**
+ * @brief Prints the AST using an inorder traversal
+ * 
+ * @param node 
+ * @param firstChild 
+ */
 void printAST(ASTNode* node, bool firstChild) {
     if (node == NULL) {
         return;
@@ -949,18 +982,13 @@ void printAST(ASTNode* node, bool firstChild) {
     return;
 }
 
-typedef struct QueueNode {
-    ASTNode* node;
-    struct QueueNode* next;
-} QueueNode;
-typedef struct Queue {
-    QueueNode* front;
-    QueueNode* tail;
-    int sz;
-} Queue;
-
-Queue* initQueue(void) {
-    Queue* q = malloc(sizeof(Queue));
+/**
+ * @brief Initialised the queue used for printing of the AST
+ * 
+ * @return ASTQueue* 
+ */
+ASTQueue* initQueue(void) {
+    ASTQueue* q = malloc(sizeof(ASTQueue));
     q->front = NULL;
     q->tail = NULL;
     q->sz = 0;
@@ -968,12 +996,23 @@ Queue* initQueue(void) {
     return q;
 }
 
-QueueNode* peekQueue(Queue* q) {
+/**
+ * @brief Peek the front element of the queue used for printing of the AST
+ * 
+ * @param q 
+ * @return ASTQueueNode* 
+ */
+ASTQueueNode* peekQueue(ASTQueue* q) {
     return q->front;
 }
 
-void popQueue(Queue* q) {
-    QueueNode* currFront = q->front;
+/**
+ * @brief Pop the queue used for printing of the AST
+ * 
+ * @param q 
+ */
+void popQueue(ASTQueue* q) {
+    ASTQueueNode* currFront = q->front;
     q->front = currFront->next;
     q->sz--;
 
@@ -981,8 +1020,14 @@ void popQueue(Queue* q) {
     return;
 }
 
-void appendQueue(Queue* q, ASTNode* node) {
-    QueueNode* qNode = malloc(sizeof(QueueNode));
+/**
+ * @brief Add an AST node to the queue used for printing of the AST
+ * 
+ * @param q 
+ * @param node 
+ */
+void appendQueue(ASTQueue* q, ASTNode* node) {
+    ASTQueueNode* qNode = malloc(sizeof(ASTQueueNode));
 
     qNode->node = node;
     qNode->next = NULL;
@@ -997,8 +1042,12 @@ void appendQueue(Queue* q, ASTNode* node) {
     return;
 }
 
+/**
+ * @brief Print the AST using level-order traversal
+ * 
+ */
 void prettyPrintAST(void) {
-    Queue* q = initQueue();
+    ASTQueue* q = initQueue();
 
     appendQueue(q, tree->root);
 
@@ -1007,7 +1056,7 @@ void prettyPrintAST(void) {
         printf("%d\n", sz);
 
         for (int i = 0; i < sz; ++i) {
-            QueueNode* qNode = peekQueue(q);
+            ASTQueueNode* qNode = peekQueue(q);
             ASTNode* node = qNode->node;
             if (node->parseTreeNode != NULL && node->parseTreeNode->isLeaf) {
                 printf("(%s %s %s)\n", node->parent->label, node->label, node->parseTreeNode->tok->lexeme);
@@ -1031,6 +1080,11 @@ void prettyPrintAST(void) {
     return;
 }
 
+/**
+ * @brief Driver function for AST
+ * 
+ * @param parseTree 
+ */
 void ASTCreator(ParseTree* parseTree) {
     pt = parseTree;
     createAST();
