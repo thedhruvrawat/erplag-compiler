@@ -15,7 +15,7 @@ AST* tree;
 ASTStack* st;
 ParseTree* pt;
 
-ASTNodeList* initASTNodeList(void) {
+/* ASTNodeList* initASTNodeList(void) {
     ASTNodeList* list = malloc(sizeof(ASTNodeList));
     list->head = NULL;
     list->tail = NULL;
@@ -23,7 +23,7 @@ ASTNodeList* initASTNodeList(void) {
 
     return list;
 }
-
+ */
 AST* initAST(void) {
     AST* tree = malloc(sizeof(AST));
     tree->root = NULL;
@@ -46,7 +46,7 @@ ASTNode* createASTNode(const char* label, ParseTreeNode* node) {
     tree->size++; // New Node created -> It WILL be added to AST
     return newNode;
 }
-
+/* 
 void insertAtEnd(ASTNodeList* list, ASTNode* node) {
     if (list == NULL) {
         list = initASTNodeList();
@@ -84,7 +84,7 @@ void insertAtStart(ASTNodeList* list, ASTNode* node) {
     list->sz++;
 
     return;
-}
+} */
 
 void appendASTNodeAsChild(ASTNode* node, ASTNode* parent) { // Appends node to list of children of ASTNode parent with start,end of list pointed by leftMostChild, rightMostChildren
     if (parent->leftMostChild == NULL) {
@@ -221,7 +221,6 @@ void createAST(void) {
     while (st->size > 0) {
         ASTStackNode* node = peekASTStack(st);
         popASTStack(st);
-        printf("prodID: %d\n", node->parseTreeNode->productionID);
 
         if (node->parseTreeNode->isLeaf) {
             if (isUsefulTerminal(node)) {
@@ -257,7 +256,7 @@ void createAST(void) {
                     break;
                 }
                 case 6: { // <driverModule> = DRIVERDEF DRIVER PROGRAM DRIVERENDDEF <moduleDef>
-                    ASTNode* driverNode = createASTNode("DRIVER", node->parseTreeNode);
+                    ASTNode* driverNode = createASTNode("DRIVER", node->parseTreeNode->child->next);
                     appendASTNodeAsChild(driverNode, node->parent);
                     pushChildrenToASTStack(st, driverNode, node->parseTreeNode->child);
                     break;
@@ -406,6 +405,7 @@ void createAST(void) {
                 case 38: { // <ioStmt> = GET_VALUE BO ID BC SEMICOL
                     ASTNode* getValNode = createASTNode("GET_VALUE", node->parseTreeNode->child);
                     appendASTNodeAsChild(getValNode, node->parent);
+                    pushChildrenToASTStack(st, getValNode, node->parseTreeNode->child);
                     break;
                 }
                 case 39: { // <ioStmt> = PRINT BO <var_print> BC SEMICOL

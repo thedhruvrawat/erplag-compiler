@@ -5,10 +5,10 @@
 #4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 #5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
 driver: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o
-	gcc driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o symbolTable.o -g -o stage1exe
+	gcc -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o symbolTable.o -g -o stage1exe
 
 sanitized: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o
-	gcc -fsanitize=address driver.o parser.o trie.o lexer.o Set.o stackADT.o symbolTable.o ast.o -g -o stage1exe
+	gcc -fsanitize=address -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o symbolTable.o ast.o -g -o stage1exe
 
 symbolTable.o: symbolTable.c symbolTable.h symbolTableDef.h
 	gcc -c -g symbolTable.c

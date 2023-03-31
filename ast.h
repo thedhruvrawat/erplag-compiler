@@ -6,6 +6,9 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
+#ifndef AST_GUARD
+#define AST_GUARD
+
 #include "astDef.h"
 
 ASTNodeList* initASTNodeList(void);
@@ -25,3 +28,4 @@ void createAST(void);
 void printAST(ASTNode* node, bool firstChild);
 void ASTCreator(ParseTree* parseTree);
 
+#endif

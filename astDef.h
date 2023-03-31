@@ -6,7 +6,17 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
+#ifndef AST_DEF
+#define AST_DEF
+
 #include "parserDef.h"
+
+typedef enum {
+    INT,
+    DOUBLE,
+    BOOL,
+    ARR
+} VAR_TYPE;
 
 typedef struct ASTNode {
     char label[20];
@@ -17,19 +27,17 @@ typedef struct ASTNode {
     struct ASTNode* next;
     struct ASTNode* prev;
     int numChildren;
+
+    union {
+        bool isStatic;
+        VAR_TYPE type;
+    };
 } ASTNode;
 
 typedef struct AST {
     ASTNode* root;
     int size;
 } AST;
-
-/* 
-typedef struct addrListNode {
-    ASTNode* node;
-    struct addrListNode* prev;
-    struct addrListNode* next;
-} addrListNode; */
 
 typedef struct ASTNodeList {
     ASTNode* head;
@@ -41,13 +49,13 @@ typedef struct ASTStackNode {
     ParseTreeNode* parseTreeNode;
     struct ASTStackNode* next;
     ASTNode* parent;
-    ASTNode* addr;
-    ASTNode* addrInherited;
-    ASTNode* addrSynthesized;
-    ASTNode* addrList;
 } ASTStackNode;
 
 typedef struct ASTStack {
     struct ASTStackNode* top;
     int size;
 } ASTStack;
+
+extern AST* tree;
+
+#endif

@@ -6,4 +6,28 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
+#ifndef SYMBOL_TABLE
+#define SYMBOL_TABLE
+
 #include "symbolTableDef.h"
+
+unsigned int hash(const char *str);
+SymbolTableNode* initSymbolTableNode(void);
+SymbolTable* initSymbolTable(void);
+void pushToSymbolTableStack(SymbolTableStack* st, ASTNode* node, unsigned int offset);
+SymbolTableStackNode* peekSymbolTableStack(SymbolTableStack* st);
+void popSymbolTableStack(SymbolTableStack* st);
+SymbolTableStack* initSymbolTableStack(void);
+Record* generateRecord(ASTNode* idNode, ASTNode* dataTypeNode, int* nextOffset);
+GlobalRecord* findFunction(char* name, unsigned int hashVal);
+Record* findVariable(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal);
+void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList);
+void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement);
+void populateSymbolTable(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode, ASTNode* moduleDefNode);
+void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode);
+void addFunctionToSymbolTable(ASTNode* moduleNode);
+void printSymbolTableRec(SymbolTableNode* symbolTableNode);
+void printSymbolTable(void);
+void generateSymbolTable(AST* ast);
+
+#endif

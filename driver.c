@@ -15,6 +15,7 @@ Group Number : 2
 #include "lexer.h"
 #include "parser.h"
 #include "ast.h"
+#include "symbolTable.h"
 
 /**
  * @brief Removes the comments from the input file and outputs the same to console
@@ -214,6 +215,8 @@ int main(int argc, char* argv[])
             printf("-------------------------------------------------------------------------------------\n");
             // TESTING AST CREATION;;; TO BE REMOVED LATER
             ASTCreator(pt);
+            generateSymbolTable(tree);
+            printSymbolTable();
 
             break;
         }

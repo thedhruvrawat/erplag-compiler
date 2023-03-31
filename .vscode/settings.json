@@ -7,7 +7,9 @@
         "set.h": "c",
         "colorcodes.h": "c",
         "astdef.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "cstring": "c",
+        "symboltabledef.h": "c"
     },
     "makefile.launchConfigurations": [
         {

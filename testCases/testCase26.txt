@@ -1,4 +1,40 @@
+declare module mod1;
+declare module mod2;
+
+<<module mod1>>
+takes input [a: integer, b: boolean];
+returns [x: integer, abc: real];
+start
+declare c: real;
+c:=10.4;
+x:=a+b-10;
+abc:=b/5+c;
+end
+
 <<<driver program>>>
 start
-    c := a + 5 AND b + d AND (c + A[k + 43 * 2] * 5 + d > d);
+    declare s, f, t, b: integer;
+    switch(f)
+    start
+        case 8 : a := b; break;
+    end
+
+    declare A:array [-s..10] of integer;
+
+    for (index in 4..20)
+    start
+        s := s + list[index];
+        for (lo1 in -12..3)
+        start
+            f := f + list[lol];
+            for (lo2 in 4..20)
+            start
+                t := t + list[lo2];
+                for (lo3 in 4..20)
+                start
+                    b := b + list[lo3];
+                end
+            end
+        end
+    end
 end
