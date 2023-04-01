@@ -216,12 +216,22 @@ GlobalRecord* findFunction(char* name, unsigned int hashVal) {
 
     return curr;
 }
+// Return Boolean value based on existence of entry with label name, 1->Exists, 0->Doesn't Exist
 bool variableExists(SymbolTableNode* symbolTableNode, char* name){
     int hashVal = hash(name);
     // iF variable doesn't exists, hashTable[hashVal] is 0/NULL
     return (symbolTableNode->hashTable[hashVal] != NULL);
 }
-
+// Returns the symbolTableNode where the static variable labelled 'name' exists by recursively checking parent symbolTableNodes. Problem might occur at global declaration of variable / Entries
+SymbolTableNode* variableExistsRec(SymbolTableNode* symbolTableNode, char* name){
+    if(variableExists(symbolTableNode, name)){ 
+        return symbolTableNode;
+    } else if(symbolTableNode->parent == NULL) {
+        return NULL;
+    }else {
+        return variableExistsRec(symbolTableNode->parent, name);
+    }
+}
 Record* findVariable(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal) {
     if (symbolTableNode->hashTable[hashVal] == NULL) {
         return NULL;
@@ -276,7 +286,59 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     free(sentinel);
     return;
 }
-
+// Type* funcRecType(ASTNode* RHS, SymbolTableNode* symbolTableNode){
+//     int tokenID = RHS->parseTreeNode->tokenID;
+//     switch(tokenID){
+//         case ID : {
+//             // Check if variable exists
+//             ParseTreeNode * pNode = RHS->parseTreeNode;
+//             if(variableExistsRec(symbolTableNode, pNode->tok->lexeme)){
+//                 // TODO -> Handle ARRAY as type
+//                 return RHS->type;
+//             } else {
+//                 // Not Found after recursively searching for RHS in the STs & their parents
+//                 printf("Undefined variable %s at line %d\n",pNode->tok->lexeme, pNode->tok->linenum);
+//                 return NULL;
+//             }
+//             break;
+//         }
+//         case NUM : {
+//             return RHS->type;
+//             break;
+//         }
+//         case RNUM : {
+//             return RHS->type;
+//             break;
+//         }
+//         case INTEGER : {
+//             return RHS->type;
+//             break;
+//         }
+//         case REAL : {
+//             return RHS->type;
+//             break;
+//         }
+//         // case BOOLEAN : { Not Required
+//         //     break;
+//         // }
+//         // Operators
+//         case DIV : {
+//             // Assuming No error in AST Generation, so DIV ASTNode HAS 2 CHILDREN
+//             Type* left = funcRecType(RHS->leftMostChild);
+//             break;
+//         }
+//         case MUL : {
+//             break;
+//         }
+//         case PLUS : {
+//             break;
+//         }
+//         case MINUS : {
+//             break;
+//         }
+//     }
+//     return NULL;
+// }
 void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement) {
     /*
         Types of statements possible:
@@ -296,39 +358,45 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
                 ASTNode* id = statement->leftMostChild; // ID node of GET_VALUE()
-                // Do we need to check if it is ID node or not ? i.e. It SHOULDN'T be ARRAY, INTEGER,..
+                // Type-check if it is ID node or not ? i.e. It SHOULDN'T be ARRAY, INTEGER,..
                 char * idLabel = id->parseTreeNode->tok->lexeme;
-                if(variableExists(symbolTableNode, idLabel)){ // Existence Check if already declared or not
+                if(variableExistsRec(symbolTableNode, idLabel)){
                     // TODO : GET_VALUE fetches user input into the variable
                 } else {
-                    printf("Variable %s is not defined previously at line %d\n",idLabel, id->parseTreeNode->tok->linenum);
+                    printf("Undefined variable %s at line %d\n",idLabel, id->parseTreeNode->tok->linenum);
                 }
                 break;
             }
             case 'P': { // PRINT
-                ASTNode* id = statement->leftMostChild; // ID node of PRINT()
+                ASTNode* id = statement->leftMostChild;
                 char* idLabel = id->parseTreeNode->tok->lexeme;
-                if(variableExists(symbolTableNode, idLabel)){
+                if(variableExistsRec(symbolTableNode, idLabel)){
+                    // TODO -> Type-Check ?
                 } else {
                     printf("Variable %s  is not defined previously at line %d\n",idLabel, id->parseTreeNode->tok->linenum);
                 }
                 break;
             }
             case 'A': { // ASSIGN_STMT
-                // Left Most Child is always an identifier 
+                // Left Most Child must always be an identifier 
                 ASTNode* assignID = statement->leftMostChild;
                 char* assignIDLabel = assignID->parseTreeNode->tok->lexeme;
-                // DEBUGGING
-                // printf("DEBUGGING : assingID lexeme is %s\n", assignIDLabel);
-                if(variableExists(symbolTableNode, assignIDLabel)){
+                if(variableExistsRec(symbolTableNode, assignIDLabel)){
+                    // TODO -> Type Checking of LHS with RHS
                 } else {
-                    printf("Variable %s is not defined previously at line %d\n",assignIDLabel, assignID->parseTreeNode->tok->linenum);
-                    break;
+                    // Not Found after recursively searching for LHS in the STs & their parents
+                    printf("Undefined variable %s at line %d\n",assignIDLabel, assignID->parseTreeNode->tok->linenum);
                 }
+                // Find if all the rightMostChildren variables are also present in the symbolTabelNode(or its parents)
+                // Need to traverse the whole EXPR Node, Possibly in DFS manner, to help for type-checking as well
+                ASTNode* RHS = statement->rightMostChild;
+                // funcRecType(RHS, symbolTableNode);
+                // checkVarExistsRec(symbolTableNode, RHS); // Add parameter of type to handle type checking and change func Name
                 break;
             }
             case 'M': { // MODULE_REUSE_STMT
-                // MODULE_REUSE_STMT has an actual para list
+                // MODULE_REUSE_STMT has an actual para list Node
+                // Need to 
                 break;
             }
             case 'D': { // DECLARE_STMT
