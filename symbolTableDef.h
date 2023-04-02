@@ -56,7 +56,9 @@ typedef struct GlobalRecord { // These are Records at the first layer/row of Sym
     int linenum;
     bool driver;
     bool called;
+    bool declared;
     bool defined;
+    bool checkedRedundancy;
     Record* inputList;
     unsigned int inputListSize;
     Record* outputList;

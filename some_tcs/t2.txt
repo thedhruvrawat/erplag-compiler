@@ -28,6 +28,7 @@ start
 	start
            	declare y_1, y_2: real;				    ** scope: Nesting level 2; module: arraySum; lines: 33 to 55 **
            	declare k,l,m: array[1..10] of real;		    ** scope: Nesting level 2; module: arraySum; lines: 33 to 55 **
+			declare j: integer;
 		declare x:real;					    ** scope: Nesting level 2; module: arraySum; lines: 33 to 55 **	
 		t:= index<=n;
 		switch(t)

@@ -608,6 +608,9 @@ void createAST(void) {
                     break;
                 }
                 case 70: { // <optional> = e 
+                    // To keep things consistent, create a dummy node
+                    ASTNode* idListNode = createASTNode("ASSIGN_LIST", node->parseTreeNode);
+                    appendASTNodeAsChild(idListNode, node->parent);
                     break;
                 }
                 case 71: { // <idList> = ID <N3>

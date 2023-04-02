@@ -33,6 +33,7 @@ start
     print(B);
     print(4);
     print(true);
+    [num, s] := use module arraysum with parameters -s, f[4];
 
     for (index in 4..20)
     start
