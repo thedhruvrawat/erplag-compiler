@@ -218,7 +218,7 @@ GlobalRecord* findFunction(char* name, unsigned int hashVal) {
     return curr;
 }
 
-Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal){
+Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal) {
     Record* varRecord = symbolTableNode->hashTable[hashVal];
     while (varRecord != NULL) {
         if (strcmp(varRecord->name, name) == 0) {
@@ -308,7 +308,14 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         symbolTableNode = funcRecord->outputST;
         char* name = newRecord->name;
         unsigned int hashVal = hash(name);
-        Record* varRecord = findVariable(symbolTableNode, name, hashVal);
+
+        // Checking if the variable has already been declared in the inputList
+        Record* varRecord = variableExists(funcRecord->funcST, name, hashVal);
+        if (varRecord != NULL) {
+            printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputNode->leftMostChild->parseTreeNode->tok->linenum);
+        }
+
+        varRecord = findVariable(symbolTableNode, name, hashVal);
         int linenum = outputNode->leftMostChild->parseTreeNode->tok->linenum;
         if (varRecord == NULL) {
             varRecord = malloc(sizeof(Record));
@@ -542,7 +549,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
     
 }
 
-void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement) {
+void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
     /*
         Types of statements possible:
         1. GET_VALUE                    Use
@@ -704,6 +711,15 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                     // Checking if already exists
                     char* name = curr->parseTreeNode->tok->lexeme;
                     unsigned int hashVal = hash(name);
+
+                    // In outputList
+                    if (variableExists(symbolTableNode->funcOutputST, name, hashVal) != NULL) {
+                        printf("Redeclaration of output variable %s at line %d\n", name, curr->parseTreeNode->tok->linenum);
+                        curr = curr->next;
+                        continue;
+                    }
+
+                    // Otherwise, check in current symbol table
                     Record* varRecord = findVariable(symbolTableNode, name, hashVal);
                     if (varRecord == NULL) {
                         varRecord = generateRecord(curr, dataTypeNode, &symbolTableNode->nextOffset);
@@ -753,7 +769,7 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                                 printf("Case label not of type INTEGER at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
                             }
                             // Populating the symbol table for the statements in the case
-                            populateSymbolTableRec(currChild, caseStatements->leftMostChild->next);
+                            populateSymbolTable(currChild, caseStatements->leftMostChild->next);
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -776,7 +792,7 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                                 printf("Case label not of type BOOLEAN at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
                             }
                             // Populating the symbol table for the statements in the case
-                            populateSymbolTableRec(currChild, caseStatements->leftMostChild->next);
+                            populateSymbolTable(currChild, caseStatements->leftMostChild->next);
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -810,7 +826,7 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 varRecord->next = NULL;
 
                 // Statements inside the for loop
-                populateSymbolTableRec(currChild, statement->leftMostChild->next->next);
+                populateSymbolTable(currChild, statement->leftMostChild->next->next);
                 break;
             }
             case 'W': { // WHILE
@@ -829,7 +845,7 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 }
 
                 // Statements inside the while loop
-                populateSymbolTableRec(currChild, statement->leftMostChild->next);
+                populateSymbolTable(currChild, statement->leftMostChild->next);
                 break;
             }
         }
@@ -839,59 +855,6 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
     currChild->next = NULL;
     symbolTableNode->children = sentinel->next;
     free(sentinel);
-    return;
-}
-
-void populateSymbolTable(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode, ASTNode* moduleDefNode) {
-    // // Adding inputList variables to the symbolTableNode
-    // Record* inputListNode = funcRecord->inputList;
-    // while (inputListNode != NULL) {
-    //     char* name = inputListNode->name;
-    //     unsigned int hashVal = hash(name);
-    //     Record* varRecord = findVariable(symbolTableNode, name, hashVal);
-    //     if (varRecord == NULL) {
-    //         varRecord = malloc(sizeof(Record));
-    //         memcpy(varRecord, inputListNode, sizeof(Record));
-    //         varRecord->next = NULL;
-    //         symbolTableNode->hashTable[hashVal] = varRecord;
-    //     } else if (strcmp(varRecord->name, name) == 0) {
-    //         printf("Redeclaration of variable %s in input list of module %s at line %d\n", name, funcRecord->name, inputListNode->linenum);
-    //     } else {
-    //         varRecord->next = malloc(sizeof(Record));
-    //         varRecord = varRecord->next;
-    //         memcpy(varRecord, inputListNode, sizeof(Record));
-    //         varRecord->next = NULL;
-    //     }
-
-    //     inputListNode = inputListNode->next;
-    // }
-
-    // // Adding outputList variables to the symbolTableNode
-    // Record* outputListNode = funcRecord->outputList;
-    // while (outputListNode != NULL) {
-    //     char* name = outputListNode->name;
-    //     unsigned int hashVal = hash(name);
-    //     Record* varRecord = findVariable(symbolTableNode, name, hashVal);
-    //     if (varRecord == NULL) {
-    //         varRecord = malloc(sizeof(Record));
-    //         memcpy(varRecord, outputListNode, sizeof(Record));
-    //         varRecord->next = NULL;
-    //         symbolTableNode->hashTable[hashVal] = varRecord;
-    //     } else if (strcmp(varRecord->name, name) == 0) {
-    //         printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputListNode->linenum);
-    //     } else {
-    //         varRecord->next = malloc(sizeof(Record));
-    //         varRecord = varRecord->next;
-    //         memcpy(varRecord, outputListNode, sizeof(Record));
-    //         varRecord->next = NULL;
-    //     }
-
-    //     outputListNode = outputListNode->next;
-    // }
-
-    // Adding the statements recursively
-    populateSymbolTableRec(symbolTableNode, moduleDefNode->leftMostChild);
-
     return;
 }
 
@@ -978,9 +941,9 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         ASTNode* outputList = inputList->next;
         ASTNode* moduleDef = outputList->next;
         populateInputOutputList(funcRecord, inputList, outputList);
-        populateSymbolTable(funcRecord, funcRecord->funcST, moduleDef); 
+        populateSymbolTable(funcRecord->funcST, moduleDef->leftMostChild); 
     } else {
-        populateSymbolTable(funcRecord, funcRecord->funcST, moduleNode->leftMostChild);
+        populateSymbolTable(funcRecord->funcST, moduleNode->leftMostChild->leftMostChild);
     }
 
     return;   

@@ -8,6 +8,12 @@ start
 declare c: real;
 c:=10.4;
 A[-k+4] := 5;
+
+for (index in 4..10)
+start
+    declare a: integer;
+    declare x: integer;
+end
 x:=a+b-10;
 abc:=b[k]/5+c;
 end
