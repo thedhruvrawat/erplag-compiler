@@ -15,7 +15,8 @@ typedef enum {
     INT,
     DOUBLE,
     BOOL,
-    ARR
+    ARR,
+    ERROR
 } VAR_TYPE;
 
 typedef struct ASTNode {

@@ -32,6 +32,7 @@ SymbolTableNode* initSymbolTableNode(void) {
     memset(newNode->hashTable, 0, sizeof(Record*) * HASH_TABLE_SIZE);
     newNode->children = NULL;
     newNode->nextOffset = 0;
+    newNode->funcOutputST = NULL;
     newNode->next = NULL;
     newNode->parent = NULL;
 
@@ -95,7 +96,7 @@ Record* generateRecord(ASTNode* idNode, ASTNode* dataTypeNode, int* nextOffset) 
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
     newRec->offset = *nextOffset;
-    newRec->linenum = idNode->parseTreeNode->tok->linenum;
+    // newRec->linenum = idNode->parseTreeNode->tok->linenum;
     newRec->next = NULL;
 
     switch (dataTypeNode->parseTreeNode->tokenID) {
@@ -216,22 +217,23 @@ GlobalRecord* findFunction(char* name, unsigned int hashVal) {
 
     return curr;
 }
-// Return Boolean value based on existence of entry with label name, 1->Exists, 0->Doesn't Exist
-bool variableExists(SymbolTableNode* symbolTableNode, char* name){
-    int hashVal = hash(name);
-    // iF variable doesn't exists, hashTable[hashVal] is 0/NULL
-    return (symbolTableNode->hashTable[hashVal] != NULL);
-}
-// Returns the symbolTableNode where the static variable labelled 'name' exists by recursively checking parent symbolTableNodes. Problem might occur at global declaration of variable / Entries
-SymbolTableNode* variableExistsRec(SymbolTableNode* symbolTableNode, char* name){
-    if(variableExists(symbolTableNode, name)){ 
-        return symbolTableNode;
-    } else if(symbolTableNode->parent == NULL) {
+
+Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal){
+    Record* varRecord = symbolTableNode->hashTable[hashVal];
+    while (varRecord != NULL) {
+        if (strcmp(varRecord->name, name) == 0) {
+            return varRecord;
+        }
+        varRecord = varRecord->next;
+    }
+
+    if (symbolTableNode->parent == NULL) {
         return NULL;
-    }else {
-        return variableExistsRec(symbolTableNode->parent, name);
+    } else {
+        return variableExists(symbolTableNode->parent, name, hashVal);
     }
 }
+
 Record* findVariable(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal) {
     if (symbolTableNode->hashTable[hashVal] == NULL) {
         return NULL;
@@ -250,18 +252,41 @@ Record* findVariable(SymbolTableNode* symbolTableNode, char* name, unsigned int 
 
 void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList) {
     unsigned int* offset = &funcRecord->funcST->nextOffset;
+    SymbolTableNode* symbolTableNode = funcRecord->funcST;
 
     // Creating the inputList
     int inputListSize = 0;
     Record* sentinel = malloc(sizeof(Record));
+    sentinel->next = NULL;
     Record* curr = sentinel;
     ASTNode* inputNode = inputList->leftMostChild;
     while (inputNode != NULL) {
+        // Adding the input variable to the inputList
         Record* newRecord = generateRecord(inputNode->leftMostChild, inputNode->rightMostChild, offset);
         curr->next = newRecord;
         curr = curr->next;
-        inputNode = inputNode->next;
         inputListSize++;
+
+        // Adding the input variable to the symbolTableNode
+        char* name = newRecord->name;
+        unsigned int hashVal = hash(name);
+        Record* varRecord = findVariable(symbolTableNode, name, hashVal);
+        int linenum = inputNode->leftMostChild->parseTreeNode->tok->linenum;
+        if (varRecord == NULL) {
+            varRecord = malloc(sizeof(Record));
+            memcpy(varRecord, newRecord, sizeof(Record));
+            varRecord->next = NULL;
+            symbolTableNode->hashTable[hashVal] = varRecord;
+        } else if (strcmp(varRecord->name, name) == 0) {
+            printf("Redeclaration of variable %s in input list of module %s at line %d\n", name, funcRecord->name, linenum);
+        } else {
+            varRecord->next = malloc(sizeof(Record));
+            varRecord = varRecord->next;
+            memcpy(varRecord, newRecord, sizeof(Record));
+            varRecord->next = NULL;
+        }
+
+        inputNode = inputNode->next;
     }
     curr->next = NULL;
     funcRecord->inputList = sentinel->next;
@@ -273,11 +298,33 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     curr = sentinel;
     ASTNode* outputNode = outputList->leftMostChild;
     while (outputNode != NULL) {
+        // Adding the output variable to the outputList
         Record* newRecord = generateRecord(outputNode->leftMostChild, outputNode->rightMostChild, offset);
         curr->next = newRecord;
         curr = curr->next;
-        outputNode = outputNode->next;
         outputListSize++;
+
+        // Adding the output variable to the outputSymbolTableNode
+        symbolTableNode = funcRecord->outputST;
+        char* name = newRecord->name;
+        unsigned int hashVal = hash(name);
+        Record* varRecord = findVariable(symbolTableNode, name, hashVal);
+        int linenum = outputNode->leftMostChild->parseTreeNode->tok->linenum;
+        if (varRecord == NULL) {
+            varRecord = malloc(sizeof(Record));
+            memcpy(varRecord, newRecord, sizeof(Record));
+            varRecord->next = NULL;
+            symbolTableNode->hashTable[hashVal] = varRecord;
+        } else if (strcmp(varRecord->name, name) == 0) {
+            printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, linenum);
+        } else {
+            varRecord->next = malloc(sizeof(Record));
+            varRecord = varRecord->next;
+            memcpy(varRecord, newRecord, sizeof(Record));
+            varRecord->next = NULL;
+        }
+
+        outputNode = outputNode->next;
     }
     curr->next = NULL;
     funcRecord->outputList = sentinel->next;
@@ -286,6 +333,8 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     free(sentinel);
     return;
 }
+
+
 // Type* funcRecType(ASTNode* RHS, SymbolTableNode* symbolTableNode){
 //     int tokenID = RHS->parseTreeNode->tokenID;
 //     switch(tokenID){
@@ -339,6 +388,160 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
 //     }
 //     return NULL;
 // }
+
+VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
+    // We are entering the function for the first time
+    if (strcmp(exprNode->label, "EXPR") == 0) {
+        // If unary operator
+        if (exprNode->numChildren == 2) {
+            VAR_TYPE rhsType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+            // Unary operations are not allowed on arrays
+            if (rhsType == ARR) {
+                return ERROR;
+            } else {
+                return rhsType;
+            }
+        } else {
+            return typeExtractor(exprNode->leftMostChild, symbolTableNode);
+        }
+    }
+
+    // If array (since there is no token in that case)
+    if (strcmp(exprNode->label, "ARRAY") == 0) {
+        char* name = exprNode->leftMostChild->parseTreeNode->tok->lexeme;
+        unsigned int hashVal = hash(name);
+        Record* varRecord = variableExists(symbolTableNode, name, hashVal);
+        if (varRecord == NULL) {
+            printf("Undefined variable %s at line %d.\n", name, exprNode->leftMostChild->parseTreeNode->tok->linenum);
+            return ERROR;
+        }
+
+        // Type checking for the index
+        ASTNode* indexNode = exprNode->rightMostChild;
+        VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
+        if (indexType != INT) {
+            printf("Array index must be of type INTEGER at line %d.\n", exprNode->leftMostChild->parseTreeNode->tok->linenum);
+            return ERROR;
+        }
+
+        // Bound checking for the array
+        if (strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
+            int index = indexNode->rightMostChild->parseTreeNode->tok->num;
+            if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID) {
+                int left = varRecord->type.array.left;
+                if (varRecord->type.array.leftNegative) {
+                    left = -left;
+                }
+                int right = varRecord->type.array.right;
+                if (varRecord->type.array.rightNegative) {
+                    right = -right;
+                }
+
+                if (index < left || index > right) {
+                    printf("Array index out of bounds at line %d.\n", indexNode->rightMostChild->parseTreeNode->tok->linenum);
+                }
+            }
+        }
+
+        return varRecord->type.array.arrType;
+    }
+    
+    // If not array
+    switch (exprNode->parseTreeNode->tokenID) {
+        case PLUS:
+        case MINUS:
+        case MUL: {
+            int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+
+            if (leftType == INT && rightType == INT) {
+                return INT;
+            } else if (leftType == DOUBLE && rightType == DOUBLE) {
+                return DOUBLE;
+            } else if (leftType == ERROR || rightType == ERROR) {
+                return ERROR;
+            } else {
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                return ERROR;
+            }
+            break;
+        }
+        case DIV: {
+            int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+
+            if ((leftType == INT || leftType == DOUBLE) && (rightType == INT || rightType == DOUBLE)) {
+                return DOUBLE;
+            } else if (leftType == ERROR || rightType == ERROR) {
+                return ERROR;
+            } else {
+                printf("Invalid types for DIV at line %d.\n", exprNode->parseTreeNode->tok->linenum);
+                return ERROR;
+            }
+            break;
+        }
+        case AND: 
+        case OR: 
+        {
+            int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+
+            if (leftType == BOOL && rightType == BOOL) {
+                return BOOL;
+            } else if (leftType == ERROR || rightType == ERROR) {
+                return ERROR;
+            } else {
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                return ERROR;
+            }
+            break;
+        }
+        case GT: 
+        case LT:
+        case GE:
+        case LE:
+        case EQ:
+        case NE:
+        {
+            int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+
+            if (leftType == INT && rightType == INT) {
+                return BOOL;
+            } else if (leftType == DOUBLE && rightType == DOUBLE) {
+                return BOOL;
+            } else if (leftType == ERROR || rightType == ERROR) {
+                return ERROR;
+            } else {
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                return ERROR;
+            }
+            break;
+        }
+        case NUM: {
+            return INT;
+            break;
+        }
+        case RNUM: {
+            return DOUBLE;
+            break;
+        }
+        case ID: {
+            char* name = exprNode->parseTreeNode->tok->lexeme;
+            unsigned int hashVal = hash(name);
+            Record* varRecord = variableExists(symbolTableNode, name, hashVal);
+            if (varRecord == NULL) {
+                printf("Undefined variable %s at line %d\n", name, exprNode->parseTreeNode->tok->linenum);
+                return ERROR;
+            } else {
+                return varRecord->type.varType;
+            }
+            break;
+        }
+    }
+    
+}
+
 void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement) {
     /*
         Types of statements possible:
@@ -351,47 +554,140 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
         7. FOR                          New and Populate and Use
         8. WHILE                        New and Populate and Use
     */
-
     SymbolTableNode* sentinel = initSymbolTableNode();
     SymbolTableNode* currChild = sentinel;
     while (statement != NULL) {
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
-                ASTNode* id = statement->leftMostChild; // ID node of GET_VALUE()
-                // Type-check if it is ID node or not ? i.e. It SHOULDN'T be ARRAY, INTEGER,..
-                char * idLabel = id->parseTreeNode->tok->lexeme;
-                if(variableExistsRec(symbolTableNode, idLabel)){
-                    // TODO : GET_VALUE fetches user input into the variable
-                } else {
-                    printf("Undefined variable %s at line %d\n",idLabel, id->parseTreeNode->tok->linenum);
+                ASTNode* idNode = statement->leftMostChild;
+                char* name = idNode->parseTreeNode->tok->lexeme;
+
+                // Check if variable exists
+                Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                if (varRecord == NULL) {
+                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
                 }
                 break;
             }
             case 'P': { // PRINT
-                ASTNode* id = statement->leftMostChild;
-                char* idLabel = id->parseTreeNode->tok->lexeme;
-                if(variableExistsRec(symbolTableNode, idLabel)){
-                    // TODO -> Type-Check ?
-                } else {
-                    printf("Variable %s  is not defined previously at line %d\n",idLabel, id->parseTreeNode->tok->linenum);
-                }
+                ASTNode* printNode = statement->leftMostChild;
+                if (strcmp(printNode->label, "ID") == 0) { // ID
+                    char* name = printNode->parseTreeNode->tok->lexeme;
+                    Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                    if (varRecord == NULL) {
+                        printf("Undefined variable %s at line %d\n", name, printNode->parseTreeNode->tok->linenum);
+                    }
+
+                    if (printNode->next == NULL) { break; }
+
+                    // Case where there is a subscript
+                    ASTNode* indexNode = printNode->next;
+                    if (varRecord->type.varType != ARR) {
+                        printf("Variable %s is not an array at line %d\n", name, printNode->parseTreeNode->tok->linenum);
+                    } else {
+                        // If array is static, check if the index is within bounds
+                        if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID && strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
+                            int left = varRecord->type.array.left;
+                            if (varRecord->type.array.leftNegative) {
+                                left = -left;
+                            }
+                            int right = varRecord->type.array.right;;
+                            if (varRecord->type.array.rightNegative) {
+                                right = -right;
+                            }
+                            int index = indexNode->rightMostChild->parseTreeNode->tok->num;
+                            // If MINUS is present, the index is negative
+                            if (indexNode->numChildren == 2) {
+                                if (indexNode->leftMostChild->parseTreeNode->tokenID == MINUS) {
+                                    index = -index;
+                                }
+                            }
+                            if (index < left || index > right) {
+                                printf("Index %d out of bounds for array %s at line %d\n", index, name, indexNode->leftMostChild->parseTreeNode->tok->linenum);
+                            }
+                        } else if (strcmp(indexNode->rightMostChild->label, "ID") == 0) {
+                            // Checking for existence of the index variable and the type
+                            char* indexName = indexNode->rightMostChild->parseTreeNode->tok->lexeme;
+                            Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
+                            if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
+                                printf("Undefined variable %s at line %d\n", indexName, indexNode->parseTreeNode->tok->linenum);
+                            } else if (indexRecord->type.varType != INTEGER) {
+                                printf("Index %s is not an integer at line %d\n", indexName, indexNode->parseTreeNode->tok->linenum);
+                            }
+                        }
+                    }
+                } 
                 break;
             }
             case 'A': { // ASSIGN_STMT
-                // Left Most Child must always be an identifier 
-                ASTNode* assignID = statement->leftMostChild;
-                char* assignIDLabel = assignID->parseTreeNode->tok->lexeme;
-                if(variableExistsRec(symbolTableNode, assignIDLabel)){
-                    // TODO -> Type Checking of LHS with RHS
-                } else {
-                    // Not Found after recursively searching for LHS in the STs & their parents
-                    printf("Undefined variable %s at line %d\n",assignIDLabel, assignID->parseTreeNode->tok->linenum);
+                // Check whether the LHS is defined
+                ASTNode* idNode = statement->leftMostChild;
+                bool arrayAccess = !(strcmp(statement->leftMostChild->label, "ID") == 0);
+                if (arrayAccess) {
+                    idNode = statement->leftMostChild->leftMostChild;
                 }
-                // Find if all the rightMostChildren variables are also present in the symbolTabelNode(or its parents)
-                // Need to traverse the whole EXPR Node, Possibly in DFS manner, to help for type-checking as well
-                ASTNode* RHS = statement->rightMostChild;
-                // funcRecType(RHS, symbolTableNode);
-                // checkVarExistsRec(symbolTableNode, RHS); // Add parameter of type to handle type checking and change func Name
+
+                // Check existence of idNode and store type
+                VAR_TYPE idType;
+                char* name = idNode->parseTreeNode->tok->lexeme;
+                Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                if (varRecord == NULL) {
+                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
+                    break;
+                } else {
+                    idType = varRecord->type.varType;
+                }
+
+                switch (idType) {
+                    case INT: {
+                        // Check if RHS is an integer
+                        VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
+                        if (rhsType != INTEGER && rhsType != ERROR) {
+                            printf("Type mismatch at line %d. Expected INTEGER type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                        }
+                        break;
+                    }
+                    case DOUBLE: {
+                        // Check if RHS is a double
+                        VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
+                        if (rhsType != DOUBLE && rhsType != ERROR) {
+                            printf("Type mismatch at line %d. Expected REAL type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                        }
+                        break;
+                    }
+                    case BOOL: {
+                        // Check if RHS is a boolean
+                        VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
+                        if (rhsType != BOOLEAN && rhsType != ERROR) {
+                            printf("Type mismatch at line %d. Expected BOOLEAN type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                        }
+                        break;
+                    }
+                    case ARR: {
+                        if (arrayAccess) {
+                            VAR_TYPE arrayType = varRecord->type.array.arrType;
+                            char *typeStrings[] = {
+                                "INTEGER",
+                                "REAL",
+                                "BOOLEAN"
+                            };
+                            // Check if RHS type matches the array type
+                            VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
+                            if (rhsType != arrayType && rhsType != ERROR) {
+                                printf("Type mismatch at line %d. Expected %s on the RHS.\n", idNode->parseTreeNode->tok->linenum, typeStrings[arrayType]);
+                            }
+                        } else {
+                            // Check if RHS is an array
+                            VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
+                            if (rhsType != ARR && rhsType != ERROR) {
+                                printf("Type mismatch at line %d. Expected ARRAY type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                            } else if (rhsType == ARR) {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
                 break;
             }
             case 'M': { // MODULE_REUSE_STMT
@@ -423,6 +719,74 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 break;
             }
             case 'S': { // SWITCH
+                currChild->next = initSymbolTableNode();
+                currChild = currChild->next;
+                currChild->nextOffset = symbolTableNode->nextOffset;
+                currChild->parent = symbolTableNode;
+                currChild->funcOutputST = symbolTableNode->funcOutputST;
+
+                // ID in SWITCH
+                ASTNode* idNode = statement->leftMostChild;
+                VAR_TYPE switchType;
+                char* name = idNode->parseTreeNode->tok->lexeme;
+                Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                if (varRecord != NULL) {
+                    switchType = varRecord->type.varType;
+                } else {
+                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
+                }
+
+                switch (switchType) {
+                    case INT: {
+                        // Checking if default statement exists
+                        ASTNode* defaultCase = statement->rightMostChild;
+                        if (statement->rightMostChild->parseTreeNode->tokenID != DEFAULT) {
+                            printf("Default statement required for switch statement of type INTEGER at line %d\n", idNode->parseTreeNode->tok->linenum);
+                            defaultCase = NULL;
+                        }
+
+                        // Iterating through all the case statements
+                        ASTNode* caseStatements = statement->leftMostChild->next;
+                        while (caseStatements != NULL) {
+                            // Checking if the case statement is of type INTEGER
+                            if (caseStatements != defaultCase && caseStatements->leftMostChild->parseTreeNode->tokenID != NUM) {
+                                printf("Case label not of type INTEGER at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
+                            }
+                            // Populating the symbol table for the statements in the case
+                            populateSymbolTableRec(currChild, caseStatements->leftMostChild->next);
+                            caseStatements = caseStatements->next;
+                        }
+                        break;
+                    }
+                    case DOUBLE: {
+                        printf("REAL type identifier not allowed in switch statement at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        break;
+                    }
+                    case BOOL: {
+                        // Checking that there is no default statement
+                        if (statement->rightMostChild->parseTreeNode->tokenID == DEFAULT) {
+                            printf("Default statement not allowed in switch statement of type BOOLEAN at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        }
+
+                        // Iterating through all the case statements
+                        ASTNode* caseStatements = statement->leftMostChild->next;
+                        while (caseStatements != NULL) {
+                            // Checking if the case statement is of type BOOLEAN
+                            if (caseStatements->leftMostChild->parseTreeNode->tokenID != TRUE && caseStatements->leftMostChild->parseTreeNode->tokenID != FALSE) {
+                                printf("Case label not of type BOOLEAN at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
+                            }
+                            // Populating the symbol table for the statements in the case
+                            populateSymbolTableRec(currChild, caseStatements->leftMostChild->next);
+                            caseStatements = caseStatements->next;
+                        }
+                        break;
+                    }
+                    case ARR: {
+                        printf("ARRAY type identifier not allowed in switch statement at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        break;
+                    }
+                }
+
                 break;
             }
             case 'F': { // FOR
@@ -430,6 +794,7 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 currChild = currChild->next;
                 currChild->nextOffset = symbolTableNode->nextOffset;
                 currChild->parent = symbolTableNode;
+                currChild->funcOutputST = symbolTableNode->funcOutputST;
 
                 // ID IN FOR LOOP 
                 ASTNode* idNode = statement->leftMostChild; 
@@ -440,12 +805,12 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 strcpy(varRecord->name, name);
                 varRecord->offset = currChild->nextOffset;
                 currChild->nextOffset += sizeof(int);
-                varRecord->linenum = idNode->parseTreeNode->tok->linenum;
+                // varRecord->linenum = idNode->parseTreeNode->tok->linenum;
                 varRecord->type.varType = INT;
                 varRecord->next = NULL;
 
                 // Statements inside the for loop
-                populateSymbolTableRec(currChild, statement->rightMostChild);
+                populateSymbolTableRec(currChild, statement->leftMostChild->next->next);
                 break;
             }
             case 'W': { // WHILE
@@ -453,11 +818,18 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
                 currChild = currChild->next;
                 currChild->nextOffset = symbolTableNode->nextOffset;
                 currChild->parent = symbolTableNode;
+                currChild->funcOutputST = symbolTableNode->funcOutputST;
 
-                // TODO: Check whether the expression is a boolean expression or not
+                // Check whether the expression is a boolean expression or not
+                ASTNode* exprNode = statement->leftMostChild;
+                VAR_TYPE exprType = typeExtractor(exprNode, symbolTableNode);
+
+                if (exprType != BOOL) {
+                    printf("Expression in while loop not of type BOOLEAN at line %d\n", exprNode->parseTreeNode->tok->linenum);
+                }
 
                 // Statements inside the while loop
-                populateSymbolTableRec(currChild, statement->rightMostChild);
+                populateSymbolTableRec(currChild, statement->leftMostChild->next);
                 break;
             }
         }
@@ -471,51 +843,51 @@ void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement
 }
 
 void populateSymbolTable(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode, ASTNode* moduleDefNode) {
-    // Adding inputList variables to the symbolTableNode
-    Record* inputListNode = funcRecord->inputList;
-    while (inputListNode != NULL) {
-        char* name = inputListNode->name;
-        unsigned int hashVal = hash(name);
-        Record* varRecord = findVariable(symbolTableNode, name, hashVal);
-        if (varRecord == NULL) {
-            varRecord = malloc(sizeof(Record));
-            memcpy(varRecord, inputListNode, sizeof(Record));
-            varRecord->next = NULL;
-            symbolTableNode->hashTable[hashVal] = varRecord;
-        } else if (strcmp(varRecord->name, name) == 0) {
-            printf("Redeclaration of variable %s in input list of module %s at line %d\n", name, funcRecord->name, inputListNode->linenum);
-        } else {
-            varRecord->next = malloc(sizeof(Record));
-            varRecord = varRecord->next;
-            memcpy(varRecord, inputListNode, sizeof(Record));
-            varRecord->next = NULL;
-        }
+    // // Adding inputList variables to the symbolTableNode
+    // Record* inputListNode = funcRecord->inputList;
+    // while (inputListNode != NULL) {
+    //     char* name = inputListNode->name;
+    //     unsigned int hashVal = hash(name);
+    //     Record* varRecord = findVariable(symbolTableNode, name, hashVal);
+    //     if (varRecord == NULL) {
+    //         varRecord = malloc(sizeof(Record));
+    //         memcpy(varRecord, inputListNode, sizeof(Record));
+    //         varRecord->next = NULL;
+    //         symbolTableNode->hashTable[hashVal] = varRecord;
+    //     } else if (strcmp(varRecord->name, name) == 0) {
+    //         printf("Redeclaration of variable %s in input list of module %s at line %d\n", name, funcRecord->name, inputListNode->linenum);
+    //     } else {
+    //         varRecord->next = malloc(sizeof(Record));
+    //         varRecord = varRecord->next;
+    //         memcpy(varRecord, inputListNode, sizeof(Record));
+    //         varRecord->next = NULL;
+    //     }
 
-        inputListNode = inputListNode->next;
-    }
+    //     inputListNode = inputListNode->next;
+    // }
 
-    // Adding outputList variables to the symbolTableNode
-    Record* outputListNode = funcRecord->outputList;
-    while (outputListNode != NULL) {
-        char* name = outputListNode->name;
-        unsigned int hashVal = hash(name);
-        Record* varRecord = findVariable(symbolTableNode, name, hashVal);
-        if (varRecord == NULL) {
-            varRecord = malloc(sizeof(Record));
-            memcpy(varRecord, outputListNode, sizeof(Record));
-            varRecord->next = NULL;
-            symbolTableNode->hashTable[hashVal] = varRecord;
-        } else if (strcmp(varRecord->name, name) == 0) {
-            printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputListNode->linenum);
-        } else {
-            varRecord->next = malloc(sizeof(Record));
-            varRecord = varRecord->next;
-            memcpy(varRecord, outputListNode, sizeof(Record));
-            varRecord->next = NULL;
-        }
+    // // Adding outputList variables to the symbolTableNode
+    // Record* outputListNode = funcRecord->outputList;
+    // while (outputListNode != NULL) {
+    //     char* name = outputListNode->name;
+    //     unsigned int hashVal = hash(name);
+    //     Record* varRecord = findVariable(symbolTableNode, name, hashVal);
+    //     if (varRecord == NULL) {
+    //         varRecord = malloc(sizeof(Record));
+    //         memcpy(varRecord, outputListNode, sizeof(Record));
+    //         varRecord->next = NULL;
+    //         symbolTableNode->hashTable[hashVal] = varRecord;
+    //     } else if (strcmp(varRecord->name, name) == 0) {
+    //         printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputListNode->linenum);
+    //     } else {
+    //         varRecord->next = malloc(sizeof(Record));
+    //         varRecord = varRecord->next;
+    //         memcpy(varRecord, outputListNode, sizeof(Record));
+    //         varRecord->next = NULL;
+    //     }
 
-        outputListNode = outputListNode->next;
-    }
+    //     outputListNode = outputListNode->next;
+    // }
 
     // Adding the statements recursively
     populateSymbolTableRec(symbolTableNode, moduleDefNode->leftMostChild);
@@ -569,6 +941,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         idNode = moduleNode->leftMostChild;
         name = idNode->parseTreeNode->tok->lexeme;
     }
+    printf("Adding function %s to symbol table\n", name);
     unsigned int hashVal = hash(name);
 
     GlobalRecord* funcRecord;
@@ -594,6 +967,8 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     funcRecord->defined = true;
     funcRecord->driver = driver;
     funcRecord->funcST = initSymbolTableNode();
+    funcRecord->outputST = initSymbolTableNode();
+    funcRecord->funcST->funcOutputST = funcRecord->outputST;
     funcRecord->inputList = NULL;
     funcRecord->outputList = NULL;
     funcRecord->next = NULL;

@@ -215,7 +215,6 @@ bool isUsefulTerminal(ASTStackNode* node) {
         case GT:
         case EQ:
         case NE:
-        case ASSIGNOP:
         case TRUE:
         case FALSE:
         case AND:
@@ -299,6 +298,9 @@ void createAST(void) {
                     break;
                 }
                 case 9: { // <ret> = e 
+                    // Add an empty output list to keep things consistent
+                    ASTNode* outputParaListNode = createASTNode("OUTPUT_LIST", node->parseTreeNode);
+                    appendASTNodeAsChild(outputParaListNode, node->parent);
                     break;
                 }
                 case 10: { // <input_plist> = ID COLON <dataType> <N1>

@@ -36,7 +36,6 @@ typedef struct Type {
 
 typedef struct Record {
     char name[20];
-    int linenum;
     Type type;
     unsigned int offset;
     struct Record* next;
@@ -47,6 +46,7 @@ typedef struct SymbolTableNode {
     struct SymbolTableNode* children;
     int numChildren;
     unsigned int nextOffset;
+    struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;
     struct SymbolTableNode* parent;
 } SymbolTableNode;
@@ -62,6 +62,7 @@ typedef struct GlobalRecord { // These are Records at the first layer/row of Sym
     Record* outputList;
     unsigned int outputListSize;
     SymbolTableNode* funcST;
+    SymbolTableNode* outputST;
     struct GlobalRecord* next;
 } GlobalRecord;
 
