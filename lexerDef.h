@@ -9,6 +9,8 @@ Group Number : 2
 
 #ifndef LEXER_DEF
 #define LEXER_DEF
+
+#include <stdbool.h>
 typedef enum {
     // Keywords
     INTEGER,
@@ -86,5 +88,7 @@ typedef struct TOKEN {
     char lexeme[21];
     int linenum;
 } TOKEN;
+
+extern bool LEXER_ERROR;
 
 #endif

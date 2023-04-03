@@ -20,6 +20,9 @@ Trie* grammarTrie;
 #define TOTAL_RULES 200 // total number of rules in grammar
 #define NULL_RULES 50 // expected number of nullable rules
 
+// Flag to check if there is a parse error
+bool PARSER_ERROR = false;
+
 ProductionTable* pdtable; // stores all rules
 
 int parseTable[TOTAL_RULES][TOTAL_RULES];
@@ -77,6 +80,7 @@ void insertRuleInProductionTable(ProductionTable* pdtable, ProductionRule* p)
  */
 void printParseError(int p_errno, stackNode* top, TOKEN* tok)
 {
+    PARSER_ERROR = true;
     synCorrPrint = false;
     switch (p_errno) {
     case 1: {
@@ -472,10 +476,9 @@ void initRootNode()
     parseTree->sz++;
     parseTree->treeDepth++;
     ParseTreeNode* root = malloc(sizeof(ParseTreeNode));
-    root->tok = NULL;
     root->depth = 1;
     root->tokenID = pdtable->grammarrules[0]->LHS->tokenID;
-    root->productionID = -1;
+    root->nonLeaf.productionID = -1;
     root->tokenDerivedFrom = -1;
     root->isLeaf = false;
     root->next = NULL;
@@ -516,11 +519,12 @@ void insertRuleInParseTree(ParseTreeNode* parent, int productionID, TOKEN* tok, 
         currNode = malloc(sizeof(ParseTreeNode));
         parseTree->sz++;
         currNode->depth = parent->depth + 1;
-        currNode->tok = NULL;
         currNode->tokenID = g->tokenID;
-        currNode->productionID = productionID;
         currNode->tokenDerivedFrom = parent->tokenID;
         currNode->isLeaf = g->isTerminal;
+        if (currNode->isLeaf) {
+            currNode->leaf.tok = NULL;
+        }
         currNode->next = head;
         currNode->child = NULL;
         head = currNode;
@@ -548,20 +552,20 @@ void printParseTreeRec(ParseTreeNode* node, FILE* fp, bool firstChild)
 
     printParseTreeRec(node->child, fp, true);
 
-    if (node->isLeaf && node->tok != NULL) {
-        fprintf(fp, "%-25s%-10d%-15s", node->tok->lexeme, node->tok->linenum, elements[node->tok->tok]);
+    if (node->isLeaf && node->leaf.tok != NULL) {
+        fprintf(fp, "%-25s%-10d%-15s", node->leaf.tok->lexeme, node->leaf.tok->linenum, elements[node->tokenID]);
     } else if (node->isLeaf) {
         fprintf(fp, "%-25s%-10s%-15s", "(null)", "(null)", "(null)");
     } else {
         fprintf(fp, "%-25s%-10s%-15s", "--------------------", "---", "----------");
     }
 
-    if (node->isLeaf && node->tok == NULL) {
+    if (node->isLeaf && node->leaf.tok == NULL) {
         fprintf(fp, "%-20s", "(null)");
-    } else if (node->isLeaf && node->tok->tok == NUM) {
-        fprintf(fp, "%-20d", node->tok->num);
-    } else if (node->isLeaf && node->tok->tok == RNUM) {
-        fprintf(fp, "%-20lf", node->tok->rnum);
+    } else if (node->isLeaf && node->leaf.tok->tok == NUM) {
+        fprintf(fp, "%-20d", node->leaf.tok->num);
+    } else if (node->isLeaf && node->leaf.tok->tok == RNUM) {
+        fprintf(fp, "%-20lf", node->leaf.tok->rnum);
     } else {
         fprintf(fp, "%-20s", "---------------");
     }
@@ -729,7 +733,7 @@ void parse()
                 if (curTok->tok == DOLLAR) {
                     break;
                 }
-                topStack->nodeAddr->tok = curTok;
+                topStack->nodeAddr->leaf.tok = curTok;
 
                 popStack(st);
                 topStack = peekStack(st);
@@ -779,6 +783,7 @@ void parse()
 
             if (ruleID == -1) {
                 synCorrPrint = false;
+                PARSER_ERROR = true;
                 printf(RED BOLD "[Parser] Line: %d Error in the input as no entry found in parseTable[%s][%s]\n" RESET, curTok->linenum, topStack->GE->lexeme, elements[curTok->tok]);
 
                 Set* synchronizingSet = initSynchronizingSet(topStack->GE);
@@ -939,8 +944,8 @@ void freeParseTreeRec(ParseTreeNode* node)
     }
 
     freeParseTreeRec(node->child);
-    if (node->tok != NULL) {
-        free(node->tok);
+    if (node->isLeaf && node->leaf.tok != NULL) {
+        free(node->leaf.tok);
     }
 
     freeParseTreeRec(node->next);

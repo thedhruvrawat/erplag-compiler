@@ -214,10 +214,13 @@ int main(int argc, char* argv[])
             printf(YELLOW BOLD "TOTAL CPU TIME: %f\tTOTAL CPU TIME IN SECONDS: %f sec\n" RESET, total_CPU_time, total_CPU_time_in_seconds);
             printf("-------------------------------------------------------------------------------------\n");
             // TESTING AST CREATION;;; TO BE REMOVED LATER
+            if (PARSER_ERROR || LEXER_ERROR) {
+                printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                break;
+            }
             ASTCreator(pt);
             generateSymbolTable(tree);
             printSymbolTable();
-
             break;
         }
         default: {

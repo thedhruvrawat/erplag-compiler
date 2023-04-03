@@ -17,6 +17,9 @@ Group Number : 2
 // Buffers
 long long BUF_SIZE = 512;
 
+// A flag to check for lexer errors
+bool LEXER_ERROR = false;
+
 const char* token_types[] = {
     "INTEGER", "REAL", "BOOLEAN", "OF", "ARRAY", "START",
     "END", "DECLARE", "MODULE", "DRIVER", "PROGRAM", "GET_VALUE",
@@ -771,6 +774,7 @@ TOKEN* getNextToken()
             }
             begin--; // Begin should begin just after the error char
             invalidLex[i] = 0;
+            LEXER_ERROR = true;
 
             // Prevent printing for unlosed comment
             if (errno != 7) {

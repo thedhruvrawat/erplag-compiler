@@ -42,13 +42,24 @@ typedef struct ProductionTable {
     ProductionRule** grammarrules;
 } ProductionTable;
 
-typedef struct ParseTreeNode {
+typedef struct Leaf {
     TOKEN* tok;
+} Leaf;
+
+typedef struct NonLeaf {
+    int productionID;
+} NonLeaf;
+
+typedef struct ParseTreeNode {
+    bool isLeaf;
+    union {
+        Leaf leaf;
+        NonLeaf nonLeaf;
+    };
     int depth;
     int tokenID;
     int productionID;
     int tokenDerivedFrom;
-    bool isLeaf;
     struct ParseTreeNode* next;
     struct ParseTreeNode* child;
 } ParseTreeNode;
@@ -58,5 +69,7 @@ typedef struct ParseTree {
     int sz;
     int treeDepth;
 } ParseTree;
+
+extern bool PARSER_ERROR;
 
 #endif

@@ -21,18 +21,14 @@ typedef enum {
 
 typedef struct ASTNode {
     char label[20];
-    ParseTreeNode* parseTreeNode;
+    bool isLeaf;
+    Leaf leaf;
     struct ASTNode* parent;
     struct ASTNode* leftMostChild;
     struct ASTNode* rightMostChild;
     struct ASTNode* next;
     struct ASTNode* prev;
     int numChildren;
-
-    union {
-        bool isStatic;
-        VAR_TYPE type;
-    };
 } ASTNode;
 
 typedef struct AST {

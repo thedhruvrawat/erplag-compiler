@@ -129,14 +129,14 @@ Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned in
 }
 
 Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNode* dataTypeNode, int* nextOffset) {
-    char* name = idNode->parseTreeNode->tok->lexeme;
+    char* name = idNode->leaf.tok->lexeme;
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
     newRec->offset = *nextOffset;
-    // newRec->linenum = idNode->parseTreeNode->tok->linenum;
+    // newRec->linenum = idNode->leaf.tok->linenum;
     newRec->next = NULL;
 
-    switch (dataTypeNode->parseTreeNode->tokenID) {
+    switch (dataTypeNode->leaf.tok->tok) {
         case INTEGER: {
             newRec->type.varType = INT;
             *nextOffset += sizeof(int);
@@ -157,7 +157,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
             int elementSize;
             
             // Setting the datatype of the elements of the array
-            switch (dataTypeNode->rightMostChild->parseTreeNode->tokenID) {
+            switch (dataTypeNode->rightMostChild->leaf.tok->tok) {
                 case INTEGER: {
                     newRec->type.array.arrType = INT;
                     elementSize = sizeof(int);
@@ -187,12 +187,12 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                 newRec->type.array.leftNegative = false;
             }
 
-            if (leftIDNum->parseTreeNode->tokenID == ID) {
+            if (leftIDNum->leaf.tok->tok == ID) {
                 newRec->type.array.isLeftID = true;
-                strcpy(newRec->type.array.leftID, leftIDNum->parseTreeNode->tok->lexeme);
+                strcpy(newRec->type.array.leftID, leftIDNum->leaf.tok->lexeme);
             } else {
                 newRec->type.array.isLeftID = false;
-                newRec->type.array.left = leftIDNum->parseTreeNode->tok->num;
+                newRec->type.array.left = leftIDNum->leaf.tok->num;
             }
 
             // Resolving right bound
@@ -205,12 +205,12 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                 newRec->type.array.rightNegative = false;
             }
 
-            if (rightIDNum->parseTreeNode->tokenID == ID) {
+            if (rightIDNum->leaf.tok->tok == ID) {
                 newRec->type.array.isRightID = true;
-                strcpy(newRec->type.array.rightID, rightIDNum->parseTreeNode->tok->lexeme);
+                strcpy(newRec->type.array.rightID, rightIDNum->leaf.tok->lexeme);
             } else {
                 newRec->type.array.isRightID = false;
-                newRec->type.array.right = rightIDNum->parseTreeNode->tok->num;
+                newRec->type.array.right = rightIDNum->leaf.tok->num;
             }
 
             // The static flag of the ast node itself (required during code generation (maybe))
@@ -304,7 +304,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         char* name = newRecord->name;
         unsigned int hashVal = hash(name);
         Record* varRecord = findVariableInsertion(symbolTableNode, name, hashVal);
-        int linenum = inputNode->leftMostChild->parseTreeNode->tok->linenum;
+        int linenum = inputNode->leftMostChild->leaf.tok->linenum;
         if (varRecord == NULL) {
             varRecord = malloc(sizeof(Record));
             memcpy(varRecord, newRecord, sizeof(Record));
@@ -345,13 +345,13 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         // Checking if the variable has already been declared in the inputList
         Record* varRecord = variableExists(funcRecord->funcST, name, hashVal);
         if (varRecord != NULL) {
-            printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputNode->leftMostChild->parseTreeNode->tok->linenum);
+            printf("Redeclaration of variable %s in output list of module %s at line %d\n", name, funcRecord->name, outputNode->leftMostChild->leaf.tok->linenum);
             outputNode = outputNode->next;
             continue;
         }
 
         varRecord = findVariableInsertion(symbolTableNode, name, hashVal);
-        int linenum = outputNode->leftMostChild->parseTreeNode->tok->linenum;
+        int linenum = outputNode->leftMostChild->leaf.tok->linenum;
         if (varRecord == NULL) {
             varRecord = malloc(sizeof(Record));
             memcpy(varRecord, newRecord, sizeof(Record));
@@ -395,11 +395,11 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
 
     // If array (since there is no token in that case)
     if (strcmp(exprNode->label, "ARRAY") == 0) {
-        char* name = exprNode->leftMostChild->parseTreeNode->tok->lexeme;
+        char* name = exprNode->leftMostChild->leaf.tok->lexeme;
         unsigned int hashVal = hash(name);
         Record* varRecord = variableExists(symbolTableNode, name, hashVal);
         if (varRecord == NULL) {
-            printf("Undefined variable %s at line %d.\n", name, exprNode->leftMostChild->parseTreeNode->tok->linenum);
+            printf("Undefined variable %s at line %d.\n", name, exprNode->leftMostChild->leaf.tok->linenum);
             return ERROR;
         }
 
@@ -407,13 +407,13 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         ASTNode* indexNode = exprNode->rightMostChild;
         VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
         if (indexType != INT) {
-            printf("Array index must be of type INTEGER at line %d.\n", exprNode->leftMostChild->parseTreeNode->tok->linenum);
+            printf("Array index must be of type INTEGER at line %d.\n", exprNode->leftMostChild->leaf.tok->linenum);
             return ERROR;
         }
 
         // Bound checking for the array
         if (strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
-            int index = indexNode->rightMostChild->parseTreeNode->tok->num;
+            int index = indexNode->rightMostChild->leaf.tok->num;
             if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID) {
                 int left = varRecord->type.array.left;
                 if (varRecord->type.array.leftNegative) {
@@ -425,7 +425,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 }
 
                 if (index < left || index > right) {
-                    printf("Array index out of bounds at line %d.\n", indexNode->rightMostChild->parseTreeNode->tok->linenum);
+                    printf("Array index out of bounds at line %d.\n", indexNode->rightMostChild->leaf.tok->linenum);
                 }
             }
         }
@@ -434,7 +434,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
     }
     
     // If not array
-    switch (exprNode->parseTreeNode->tokenID) {
+    switch (exprNode->leaf.tok->tok) {
         case PLUS:
         case MINUS:
         case MUL: {
@@ -448,7 +448,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
             } else {
-                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->leaf.tok->tok],exprNode->leaf.tok->linenum);
                 return ERROR;
             }
             break;
@@ -462,7 +462,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
             } else {
-                printf("Invalid types for DIV at line %d.\n", exprNode->parseTreeNode->tok->linenum);
+                printf("Invalid types for DIV at line %d.\n", exprNode->leaf.tok->linenum);
                 return ERROR;
             }
             break;
@@ -478,7 +478,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
             } else {
-                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->leaf.tok->tok],exprNode->leaf.tok->linenum);
                 return ERROR;
             }
             break;
@@ -500,7 +500,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
             } else {
-                printf("Invalid types for %s at line %d.\n", token_types[exprNode->parseTreeNode->tokenID],exprNode->parseTreeNode->tok->linenum);
+                printf("Invalid types for %s at line %d.\n", token_types[exprNode->leaf.tok->tok],exprNode->leaf.tok->linenum);
                 return ERROR;
             }
             break;
@@ -514,11 +514,11 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             break;
         }
         case ID: {
-            char* name = exprNode->parseTreeNode->tok->lexeme;
+            char* name = exprNode->leaf.tok->lexeme;
             unsigned int hashVal = hash(name);
             Record* varRecord = variableExists(symbolTableNode, name, hashVal);
             if (varRecord == NULL) {
-                printf("Undefined variable %s at line %d\n", name, exprNode->parseTreeNode->tok->linenum);
+                printf("Undefined variable %s at line %d\n", name, exprNode->leaf.tok->linenum);
                 return ERROR;
             } else {
                 return varRecord->type.varType;
@@ -547,22 +547,22 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
                 ASTNode* idNode = statement->leftMostChild;
-                char* name = idNode->parseTreeNode->tok->lexeme;
+                char* name = idNode->leaf.tok->lexeme;
 
                 // Check if variable exists
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
-                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
+                    printf("Undefined variable %s at line %d\n", name, idNode->leaf.tok->linenum);
                 }
                 break;
             }
             case 'P': { // PRINT
                 ASTNode* printNode = statement->leftMostChild;
                 if (strcmp(printNode->label, "ID") == 0) { // ID
-                    char* name = printNode->parseTreeNode->tok->lexeme;
+                    char* name = printNode->leaf.tok->lexeme;
                     Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                     if (varRecord == NULL) {
-                        printf("Undefined variable %s at line %d\n", name, printNode->parseTreeNode->tok->linenum);
+                        printf("Undefined variable %s at line %d\n", name, printNode->leaf.tok->linenum);
                     }
 
                     if (printNode->next == NULL) { break; }
@@ -570,7 +570,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     // Case where there is a subscript
                     ASTNode* indexNode = printNode->next;
                     if (varRecord->type.varType != ARR) {
-                        printf("Variable %s is not an array at line %d\n", name, printNode->parseTreeNode->tok->linenum);
+                        printf("Variable %s is not an array at line %d\n", name, printNode->leaf.tok->linenum);
                     } else {
                         // If array is static, check if the index is within bounds
                         if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID && strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
@@ -582,24 +582,24 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             if (varRecord->type.array.rightNegative) {
                                 right = -right;
                             }
-                            int index = indexNode->rightMostChild->parseTreeNode->tok->num;
+                            int index = indexNode->rightMostChild->leaf.tok->num;
                             // If MINUS is present, the index is negative
                             if (indexNode->numChildren == 2) {
-                                if (indexNode->leftMostChild->parseTreeNode->tokenID == MINUS) {
+                                if (indexNode->leftMostChild->leaf.tok->tok == MINUS) {
                                     index = -index;
                                 }
                             }
                             if (index < left || index > right) {
-                                printf("Index %d out of bounds for array %s at line %d\n", index, name, indexNode->leftMostChild->parseTreeNode->tok->linenum);
+                                printf("Index %d out of bounds for array %s at line %d\n", index, name, indexNode->leftMostChild->leaf.tok->linenum);
                             }
                         } else if (strcmp(indexNode->rightMostChild->label, "ID") == 0) {
                             // Checking for existence of the index variable and the type
-                            char* indexName = indexNode->rightMostChild->parseTreeNode->tok->lexeme;
+                            char* indexName = indexNode->rightMostChild->leaf.tok->lexeme;
                             Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
                             if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
-                                printf("Undefined variable %s at line %d\n", indexName, indexNode->parseTreeNode->tok->linenum);
+                                printf("Undefined variable %s at line %d\n", indexName, indexNode->leaf.tok->linenum);
                             } else if (indexRecord->type.varType != INTEGER) {
-                                printf("Index %s is not an integer at line %d\n", indexName, indexNode->parseTreeNode->tok->linenum);
+                                printf("Index %s is not an integer at line %d\n", indexName, indexNode->leaf.tok->linenum);
                             }
                         }
                     }
@@ -616,10 +616,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // Check existence of idNode and store type
                 VAR_TYPE idType;
-                char* name = idNode->parseTreeNode->tok->lexeme;
+                char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
-                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
+                    printf("Undefined variable %s at line %d\n", name, idNode->leaf.tok->linenum);
                     break;
                 } else {
                     idType = varRecord->type.varType;
@@ -630,7 +630,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         // Check if RHS is an integer
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != INTEGER && rhsType != ERROR) {
-                            printf("Type mismatch at line %d. Expected INTEGER type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                            printf("Type mismatch at line %d. Expected INTEGER type on the RHS.\n", idNode->leaf.tok->linenum);
                         }
                         break;
                     }
@@ -638,7 +638,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         // Check if RHS is a double
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != DOUBLE && rhsType != ERROR) {
-                            printf("Type mismatch at line %d. Expected REAL type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                            printf("Type mismatch at line %d. Expected REAL type on the RHS.\n", idNode->leaf.tok->linenum);
                         }
                         break;
                     }
@@ -646,7 +646,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         // Check if RHS is a boolean
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != BOOLEAN && rhsType != ERROR) {
-                            printf("Type mismatch at line %d. Expected BOOLEAN type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                            printf("Type mismatch at line %d. Expected BOOLEAN type on the RHS.\n", idNode->leaf.tok->linenum);
                         }
                         break;
                     }
@@ -661,13 +661,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             // Check if RHS type matches the array type
                             VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                             if (rhsType != arrayType && rhsType != ERROR) {
-                                printf("Type mismatch at line %d. Expected %s on the RHS.\n", idNode->parseTreeNode->tok->linenum, typeStrings[arrayType]);
+                                printf("Type mismatch at line %d. Expected %s on the RHS.\n", idNode->leaf.tok->linenum, typeStrings[arrayType]);
                             }
                         } else {
                             // Check if RHS is an array
                             VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                             if (rhsType != ARR && rhsType != ERROR) {
-                                printf("Type mismatch at line %d. Expected ARRAY type on the RHS.\n", idNode->parseTreeNode->tok->linenum);
+                                printf("Type mismatch at line %d. Expected ARRAY type on the RHS.\n", idNode->leaf.tok->linenum);
                             } else if (rhsType == ARR) {
                                 break;
                             }
@@ -682,16 +682,16 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 ASTNode* outputListNode = statement->leftMostChild;
                 ASTNode* moduleNode = outputListNode->next;
                 ASTNode* inputListNode = moduleNode->next;
-                char* moduleName = moduleNode->parseTreeNode->tok->lexeme;
+                char* moduleName = moduleNode->leaf.tok->lexeme;
                 GlobalRecord* moduleRecord = moduleExists(moduleName, hash(moduleName));
                 if (moduleRecord == NULL) {
-                    printf("Undefined module %s at line %d\n", moduleName, moduleNode->parseTreeNode->tok->linenum);
+                    printf("Undefined module %s at line %d\n", moduleName, moduleNode->leaf.tok->linenum);
                     break;
                 }
 
                 // Check for recursion
                 if (moduleRecord->called) {
-                    printf("Recursion is not permitted at line %d.\n", moduleNode->parseTreeNode->tok->linenum);
+                    printf("Recursion is not permitted at line %d.\n", moduleNode->leaf.tok->linenum);
                     break;
                 }
 
@@ -704,18 +704,19 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     moduleRecord->checkedRedundancy = true;
                 }
 
-                // Check if the input parameters match
-                Record* inputNode = moduleRecord->inputList;
-                ASTNode* curr = inputListNode->leftMostChild;
                 char *typeStrings[] = {
                     "INTEGER",
                     "REAL",
                     "BOOLEAN",
                     "ARRAY"
                 };
+
+                // Check if the input parameters match
+                Record* inputNode = moduleRecord->inputList;
+                ASTNode* curr = inputListNode->leftMostChild;
                 while (curr != NULL) {
                     if (inputNode == NULL) {
-                        printf("Too many parameters for module %s at line %d\n", moduleName, curr->parseTreeNode->tok->linenum);
+                        printf("Too many input parameters for module %s at line %d\n", moduleName, curr->leaf.tok->linenum);
                         break;
                     }
                     // Check if it is a MINUS_NODE
@@ -728,10 +729,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     // Check if the variable exists if ID or ARRAY
                     Record* varRecord = NULL;
                     if (strcmp(curr->label, "ID") == 0) {
-                        char* name = curr->parseTreeNode->tok->lexeme;
+                        char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
                         if (varRecord == NULL) {
-                            printf("Undefined variable %s at line %d\n", name, curr->parseTreeNode->tok->linenum);
+                            printf("Undefined variable %s at line %d\n", name, curr->leaf.tok->linenum);
                             if (isMinus) {
                                 curr = curr->parent;
                             }
@@ -744,16 +745,16 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     VAR_TYPE inputType = typeExtractor(curr, symbolTableNode);
                     if (inputNode->type.varType == ARRAY) {
                         if (inputType != ARRAY) {
-                            printf("Type mismatch at line %d. Expected ARRAY type.\n", moduleNode->parseTreeNode->tok->linenum);
+                            printf("Type mismatch at line %d. Expected ARRAY type.\n", moduleNode->leaf.tok->linenum);
                         } else if (inputType == ARRAY && isMinus) {
-                            printf("Unary minus operation not allowed on array %s at line %d.\n", inputNode->name, curr->parseTreeNode->tok->linenum);
+                            printf("Unary minus operation not allowed on array %s at line %d.\n", inputNode->name, curr->leaf.tok->linenum);
                         } else {
                             // Check if the array types match
                             VAR_TYPE arrayType = inputNode->type.array.arrType; 
                             VAR_TYPE inputArrayType = varRecord->type.array.arrType;
 
                             if (arrayType != inputArrayType) {
-                                printf("Array type mismatch at line %d. Expected array of %s type.\n", moduleNode->parseTreeNode->tok->linenum, typeStrings[arrayType]);
+                                printf("Array type mismatch at line %d. Expected array of %s type.\n", moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
                             }
                             
                             // Check if the array dimensions match if both are static
@@ -767,12 +768,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 int varRecordRight = varRecord->type.array.right;
 
                                 if (inputNodeLeft != varRecordLeft || inputNodeRight != varRecordRight) {
-                                    printf("Array dimensions mismatch at line %d. Expected array of [%d..%d].\n", moduleNode->parseTreeNode->tok->linenum, inputNodeLeft, inputNodeRight);
+                                    printf("Array dimensions mismatch at line %d. Expected array of [%d..%d].\n", moduleNode->leaf.tok->linenum, inputNodeLeft, inputNodeRight);
                                 }
                             }
                         }
                     } else if (inputType != inputNode->type.varType && inputType != ERROR) {
-                        printf("Type mismatch at line %d. Expected %s type.\n", moduleNode->parseTreeNode->tok->linenum, typeStrings[inputNode->type.varType]);
+                        printf("Type mismatch at line %d. Expected %s type.\n", moduleNode->leaf.tok->linenum, typeStrings[inputNode->type.varType]);
                     }
 
                     if (isMinus) {
@@ -783,7 +784,84 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 }
 
                 if (inputNode != NULL) {
-                    printf("Too few parameters for module %s at line %d\n", moduleName, moduleNode->parseTreeNode->tok->linenum);
+                    printf("Too few input parameters for module %s at line %d\n", moduleName, moduleNode->leaf.tok->linenum);
+                }
+
+
+                // Check if the output parameters match
+                Record* outputNode = moduleRecord->outputList;
+                curr = outputListNode->leftMostChild;
+                while (curr != NULL) {
+                    if (outputNode == NULL) {
+                        printf("Too many output parameters for module %s at line %d\n", moduleName, curr->leaf.tok->linenum);
+                        break;
+                    }
+                    // Check if it is a MINUS_NODE
+                    bool isMinus = false;
+                    if (strcmp(curr->label, "MINUS_NODE") == 0) {
+                        isMinus = true;
+                        curr = curr->leftMostChild;
+                    }
+
+                    // Check if the variable exists if ID or ARRAY
+                    Record* varRecord = NULL;
+                    if (strcmp(curr->label, "ID") == 0) {
+                        char* name = curr->leaf.tok->lexeme;
+                        varRecord = variableExists(symbolTableNode, name, hash(name));
+                        if (varRecord == NULL) {
+                            printf("Undefined variable %s at line %d\n", name, curr->leaf.tok->linenum);
+                            if (isMinus) {
+                                curr = curr->parent;
+                            }
+                            curr = curr->next;
+                            outputNode = outputNode->next;
+                            continue;
+                        }
+                    }
+
+                    VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
+                    if (outputNode->type.varType == ARRAY) {
+                        if (outputType != ARRAY) {
+                            printf("Type mismatch at line %d. Expected ARRAY type.\n", moduleNode->leaf.tok->linenum);
+                        } else if (outputType == ARRAY && isMinus) {
+                            printf("Unary minus operation not allowed on array %s at line %d.\n", outputNode->name, curr->leaf.tok->linenum);
+                        } else {
+                            // Check if the array types match
+                            VAR_TYPE arrayType = outputNode->type.array.arrType; 
+                            VAR_TYPE outputArrayType = varRecord->type.array.arrType;
+
+                            if (arrayType != outputArrayType) {
+                                printf("Array type mismatch at line %d. Expected array of %s type.\n", moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
+                            }
+                            
+                            // Check if the array dimensions match if both are static
+                            bool outputNodeIsStatic = !outputNode->type.array.isLeftID && !outputNode->type.array.isRightID;
+                            bool varRecordIsStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+
+                            if (outputNodeIsStatic && varRecordIsStatic) {
+                                int outputNodeLeft = outputNode->type.array.left;
+                                int outputNodeRight = outputNode->type.array.right;
+                                int varRecordLeft = varRecord->type.array.left;
+                                int varRecordRight = varRecord->type.array.right;
+
+                                if (outputNodeLeft != varRecordLeft || outputNodeRight != varRecordRight) {
+                                    printf("Array dimensions mismatch at line %d. Expected array of [%d..%d].\n", moduleNode->leaf.tok->linenum, outputNodeLeft, outputNodeRight);
+                                }
+                            }
+                        }
+                    } else if (outputType != outputNode->type.varType && outputType != ERROR) {
+                        printf("Type mismatch at line %d. Expected %s type.\n", moduleNode->leaf.tok->linenum, typeStrings[outputNode->type.varType]);
+                    }
+
+                    if (isMinus) {
+                        curr = curr->parent;
+                    }
+                    curr = curr->next;
+                    outputNode = outputNode->next;
+                }
+
+                if (outputNode != NULL) {
+                    printf("Too few output parameters for module %s at line %d\n", moduleName, moduleNode->leaf.tok->linenum);
                 }
                 break;
             }
@@ -794,12 +872,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 ASTNode* curr = assignListNode->leftMostChild;
                 while (curr != NULL) {
                     // Checking if already exists
-                    char* name = curr->parseTreeNode->tok->lexeme;
+                    char* name = curr->leaf.tok->lexeme;
                     unsigned int hashVal = hash(name);
 
                     // In outputList
                     if (variableExists(symbolTableNode->funcOutputST, name, hashVal) != NULL) {
-                        printf("Redeclaration of output variable %s at line %d\n", name, curr->parseTreeNode->tok->linenum);
+                        printf("Redeclaration of output variable %s at line %d\n", name, curr->leaf.tok->linenum);
                         curr = curr->next;
                         continue;
                     }
@@ -810,7 +888,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         varRecord = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
                         symbolTableNode->hashTable[hashVal] = varRecord;
                     } else if (strcmp(varRecord->name, name) == 0) {
-                        printf("Redeclaration of variable %s at line %d\n", name, curr->parseTreeNode->tok->linenum);
+                        printf("Redeclaration of variable %s at line %d\n", name, curr->leaf.tok->linenum);
                     } else {
                         varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
                     }
@@ -829,20 +907,20 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 // ID in SWITCH
                 ASTNode* idNode = statement->leftMostChild;
                 VAR_TYPE switchType;
-                char* name = idNode->parseTreeNode->tok->lexeme;
+                char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord != NULL) {
                     switchType = varRecord->type.varType;
                 } else {
-                    printf("Undefined variable %s at line %d\n", name, idNode->parseTreeNode->tok->linenum);
+                    printf("Undefined variable %s at line %d\n", name, idNode->leaf.tok->linenum);
                 }
 
                 switch (switchType) {
                     case INT: {
                         // Checking if default statement exists
                         ASTNode* defaultCase = statement->rightMostChild;
-                        if (statement->rightMostChild->parseTreeNode->tokenID != DEFAULT) {
-                            printf("Default statement required for switch statement of type INTEGER at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        if (statement->rightMostChild->leaf.tok->tok != DEFAULT) {
+                            printf("Default statement required for switch statement of type INTEGER at line %d\n", idNode->leaf.tok->linenum);
                             defaultCase = NULL;
                         }
 
@@ -850,8 +928,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type INTEGER
-                            if (caseStatements != defaultCase && caseStatements->leftMostChild->parseTreeNode->tokenID != NUM) {
-                                printf("Case label not of type INTEGER at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
+                            if (caseStatements != defaultCase && caseStatements->leftMostChild->leaf.tok->tok != NUM) {
+                                printf("Case label not of type INTEGER at line %d\n", caseStatements->leftMostChild->leaf.tok->linenum);
                             }
                             // Populating the symbol table for the statements in the case
                             populateSymbolTable(currChild, caseStatements->leftMostChild->next);
@@ -860,21 +938,21 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         break;
                     }
                     case DOUBLE: {
-                        printf("REAL type identifier not allowed in switch statement at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        printf("REAL type identifier not allowed in switch statement at line %d\n", idNode->leaf.tok->linenum);
                         break;
                     }
                     case BOOL: {
                         // Checking that there is no default statement
-                        if (statement->rightMostChild->parseTreeNode->tokenID == DEFAULT) {
-                            printf("Default statement not allowed in switch statement of type BOOLEAN at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        if (statement->rightMostChild->leaf.tok->tok == DEFAULT) {
+                            printf("Default statement not allowed in switch statement of type BOOLEAN at line %d\n", idNode->leaf.tok->linenum);
                         }
 
                         // Iterating through all the case statements
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type BOOLEAN
-                            if (caseStatements->leftMostChild->parseTreeNode->tokenID != TRUE && caseStatements->leftMostChild->parseTreeNode->tokenID != FALSE) {
-                                printf("Case label not of type BOOLEAN at line %d\n", caseStatements->leftMostChild->parseTreeNode->tok->linenum);
+                            if (caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
+                                printf("Case label not of type BOOLEAN at line %d\n", caseStatements->leftMostChild->leaf.tok->linenum);
                             }
                             // Populating the symbol table for the statements in the case
                             populateSymbolTable(currChild, caseStatements->leftMostChild->next);
@@ -883,7 +961,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         break;
                     }
                     case ARR: {
-                        printf("ARRAY type identifier not allowed in switch statement at line %d\n", idNode->parseTreeNode->tok->linenum);
+                        printf("ARRAY type identifier not allowed in switch statement at line %d\n", idNode->leaf.tok->linenum);
                         break;
                     }
                 }
@@ -899,14 +977,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // ID IN FOR LOOP 
                 ASTNode* idNode = statement->leftMostChild; 
-                char* name = idNode->parseTreeNode->tok->lexeme;
+                char* name = idNode->leaf.tok->lexeme;
                 unsigned int hashVal = hash(name);
                 Record* varRecord = malloc(sizeof(Record));
                 currChild->hashTable[hashVal] = varRecord;
                 strcpy(varRecord->name, name);
                 varRecord->offset = currChild->nextOffset;
                 currChild->nextOffset += sizeof(int);
-                // varRecord->linenum = idNode->parseTreeNode->tok->linenum;
+                // varRecord->linenum = idNode->leaf.tok->linenum;
                 varRecord->type.varType = INT;
                 varRecord->next = NULL;
 
@@ -926,7 +1004,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 VAR_TYPE exprType = typeExtractor(exprNode, symbolTableNode);
 
                 if (exprType != BOOL) {
-                    printf("Expression in while loop not of type BOOLEAN at line %d\n", exprNode->parseTreeNode->tok->linenum);
+                    printf("Expression in while loop not of type BOOLEAN at line %d\n", exprNode->leaf.tok->linenum);
                 }
 
                 // Statements inside the while loop
@@ -944,14 +1022,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 }
 
 void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
-    char* name = moduleDeclarationNode->parseTreeNode->tok->lexeme;
+    char* name = moduleDeclarationNode->leaf.tok->lexeme;
     unsigned int hashVal = hash(name);
 
     GlobalRecord* funcRecord;
     if (symbolTable->global[hashVal] != NULL) {
         funcRecord = findFunction(name, hashVal);
         if (strcmp(funcRecord->name, name) == 0) {
-            printf("Redeclaration of module %s at line %d.\n", name, moduleDeclarationNode->parseTreeNode->tok->linenum);
+            printf("Redeclaration of module %s at line %d.\n", name, moduleDeclarationNode->leaf.tok->linenum);
             return;
         } else {
             funcRecord->next = malloc(sizeof(GlobalRecord));
@@ -963,7 +1041,7 @@ void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
     }
 
     strcpy(funcRecord->name, name);
-    funcRecord->linenum = moduleDeclarationNode->parseTreeNode->tok->linenum;
+    funcRecord->linenum = moduleDeclarationNode->leaf.tok->linenum;
     funcRecord->called = false;
     funcRecord->declared = true;
     funcRecord->defined = false;
@@ -988,7 +1066,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         idNode = moduleNode;
     } else {
         idNode = moduleNode->leftMostChild;
-        name = idNode->parseTreeNode->tok->lexeme;
+        name = idNode->leaf.tok->lexeme;
     }
     printf("Adding function %s to symbol table\n", name);
     unsigned int hashVal = hash(name);
@@ -1002,7 +1080,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
             funcRecord = funcRecord->next;
             funcRecord->declared = false;
         } else if (funcRecord->defined) {
-            printf("Redefinition of module %s at line %d.\n", name, idNode->parseTreeNode->tok->linenum);
+            printf("Redefinition of module %s at line %d.\n", name, idNode->leaf.tok->linenum);
             return;
         }
     } else {
@@ -1013,7 +1091,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
 
 
     strcpy(funcRecord->name, name);
-    funcRecord->linenum = idNode->parseTreeNode->tok->linenum;
+    funcRecord->linenum = idNode->leaf.tok->linenum;
     funcRecord->checkedRedundancy = false;
     // Used to check for recursion
     funcRecord->called = true;

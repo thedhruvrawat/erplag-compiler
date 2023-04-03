@@ -9,7 +9,8 @@
         "astdef.h": "c",
         "stdint.h": "c",
         "cstring": "c",
-        "symboltabledef.h": "c"
+        "symboltabledef.h": "c",
+        "ratio": "c"
     },
     "makefile.launchConfigurations": [
         {
