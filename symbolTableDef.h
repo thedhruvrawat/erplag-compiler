@@ -51,6 +51,12 @@ typedef struct SymbolTableNode {
     struct SymbolTableNode* parent;
 } SymbolTableNode;
 
+typedef struct DeferCheckNode {
+    SymbolTableNode* symbolTableNode;
+    ASTNode* statement;
+    struct DeferCheckNode* next;
+} DeferCheckNode;
+
 typedef struct GlobalRecord { // These are Records at the first layer/row of Symbol Table. They contain only function Symbol Tables as per current grammar but would change if grammar allows Global Variable
     char name[20];
     int linenum;

@@ -296,7 +296,7 @@ void createAST(void) {
                     break;
                 }
                 case 7: { // <module> = DEF MODULE ID ENDDEF TAKES INPUT SQBO <input_plist> SQBC SEMICOL <ret> <moduleDef>
-                    ASTNode* moduleNode = createASTNode("MODULE", stackNode->parseTreeNode);
+                    ASTNode* moduleNode = createASTNode("MODULE", stackNode->parseTreeNode->child->next);
                     appendASTNodeAsChild(moduleNode, stackNode->parent);
                     pushChildrenToASTStack(st, moduleNode, stackNode->parseTreeNode->child);
                     break;

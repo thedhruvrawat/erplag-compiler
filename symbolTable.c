@@ -15,6 +15,7 @@ Group Number : 2
 SymbolTable* symbolTable;
 
 // Fowler–Noll–Vo hash function
+// https://datatracker.ietf.org/doc/html/draft-eastlake-fnv-03
 unsigned int hash(const char *str) {
     unsigned int res = 0;
     const unsigned int prime = 16777619;
@@ -712,6 +713,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     break;
                 }
 
+                // Check if the module has been declared or defined
+                if (!moduleRecord->declared && !moduleRecord->defined) {
+                    printf("[Semantic Analyser] Module %s has not been declared or defined yet at line %d", moduleName, moduleNode->leaf.tok->linenum);
+                }
+
                 // Check for recursion
                 if (moduleRecord->called) {
                     printf(RED BOLD "[Semantic Analyser] Recursion is not permitted at line %d.\n" RESET, moduleNode->leaf.tok->linenum);
@@ -738,10 +744,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 Record* inputNode = moduleRecord->inputList;
                 ASTNode* curr = inputListNode->leftMostChild;
                 while (curr != NULL) {
-                    if (inputNode == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] Too many input parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
-                        break;
-                    }
+
                     // Check if it is a MINUS_NODE
                     bool isMinus = false;
                     if (strcmp(curr->label, "MINUS_NODE") == 0) {
@@ -763,6 +766,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             inputNode = inputNode->next;
                             continue;
                         }
+                    }
+                    
+                    if (inputNode == NULL) {
+                        printf(RED BOLD "[Semantic Analyser] Too many input parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
+                        break;
                     }
 
                     VAR_TYPE inputType = typeExtractor(curr, symbolTableNode);
@@ -815,10 +823,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 Record* outputNode = moduleRecord->outputList;
                 curr = outputListNode->leftMostChild;
                 while (curr != NULL) {
-                    if (outputNode == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] Too many output parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
-                        break;
-                    }
                     // Check if it is a MINUS_NODE
                     bool isMinus = false;
                     if (strcmp(curr->label, "MINUS_NODE") == 0) {
@@ -840,6 +844,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             outputNode = outputNode->next;
                             continue;
                         }
+                    }
+
+                    if (outputNode == NULL) {
+                        printf(RED BOLD "[Semantic Analyser] Too many output parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
+                        break;
                     }
 
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
@@ -1050,13 +1059,57 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
 void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
     char* name = moduleDeclarationNode->leaf.tok->lexeme;
+    GlobalRecord* funcRecord = moduleExists(name, hash(name));
+
+    if (funcRecord->declared) {
+        printf(RED BOLD "[Semantic Analyser] Module %s redeclared at line %d\n" RESET, name, moduleDeclarationNode->leftMostChild->leaf.tok->linenum);
+        return;
+    } else {
+        funcRecord->declared = true;
+    }
+
+    return;
+}
+
+void addFunctionToSymbolTable(ASTNode* moduleNode) {
+    bool driver = (strcmp(moduleNode->label, "DRIVER") == 0);
+    char* name;
+    if (driver) {
+        name = "DRIVER";
+    } else {
+        name = moduleNode->leftMostChild->leaf.tok->lexeme;
+    }
+    GlobalRecord* funcRecord = moduleExists(name, hash(name));
+
+    if (funcRecord->defined) { return; }
+    funcRecord->defined = true;
+    ASTNode* statementsNode;
+    if (driver) {
+        statementsNode = moduleNode->leftMostChild->leftMostChild;
+    } else {
+        statementsNode = moduleNode->rightMostChild->leftMostChild;
+    }
+
+    populateSymbolTable(funcRecord->funcST, statementsNode);
+
+    return;
+}
+
+void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
+    bool driver = (strcmp(moduleSignatureNode->label, "DRIVER") == 0);
+    char* name;
+    if (driver) {
+        name = "DRIVER";
+    } else {
+        name = moduleSignatureNode->leftMostChild->leaf.tok->lexeme;
+    }
     unsigned int hashVal = hash(name);
 
     GlobalRecord* funcRecord;
     if (symbolTable->global[hashVal] != NULL) {
         funcRecord = findFunction(name, hashVal);
         if (strcmp(funcRecord->name, name) == 0) {
-            printf(RED BOLD "[Semantic Analyser] Redeclaration of module %s at line %d.\n" RESET, name, moduleDeclarationNode->leaf.tok->linenum);
+            printf(RED BOLD "[Semantic Analyser] Redeclaration of module %s at line %d.\n" RESET, name, moduleSignatureNode->leftMostChild->leaf.tok->linenum);
             return;
         } else {
             funcRecord->next = malloc(sizeof(GlobalRecord));
@@ -1068,81 +1121,26 @@ void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
     }
 
     strcpy(funcRecord->name, name);
-    funcRecord->linenum = moduleDeclarationNode->leaf.tok->linenum;
+    funcRecord->linenum = moduleSignatureNode->leaf.tok->linenum;
     funcRecord->called = false;
-    funcRecord->declared = true;
+    funcRecord->declared = false;
     funcRecord->defined = false;
-    funcRecord->driver = false;
-    funcRecord->funcST = NULL;
-    funcRecord->inputList = NULL;
-    funcRecord->outputList = NULL;
-    funcRecord->inputListSize = 0;
-    funcRecord->outputListSize = 0;
-    funcRecord->next = NULL;
-
-    return;
-}
-
-void addFunctionToSymbolTable(ASTNode* moduleNode) {
-    bool driver = (strcmp(moduleNode->label, "DRIVER") == 0);
-    char* name;
-    ASTNode* idNode;
-
-    if (driver) {
-        name = "DRIVER";
-        idNode = moduleNode;
-    } else {
-        idNode = moduleNode->leftMostChild;
-        name = idNode->leaf.tok->lexeme;
-    }
-    // printf(RED BOLD "[Semantic Analyser] Adding function %s to symbol table\n" RESET, name);
-    unsigned int hashVal = hash(name);
-
-    GlobalRecord* funcRecord;
-
-    if (symbolTable->global[hashVal] != NULL) {
-        funcRecord = findFunction(name, hashVal);
-        if (strcmp(funcRecord->name, name) != 0) {
-            funcRecord->next = malloc(sizeof(GlobalRecord));
-            funcRecord = funcRecord->next;
-            funcRecord->declared = false;
-        } else if (funcRecord->defined) {
-            printf(RED BOLD "[Semantic Analyser] Redefinition of module %s at line %d.\n" RESET, name, idNode->leaf.tok->linenum);
-            return;
-        }
-    } else {
-        funcRecord = malloc(sizeof(GlobalRecord));
-        symbolTable->global[hashVal] = funcRecord;
-        funcRecord->declared = false;
-    }
-
-
-    strcpy(funcRecord->name, name);
-    funcRecord->linenum = idNode->leaf.tok->linenum;
-    funcRecord->checkedRedundancy = false;
-    // Used to check for recursion
-    funcRecord->called = true;
-    funcRecord->defined = true;
     funcRecord->driver = driver;
     funcRecord->funcST = initSymbolTableNode();
     funcRecord->outputST = initSymbolTableNode();
     funcRecord->funcST->funcOutputST = funcRecord->outputST;
     funcRecord->inputList = NULL;
     funcRecord->outputList = NULL;
+    funcRecord->inputListSize = 0;
+    funcRecord->outputListSize = 0;
     funcRecord->next = NULL;
 
     if (!driver) {
-        ASTNode* inputList = idNode->next;
+        ASTNode* inputList = moduleSignatureNode->leftMostChild->next;
         ASTNode* outputList = inputList->next;
-        ASTNode* moduleDef = outputList->next;
         populateInputOutputList(funcRecord, inputList, outputList);
-        populateSymbolTable(funcRecord->funcST, moduleDef->leftMostChild); 
-    } else {
-        populateSymbolTable(funcRecord->funcST, moduleNode->leftMostChild->leftMostChild);
     }
-
-    funcRecord->called = false;
-    return;   
+    return;
 }
 
 void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
@@ -1240,6 +1238,13 @@ void printSymbolTable(void) {
 
 void generateSymbolTable(AST* ast) {
     symbolTable = initSymbolTable();
+
+    // Adding all the modules signatures to the symbol table
+    ASTNode* module = ast->root->leftMostChild->next;
+    while (module != NULL) {
+        addModuleSignatureToSymbolTable(module);
+        module = module->next;
+    }
 
     // Adding module declarations;
     ASTNode* moduleDeclarations = ast->root->leftMostChild->leftMostChild;
