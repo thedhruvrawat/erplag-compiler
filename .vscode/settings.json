@@ -10,7 +10,8 @@
         "stdint.h": "c",
         "cstring": "c",
         "symboltabledef.h": "c",
-        "ratio": "c"
+        "ratio": "c",
+        "lexerdef.h": "c"
     },
     "makefile.launchConfigurations": [
         {
