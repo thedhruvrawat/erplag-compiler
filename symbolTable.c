@@ -134,6 +134,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     char* name = idNode->leaf.tok->lexeme;
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
+    newRec->iterator = false;
     newRec->offset = *nextOffset;
     // newRec->linenum = idNode->leaf.tok->linenum;
     newRec->next = NULL;
@@ -573,6 +574,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
+                } else if (varRecord->iterator) {
+                    printf(RED BOLD "[Semantic Analyser] Cannot get value of iterator %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                 }
                 break;
             }
@@ -645,6 +648,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     idType = varRecord->type.varType;
                 }
 
+                if (varRecord->iterator) {
+                    printf(RED BOLD "[Semantic Analyser] Cannot assign to iterator %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
+                }
+
                 switch (idType) {
                     case INT: {
                         // Check if RHS is an integer
@@ -715,7 +722,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // Check if the module has been declared or defined
                 if (!moduleRecord->declared && !moduleRecord->defined) {
-                    printf("[Semantic Analyser] Module %s has not been declared or defined yet at line %d", moduleName, moduleNode->leaf.tok->linenum);
+                    printf(RED BOLD "[Semantic Analyser] Module %s has not been declared or defined yet at line %d" RESET, moduleName, moduleNode->leaf.tok->linenum);
                 }
 
                 // Check for recursion
@@ -843,6 +850,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             curr = curr->next;
                             outputNode = outputNode->next;
                             continue;
+                        } else if (varRecord->iterator) {
+                            printf(RED BOLD "[Semantic Analyser] Iterator variable %s cannot be used as output parameter at line %d\n" RESET, name, curr->leaf.tok->linenum);
+                            if (isMinus) {
+                                curr = curr->parent;
+                            }
+                            curr = curr->next;
+                            outputNode = outputNode->next;
+                            continue;
                         }
                     }
 
@@ -963,8 +978,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             if (caseStatements != defaultCase && caseStatements->leftMostChild->leaf.tok->tok != NUM) {
                                 printf(RED BOLD "[Semantic Analyser] Case label not of type INTEGER at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
                             }
+
                             // Populating the symbol table for the statements in the case
-                            populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                            if (caseStatements == defaultCase) {
+                                populateSymbolTable(currChild, caseStatements->leftMostChild);
+                            } else {
+                                populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                            }
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -1018,6 +1038,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 Record* varRecord = malloc(sizeof(Record));
                 currChild->hashTable[hashVal] = varRecord;
                 strcpy(varRecord->name, name);
+                varRecord->iterator = true;
                 varRecord->offset = currChild->nextOffset;
                 currChild->nextOffset += sizeof(int);
                 // varRecord->linenum = idNode->leaf.tok->linenum;

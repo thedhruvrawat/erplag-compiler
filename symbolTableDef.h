@@ -36,6 +36,7 @@ typedef struct Type {
 
 typedef struct Record {
     char name[20];
+    bool iterator;
     Type type;
     unsigned int offset;
     struct Record* next;
