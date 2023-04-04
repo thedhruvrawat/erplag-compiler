@@ -1,56 +1,5 @@
-declare module mod1;
-declare module mod2;
-
-<<module mod1>>
-takes input [a: integer, b: boolean];
-returns [x: integer, abc: real];
-start
-declare c: real;
-c:=10.4;
-A[-k+4] := 5;
-
-[num, s] := use module mod1 with parameters -s, f[4];
-
-for (index in 4..10)
-start
-    declare a: integer;
-    declare x: integer;
-end
-x:=a+b-10;
-abc:=b[k]/5+c;
-end
-
 <<<driver program>>>
 start
     declare s, f, t, b: integer;
-    switch(f)
-    start
-        case 8 : s := b; t := f; break;
-        case 7 : f := t; break;
-        default: print(f); break;
-    end
-
-    declare A:array [-5..10] of integer;
-    print(A[-4]);
-    print(B);
-    print(4);
-    print(true);
-    [num, s] := use module arraysum with parameters -s, f[4];
-
-    for (index in 4..20)
-    start
-        s := s + list[index];
-        for (lo1 in -12..3)
-        start
-            f := f + list[lol];
-            for (lo2 in 4..20)
-            start
-                t := t + list[lo2];
-                for (lo3 in 4..20)
-                start
-                    b := b + list[lo3];
-                end
-            end
-        end
-    end
+    s[10] := -f;
 end

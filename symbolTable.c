@@ -242,11 +242,18 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     Record* leftRec = variableExists(symbolTableNode, leftID, hash(leftID));
                     if (leftRec == NULL) {
                         printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not declared.\n" RESET, name);
-                        return NULL;
-                    }
-                    if (leftRec->type.varType != INT) {
+                    } else if (leftRec->type.varType != INT) {
                         printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not of type integer.\n" RESET, name);
-                        return NULL;
+                    }
+                }
+
+                if (newRec->type.array.isRightID) {
+                    char* rightID = newRec->type.array.rightID;
+                    Record* rightRec = variableExists(symbolTableNode, rightID, hash(rightID));
+                    if (rightRec == NULL) {
+                        printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not declared.\n" RESET, name);
+                    } else if (rightRec->type.varType != INT) {
+                        printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not of type integer.\n" RESET, name);
                     }
                 }
             }
@@ -395,6 +402,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             VAR_TYPE rhsType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
             // Unary operations are not allowed on arrays
             if (rhsType == ARR) {
+                printf(RED BOLD "[Semantic Analyser] Unary operations are not allowed on arrays at line %d\n" RESET, exprNode->rightMostChild->leaf.tok->linenum);
                 return ERROR;
             } else {
                 return rhsType;
@@ -648,6 +656,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     idType = varRecord->type.varType;
                 }
 
+                if (arrayAccess && idType != ARR) {
+                    printf(RED BOLD "[Semantic Analyser] Variable %s is not an array at line %d\n" RESET, name, idNode->leaf.tok->linenum);
+                }
+
                 if (varRecord->iterator) {
                     printf(RED BOLD "[Semantic Analyser] Cannot assign to iterator %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                 }
@@ -690,13 +702,76 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             if (rhsType != arrayType && rhsType != ERROR) {
                                 printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected %s on the RHS.\n" RESET, idNode->leaf.tok->linenum, typeStrings[arrayType]);
                             }
+
+                            // Check if the index is within bounds
+                            ASTNode* indexNode = statement->leftMostChild->rightMostChild;
+                            VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
+                            if (indexType != INTEGER && indexType != ERROR) {
+                                printf(RED BOLD "[Semantic Analyser] Index is not an integer at line %d\n" RESET, indexNode->leaf.tok->linenum);
+                            } else if (indexType == INTEGER) {
+                                if (strcmp(indexNode->rightMostChild->label, "NUM") != 0) {
+                                    break;
+                                }
+
+                                bool isStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+                                if (!isStatic) { break; }
+
+                                int index = indexNode->rightMostChild->leaf.tok->num;
+                                int left = varRecord->type.array.left;
+                                int right = varRecord->type.array.right;
+
+                                if (varRecord->type.array.leftNegative) {
+                                    left = -left;
+                                }
+
+                                if (varRecord->type.array.rightNegative) {
+                                    right = -right;
+                                }
+
+                                if (index < left || index > right) {
+                                    printf(RED BOLD "[Semantic Analyser] Index %d out of bounds for array %s at line %d\n" RESET, index, name, indexNode->leftMostChild->leaf.tok->linenum);
+                                }
+                            }
                         } else {
                             // Check if RHS is an array
                             VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                             if (rhsType != ARR && rhsType != ERROR) {
                                 printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected ARRAY type on the RHS.\n" RESET, idNode->leaf.tok->linenum);
-                            } else if (rhsType == ARR) {
                                 break;
+                            } else if (rhsType == ERROR) {
+                                break;
+                            }
+
+                            // Check if the dimensions match if both static
+                            ASTNode* arrayNode = statement->rightMostChild->leftMostChild;
+                            char* arrayName = arrayNode->leaf.tok->lexeme;
+                            Record* arrRecord = variableExists(symbolTableNode, arrayName, hash(arrayName));
+                            bool isLHSStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+                            bool isRHSStatic = !arrRecord->type.array.isLeftID && !arrRecord->type.array.isRightID;
+
+                            if (isLHSStatic && isRHSStatic) {
+                                int leftLHS = varRecord->type.array.left;
+                                int rightLHS = varRecord->type.array.right;
+                                int leftRHS = arrRecord->type.array.left;
+                                int rightRHS = arrRecord->type.array.right;
+
+                                if (varRecord->type.array.leftNegative) {
+                                    leftLHS = -leftLHS;
+                                }
+                                if (varRecord->type.array.rightNegative) {
+                                    rightLHS = -rightLHS;
+                                }
+
+                                if (arrRecord->type.array.leftNegative) {
+                                    leftRHS = -leftRHS;
+                                }
+                                if (arrRecord->type.array.rightNegative) {
+                                    rightRHS = -rightRHS;
+                                }
+
+                                if (leftLHS != leftRHS || rightLHS != rightRHS) {
+                                    printf(RED BOLD "[Semantic Analyser] Array dimensions do not match at line %d.\n" RESET, idNode->leaf.tok->linenum);
+                                }
                             }
                         }
                         break;
@@ -722,7 +797,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // Check if the module has been declared or defined
                 if (!moduleRecord->declared && !moduleRecord->defined) {
-                    printf(RED BOLD "[Semantic Analyser] Module %s has not been declared or defined yet at line %d" RESET, moduleName, moduleNode->leaf.tok->linenum);
+                    printf(RED BOLD "[Semantic Analyser] Module %s has not been declared or defined yet at line %d.\n" RESET, moduleName, moduleNode->leaf.tok->linenum);
                 }
 
                 // Check for recursion
@@ -781,10 +856,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     }
 
                     VAR_TYPE inputType = typeExtractor(curr, symbolTableNode);
-                    if (inputNode->type.varType == ARRAY) {
-                        if (inputType != ARRAY) {
+                    if (inputNode->type.varType == ARR) {
+                        if (inputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
-                        } else if (inputType == ARRAY && isMinus) {
+                        } else if (inputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Unary minus operation not allowed on array %s at line %d.\n" RESET, inputNode->name, curr->leaf.tok->linenum);
                         } else {
                             // Check if the array types match
@@ -798,12 +873,26 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             // Check if the array dimensions match if both are static
                             bool inputNodeIsStatic = !inputNode->type.array.isLeftID && !inputNode->type.array.isRightID;
                             bool varRecordIsStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
-
+                            
                             if (inputNodeIsStatic && varRecordIsStatic) {
                                 int inputNodeLeft = inputNode->type.array.left;
                                 int inputNodeRight = inputNode->type.array.right;
                                 int varRecordLeft = varRecord->type.array.left;
                                 int varRecordRight = varRecord->type.array.right;
+
+                                if (inputNode->type.array.leftNegative) {
+                                    inputNodeLeft = -inputNodeLeft;
+                                }
+                                if (inputNode->type.array.rightNegative) {
+                                    inputNodeRight = -inputNodeRight;
+                                }
+
+                                if (varRecord->type.array.leftNegative) {
+                                    varRecordLeft = -varRecordLeft;
+                                }
+                                if (varRecord->type.array.rightNegative) {
+                                    varRecordRight = -varRecordRight;
+                                }
 
                                 if (inputNodeLeft != varRecordLeft || inputNodeRight != varRecordRight) {
                                     printf(RED BOLD "[Semantic Analyser] Array dimensions mismatch at line %d. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, inputNodeLeft, inputNodeRight);
@@ -824,7 +913,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 if (inputNode != NULL) {
                     printf(RED BOLD "[Semantic Analyser] Too few input parameters for module %s at line %d\n" RESET, moduleName, moduleNode->leaf.tok->linenum);
                 }
-
 
                 // Check if the output parameters match
                 Record* outputNode = moduleRecord->outputList;
@@ -867,10 +955,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     }
 
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
-                    if (outputNode->type.varType == ARRAY) {
-                        if (outputType != ARRAY) {
+                    if (outputNode->type.varType == ARR) {
+                        if (outputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
-                        } else if (outputType == ARRAY && isMinus) {
+                        } else if (outputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Unary minus operation not allowed on array %s at line %d.\n" RESET, outputNode->name, curr->leaf.tok->linenum);
                         } else {
                             // Check if the array types match
@@ -891,6 +979,20 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 int varRecordLeft = varRecord->type.array.left;
                                 int varRecordRight = varRecord->type.array.right;
 
+                                if (outputNode->type.array.leftNegative) {
+                                    outputNodeLeft = -outputNodeLeft;
+                                }
+                                if (outputNode->type.array.rightNegative) {
+                                    outputNodeRight = -outputNodeRight;
+                                }
+
+                                if (varRecord->type.array.leftNegative) {
+                                    varRecordLeft = -varRecordLeft;
+                                }
+                                if (varRecord->type.array.rightNegative) {
+                                    varRecordRight = -varRecordRight;
+                                }
+
                                 if (outputNodeLeft != varRecordLeft || outputNodeRight != varRecordRight) {
                                     printf(RED BOLD "[Semantic Analyser] Array dimensions mismatch at line %d. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, outputNodeLeft, outputNodeRight);
                                 }
@@ -910,6 +1012,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 if (outputNode != NULL) {
                     printf(RED BOLD "[Semantic Analyser] Too few output parameters for module %s at line %d\n" RESET, moduleName, moduleNode->leaf.tok->linenum);
                 }
+
                 break;
             }
             case 'D': { // DECLARE_STMT
@@ -995,15 +1098,17 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     }
                     case BOOL: {
                         // Checking that there is no default statement
+                        ASTNode* defaultStatment = NULL;
                         if (statement->rightMostChild->leaf.tok->tok == DEFAULT) {
                             printf(RED BOLD "[Semantic Analyser] Default statement not allowed in switch statement of type BOOLEAN at line %d\n" RESET, idNode->leaf.tok->linenum);
+                            defaultStatment = statement->rightMostChild;
                         }
 
                         // Iterating through all the case statements
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type BOOLEAN
-                            if (caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
+                            if (caseStatements != defaultStatment && caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
                                 printf(RED BOLD "[Semantic Analyser] Case label not of type BOOLEAN at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
                             }
                             // Populating the symbol table for the statements in the case
@@ -1137,7 +1242,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     if (symbolTable->global[hashVal] != NULL) {
         funcRecord = findFunction(name, hashVal);
         if (strcmp(funcRecord->name, name) == 0) {
-            printf(RED BOLD "[Semantic Analyser] Redeclaration of module %s at line %d.\n" RESET, name, moduleSignatureNode->leftMostChild->leaf.tok->linenum);
+            printf(RED BOLD "[Semantic Analyser] Overloading of module %s at line %d.\n" RESET, name, moduleSignatureNode->leftMostChild->leaf.tok->linenum);
             return;
         } else {
             funcRecord->next = malloc(sizeof(GlobalRecord));
