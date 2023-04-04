@@ -9,6 +9,8 @@ declare c: real;
 c:=10.4;
 A[-k+4] := 5;
 
+[num, s] := use module mod1 with parameters -s, f[4];
+
 for (index in 4..10)
 start
     declare a: integer;

@@ -1082,6 +1082,11 @@ void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
     char* name = moduleDeclarationNode->leaf.tok->lexeme;
     GlobalRecord* funcRecord = moduleExists(name, hash(name));
 
+    if (funcRecord == NULL) {
+        printf(RED BOLD "[Semantic Analyser] Module %s declared but never defined\n" RESET, name);
+        return;
+    }
+
     if (funcRecord->declared) {
         printf(RED BOLD "[Semantic Analyser] Module %s redeclared at line %d\n" RESET, name, moduleDeclarationNode->leftMostChild->leaf.tok->linenum);
         return;
@@ -1111,7 +1116,9 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         statementsNode = moduleNode->rightMostChild->leftMostChild;
     }
 
+    funcRecord->called = true;
     populateSymbolTable(funcRecord->funcST, statementsNode);
+    funcRecord->called = false;
 
     return;
 }
