@@ -9,3 +9,5 @@ parseTable.txt
 stage1exe
 *.json
 .DS_Store
+symbolTable.txt
+parseTable.txt

@@ -27,7 +27,7 @@ void populateSymbolTable(GlobalRecord* funcRecord, SymbolTableNode* symbolTableN
 void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode);
 void addFunctionToSymbolTable(ASTNode* moduleNode);
 void printSymbolTableRec(SymbolTableNode* symbolTableNode);
-void printSymbolTable(void);
+void printSymbolTable(char* filename);
 void generateSymbolTable(AST* ast);
 
 #endif

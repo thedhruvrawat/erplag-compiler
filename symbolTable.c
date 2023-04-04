@@ -1171,7 +1171,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     return;
 }
 
-void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
+void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FILE* fp, int level) {
     if (symbolTableNode == NULL) {
         return;
     }
@@ -1179,19 +1179,38 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
         if (symbolTableNode->hashTable[i] == NULL) { continue; }
         Record* varRecord = symbolTableNode->hashTable[i];
+        int offset;
         while (varRecord != NULL) {
-            printf("%-5dVariable: %-7s\tOffset: %5d\t", i, varRecord->name, varRecord->offset);
+            fprintf(fp, "%-25s%-25s", varRecord->name, moduleName);
             switch (varRecord->type.varType) {
                 case INT: {
-                    printf("INTEGER\n");
+                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    sizeof(int), 
+                    "NO", 
+                    "--------------------",
+                    "----------------------------------------",
+                    "INTEGER"
+                    );
                     break;
                 }
                 case DOUBLE: {
-                    printf("REAL\n");
+                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    sizeof(double), 
+                    "NO", 
+                    "--------------------",
+                    "----------------------------------------",
+                    "REAL"
+                    );
                     break;
                 }
                 case BOOL: {
-                    printf("BOOLEAN\n");
+                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    sizeof(bool), 
+                    "NO", 
+                    "--------------------",
+                    "----------------------------------------",
+                    "BOOLEAN"
+                    );
                     break;
                 }
                 case ARR: {
@@ -1200,27 +1219,65 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
                         "REAL",
                         "BOOLEAN"
                     };
-                    printf("ARRAY\t%s\t", typeStrings[varRecord->type.array.arrType]);
-
-                    if (varRecord->type.array.leftNegative) {
-                        printf("-");
-                    }
-
-                    if (varRecord->type.array.isLeftID) {
-                        printf("%s\t", varRecord->type.array.leftID);
+                    bool isStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+                    char range[45] = {};
+                    if (isStatic) {
+                        if (varRecord->type.array.leftNegative) {
+                            sprintf(range, "[-%d", varRecord->type.array.left);
+                        } else {
+                            sprintf(range, "[%d", varRecord->type.array.left);
+                        }
+                        strcat(range, "..");
+                        if (varRecord->type.array.rightNegative) {
+                            sprintf(range, "%s-%d]", range, varRecord->type.array.right);
+                        } else {
+                            sprintf(range, "%s%d]", range, varRecord->type.array.right);
+                        }
+                    } else if (varRecord->type.array.isLeftID && varRecord->type.array.isRightID) {
+                        if (varRecord->type.array.leftNegative) {
+                            sprintf(range, "[-%s", varRecord->type.array.leftID);
+                        } else {
+                            sprintf(range, "[%s", varRecord->type.array.leftID);
+                        }
+                        strcat(range, "..");
+                        if (varRecord->type.array.rightNegative) {
+                            sprintf(range, "%s-%s]", range, varRecord->type.array.rightID);
+                        } else {
+                            sprintf(range, "%s%s]", range, varRecord->type.array.rightID);
+                        }
+                    } else if (varRecord->type.array.isLeftID) {
+                        if (varRecord->type.array.leftNegative) {
+                            sprintf(range, "[-%s", varRecord->type.array.leftID);
+                        } else {
+                            sprintf(range, "[%s", varRecord->type.array.leftID);
+                        }
+                        strcat(range, "..");
+                        if (varRecord->type.array.rightNegative) {
+                            sprintf(range, "%s-%d]", range, varRecord->type.array.right);
+                        } else {
+                            sprintf(range, "%s%d]", range, varRecord->type.array.right);
+                        }
                     } else {
-                        printf("%d\t", varRecord->type.array.left);
+                        if (varRecord->type.array.leftNegative) {
+                            sprintf(range, "[-%d", varRecord->type.array.left);
+                        } else {
+                            sprintf(range, "[%d", varRecord->type.array.left);
+                        }
+                        strcat(range, "..");
+                        if (varRecord->type.array.rightNegative) {
+                            sprintf(range, "%s-%s]", range, varRecord->type.array.rightID);
+                        } else {
+                            sprintf(range, "%s%s]", range, varRecord->type.array.rightID);
+                        }
                     }
 
-                    if (varRecord->type.array.rightNegative) {
-                        printf("-");
-                    }
-
-                    if (varRecord->type.array.isRightID) {
-                        printf("%s\n", varRecord->type.array.rightID);
-                    } else {
-                        printf("%d\n", varRecord->type.array.right);
-                    }
+                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    sizeof(void*), 
+                    "YES", 
+                    (isStatic ? "Static" : "Dynamic"),
+                    range,
+                    typeStrings[varRecord->type.array.arrType]
+                    );
                     break;
                 }
                 default: {
@@ -1228,6 +1285,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
                     break;
                 }
             }
+            fprintf(fp, "%-10d%-10d\n", varRecord->offset, level);
             varRecord = varRecord->next;
         }
     }
@@ -1236,30 +1294,38 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode) {
         return;
     }
 
-    printf("Printing Children\n");
     SymbolTableNode* child = symbolTableNode->children;
     while (child != NULL) {
-        printSymbolTableRec(child);
+        printSymbolTableRec(child , moduleName, fp, level + 1);
         child = child->next;
     }
-    printf("End of Children\n");
-    printf("-------------------------------------------------------------------------------------\n");
 
     return;
 }
 
-void printSymbolTable(void) {
+void printSymbolTable(char* filename) {
+    FILE* fp = fopen(filename, "w");
+    fprintf(fp, "%-25s%-25s%-5s%-10s%-20s%-45s%-20s%-10s%-10s\n",
+        "Variable_name",
+        "Scope (Module Name)",
+        "Width",
+        "isArray",
+        "Static or Dynamic",
+        "Range",
+        "Type of Element",
+        "Offset",
+        "Nesting Level");
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
         if (symbolTable->global[i] == NULL) { continue; }
         GlobalRecord* funcRecord = symbolTable->global[i];
         while (funcRecord != NULL) {
-            printf("%-5dFunction: %s\n", i, funcRecord->name);
-            printSymbolTableRec(funcRecord->outputST);
-            printSymbolTableRec(funcRecord->funcST);
+            printSymbolTableRec(funcRecord->outputST, funcRecord->name, fp, 0);
+            printSymbolTableRec(funcRecord->funcST, funcRecord->name, fp, 0);
             funcRecord = funcRecord->next;
-            printf("-------------------------------------------------------------------------------------\n");
         }
     }
+    printf(GREEN BOLD "Symbol Table generated successfully\n" RESET);
+    fclose(fp);
 
     return;
 }

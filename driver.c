@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
             }
             ASTCreator(pt);
             generateSymbolTable(tree);
-            printSymbolTable();
+            printSymbolTable("symbolTable.txt");
             break;
         }
         default: {
