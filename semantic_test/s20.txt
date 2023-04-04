@@ -1,0 +1,110 @@
+** OWN TEST CASE: Extensive check of redefinition of iterating variable in WHILE loop**
+<<module whilewhile>>
+takes input[a:integer, c:real];
+returns [b: real, y: integer];
+start
+	b:=c+c;
+	y:=a+a;
+end
+
+
+<<<driver program>>>
+start
+	declare x,y,k : integer;
+	declare u,v : real;
+	declare b: boolean;
+**1**	
+	while(x<5 AND y==2)					** ERROR : No change in value of x, y**
+	start
+		get_value(k);
+		[v,k]:=use module whilewhile with parameters y,u;				
+	end
+**2**
+	for (y in 15..40)
+	start
+		while(x<5 AND y==2*k)			** ERROR : No change in value of x, y**
+		start
+			switch(b)
+			start
+				case true:  declare k: integer; 											**k is redclared**
+							break;
+				case false: [v,k]:=use module whilewhile with parameters y,u;				**redeclared k from line 30**
+							break;
+			end
+		end
+	end
+**3**	
+	while(v<u OR y-k<x OR b)			** Not an error, value of b changed at line 47**
+	start
+		while(v<=u AND y-k<=x AND b)	** ERROR : No change in value of x, y, u, k, b**
+		start 
+			declare x,y: integer;
+			x:=2;
+			y:=3;
+
+		end
+		b:=false;
+	end
+**4**
+	declare A: array[1..30] of integer;
+
+	while(A[x]<k)						** Not an error, value of A[x] changed at line 52**
+	start
+		A[x]:=5;	
+	end
+
+	while(y-A[x]<k)						** ERROR , no change**
+	start
+		A[13]:=5;	
+	end
+
+	while(k*A[x]<k)						** Not an error**
+	start
+		get_value(A);	
+	end
+
+	while(A[x]<k+y)						** Not an error**
+	start
+		[v,x]:=use module whilewhile with parameters y,u;		
+	end
+
+	while(b OR A[x]-y<k)						** Not an error**
+	start
+		[u,y]:=use module whilewhile with parameters y,u;		
+	end
+
+**5**
+	while(x<5 AND y==2)					** Not an error, value of x changed **
+	start
+		get_value(k);
+		[v,x]:=use module whilewhile with parameters y,u;				
+	end
+
+	while(x<5 AND y==2)					** ERROR , no change**
+	start
+		[v,k]:=use module whilewhile with parameters y,u;	
+		declare x: integer;
+		get_value(x);			
+	end
+
+**6**
+	while(A[3]-y<k)				** No error **
+	start
+		A[3]:=5;
+	end
+	while(A[3]-y<k)				** No error **
+	start
+		get_value(A);
+	end
+	while(A[3]-y<k)				** ERROR**
+	start
+		get_value(u);
+		declare A: array[1..30] of integer;
+		A[3]:=5; 
+	end
+	while(A[3]-y<k)				** ERROR**
+	start
+		get_value(u);
+		A[2]:=5; 
+	end
+end

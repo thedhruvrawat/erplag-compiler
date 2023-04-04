@@ -1,0 +1,52 @@
+** OWN TEST CASE: Extensive check of redefinition of iterating variable in FOR loop**
+<<module forfor>>
+takes input[a:integer, c:real];
+returns [b: real, y: integer];
+start
+	b:=c+c;
+	y:=a+a;
+end
+
+
+<<<driver program>>>
+start
+	declare x,y,k : integer;
+	for(x in 1..5)
+		start
+			get_value(k);				**not an error **				
+		end
+	for (k in 15..40)
+	start
+		x:=x+k*y;			
+		declare u, v:real;
+		get_value(k);					**ERROR because k is same as iterating variable **
+
+		switch(k)
+		start
+			case 10: 
+				 k:=3;                  **ERROR because k is same as iterating variable **
+				 declare k: integer;
+				 k:=3; 				    **Not an error because k has redeclaration at line 16**
+				 break;
+			case 20: 
+			 	[v,k]:=use module forfor with parameters y,u;
+			 							**Not an error because k has redeclaration in switch scope at line 16**
+				for(x in 10..20)
+				 	start
+				 		k:=5;			**Not an error because k has redeclaration in switch scope at line 16**
+				 	end
+				break;
+			default:  
+				 break;			 	
+		end
+		[v,k]:=use module forfor with parameters y,u;
+										**ERROR because k is same as iterating variable **
+		while(x<5)
+		start
+			get_value(k);				**ERROR because k is same as iterating variable **
+			get_value(x);
+		end
+		declare k: integer;
+		k:=5;							**Not an error because k has redeclaration in for scope at line 44**
+	end
+end
