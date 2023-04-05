@@ -1289,7 +1289,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
             fprintf(fp, "%-25s%-25s", varRecord->name, moduleName);
             switch (varRecord->type.varType) {
                 case INT: {
-                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
                     sizeof(int), 
                     "NO", 
                     "--------------------",
@@ -1299,7 +1299,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     break;
                 }
                 case DOUBLE: {
-                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
                     sizeof(double), 
                     "NO", 
                     "--------------------",
@@ -1309,7 +1309,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     break;
                 }
                 case BOOL: {
-                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
                     sizeof(bool), 
                     "NO", 
                     "--------------------",
@@ -1325,58 +1325,59 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         "BOOLEAN"
                     };
                     bool isStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
-                    char range[45] = {};
+                    char firstRange[25] = {};
+                    char range[50] = {};
                     if (isStatic) {
                         if (varRecord->type.array.leftNegative) {
-                            sprintf(range, "[-%d", varRecord->type.array.left);
+                            sprintf(firstRange, "[-%d", varRecord->type.array.left);
                         } else {
-                            sprintf(range, "[%d", varRecord->type.array.left);
+                            sprintf(firstRange, "[%d", varRecord->type.array.left);
                         }
-                        strcat(range, "..");
+                        strcat(firstRange, "..");
                         if (varRecord->type.array.rightNegative) {
-                            sprintf(range, "%s-%d]", range, varRecord->type.array.right);
+                            sprintf(range, "%s-%d]", firstRange, varRecord->type.array.right);
                         } else {
-                            sprintf(range, "%s%d]", range, varRecord->type.array.right);
+                            sprintf(range, "%s%d]", firstRange, varRecord->type.array.right);
                         }
                     } else if (varRecord->type.array.isLeftID && varRecord->type.array.isRightID) {
                         if (varRecord->type.array.leftNegative) {
-                            sprintf(range, "[-%s", varRecord->type.array.leftID);
+                            sprintf(firstRange, "[-%s", varRecord->type.array.leftID);
                         } else {
-                            sprintf(range, "[%s", varRecord->type.array.leftID);
+                            sprintf(firstRange, "[%s", varRecord->type.array.leftID);
                         }
-                        strcat(range, "..");
+                        strcat(firstRange, "..");
                         if (varRecord->type.array.rightNegative) {
-                            sprintf(range, "%s-%s]", range, varRecord->type.array.rightID);
+                            sprintf(range, "%s-%s]", firstRange, varRecord->type.array.rightID);
                         } else {
-                            sprintf(range, "%s%s]", range, varRecord->type.array.rightID);
+                            sprintf(range, "%s%s]", firstRange, varRecord->type.array.rightID);
                         }
                     } else if (varRecord->type.array.isLeftID) {
                         if (varRecord->type.array.leftNegative) {
-                            sprintf(range, "[-%s", varRecord->type.array.leftID);
+                            sprintf(firstRange, "[-%s", varRecord->type.array.leftID);
                         } else {
-                            sprintf(range, "[%s", varRecord->type.array.leftID);
+                            sprintf(firstRange, "[%s", varRecord->type.array.leftID);
                         }
                         strcat(range, "..");
                         if (varRecord->type.array.rightNegative) {
-                            sprintf(range, "%s-%d]", range, varRecord->type.array.right);
+                            sprintf(range, "%s-%d]", firstRange, varRecord->type.array.right);
                         } else {
-                            sprintf(range, "%s%d]", range, varRecord->type.array.right);
+                            sprintf(range, "%s%d]", firstRange, varRecord->type.array.right);
                         }
                     } else {
                         if (varRecord->type.array.leftNegative) {
-                            sprintf(range, "[-%d", varRecord->type.array.left);
+                            sprintf(firstRange, "[-%d", varRecord->type.array.left);
                         } else {
-                            sprintf(range, "[%d", varRecord->type.array.left);
+                            sprintf(firstRange, "[%d", varRecord->type.array.left);
                         }
                         strcat(range, "..");
                         if (varRecord->type.array.rightNegative) {
-                            sprintf(range, "%s-%s]", range, varRecord->type.array.rightID);
+                            sprintf(range, "%s-%s]", firstRange, varRecord->type.array.rightID);
                         } else {
-                            sprintf(range, "%s%s]", range, varRecord->type.array.rightID);
+                            sprintf(range, "%s%s]", firstRange, varRecord->type.array.rightID);
                         }
                     }
 
-                    fprintf(fp, "%-5d%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(void*), 
                     "YES", 
                     (isStatic ? "Static" : "Dynamic"),
@@ -1410,7 +1411,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
 void printSymbolTable(char* filename) {
     FILE* fp = fopen(filename, "w");
-    fprintf(fp, "%-25s%-25s%-5s%-10s%-20s%-45s%-20s%-10s%-10s\n",
+    fprintf(fp, "%-25s%-25s%-7s%-10s%-20s%-50s%-20s%-10s%-10s\n",
         "Variable_name",
         "Scope (Module Name)",
         "Width",
