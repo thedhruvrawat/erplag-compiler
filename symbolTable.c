@@ -570,6 +570,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
         7. FOR                          New and Populate and Use
         8. WHILE                        New and Populate and Use
     */
+    printf("Entering %p\n", symbolTableNode);
     SymbolTableNode* sentinel = initSymbolTableNode();
     SymbolTableNode* currChild = sentinel;
     while (statement != NULL) {
@@ -1043,17 +1044,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
                     }
                     
+                    printf("%s\n", name);
                     curr = curr->next;
                 }
                 break;
             }
             case 'S': { // SWITCH
-                currChild->next = initSymbolTableNode();
-                currChild = currChild->next;
-                currChild->nextOffset = symbolTableNode->nextOffset;
-                currChild->parent = symbolTableNode;
-                currChild->funcOutputST = symbolTableNode->funcOutputST;
-
                 // ID in SWITCH
                 ASTNode* idNode = statement->leftMostChild;
                 VAR_TYPE switchType;
@@ -1083,6 +1079,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             }
 
                             // Populating the symbol table for the statements in the case
+                            currChild->next = initSymbolTableNode();
+                            currChild = currChild->next;
+                            currChild->nextOffset = symbolTableNode->nextOffset;
+                            currChild->parent = symbolTableNode;
+                            currChild->funcOutputST = symbolTableNode->funcOutputST;
                             if (caseStatements == defaultCase) {
                                 populateSymbolTable(currChild, caseStatements->leftMostChild);
                             } else {
@@ -1098,21 +1099,31 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     }
                     case BOOL: {
                         // Checking that there is no default statement
-                        ASTNode* defaultStatment = NULL;
+                        ASTNode* defaultStatement = NULL;
                         if (statement->rightMostChild->leaf.tok->tok == DEFAULT) {
                             printf(RED BOLD "[Semantic Analyser] Default statement not allowed in switch statement of type BOOLEAN at line %d\n" RESET, idNode->leaf.tok->linenum);
-                            defaultStatment = statement->rightMostChild;
+                            defaultStatement = statement->rightMostChild;
                         }
 
                         // Iterating through all the case statements
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type BOOLEAN
-                            if (caseStatements != defaultStatment && caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
+                            if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
                                 printf(RED BOLD "[Semantic Analyser] Case label not of type BOOLEAN at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
                             }
+
                             // Populating the symbol table for the statements in the case
-                            populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                            currChild->next = initSymbolTableNode();
+                            currChild = currChild->next;
+                            currChild->nextOffset = symbolTableNode->nextOffset;
+                            currChild->parent = symbolTableNode;
+                            currChild->funcOutputST = symbolTableNode->funcOutputST;
+                            if (caseStatements == defaultStatement) {
+                                populateSymbolTable(currChild, caseStatements->leftMostChild);
+                            } else {
+                                populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                            }
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -1165,7 +1176,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 ASTNode* exprNode = statement->leftMostChild;
                 VAR_TYPE exprType = typeExtractor(exprNode, symbolTableNode);
 
-                if (exprType != BOOL) {
+                if (exprType != BOOL && exprType != ERROR) {
                     printf(RED BOLD "[Semantic Analyser] Expression in while loop not of type BOOLEAN at line %d\n" RESET, exprNode->leaf.tok->linenum);
                 }
 
@@ -1179,6 +1190,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
     currChild->next = NULL;
     symbolTableNode->children = sentinel->next;
+    printf("%p: %p\n",symbolTableNode, symbolTableNode->children);
     free(sentinel);
     return;
 }
@@ -1277,6 +1289,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
 }
 
 void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FILE* fp, int level) {
+    printf("%p\n", symbolTableNode);   
     if (symbolTableNode == NULL) {
         return;
     }
@@ -1402,7 +1415,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
     SymbolTableNode* child = symbolTableNode->children;
     while (child != NULL) {
-        printSymbolTableRec(child , moduleName, fp, level + 1);
+        printSymbolTableRec(child, moduleName, fp, level + 1);
         child = child->next;
     }
 
