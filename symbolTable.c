@@ -135,6 +135,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
     newRec->iterator = false;
+    newRec->assigned = false;
     newRec->offset = *nextOffset;
     // newRec->linenum = idNode->leaf.tok->linenum;
     newRec->next = NULL;
@@ -570,7 +571,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
         7. FOR                          New and Populate and Use
         8. WHILE                        New and Populate and Use
     */
-    printf("Entering %p\n", symbolTableNode);
     SymbolTableNode* sentinel = initSymbolTableNode();
     SymbolTableNode* currChild = sentinel;
     while (statement != NULL) {
@@ -583,9 +583,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
+                    break;
                 } else if (varRecord->iterator) {
                     printf(RED BOLD "[Semantic Analyser] Cannot get value of iterator %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
+                    break;
                 }
+
+                varRecord->assigned = true;
                 break;
             }
             case 'P': { // PRINT
@@ -782,6 +786,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         break;
                     }
                 }
+
+                // To check whether return variables have been assigned
+                varRecord->assigned = true;
                 break;
             }
             case 'M': { // MODULE_REUSE_STMT
@@ -949,6 +956,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             continue;
                         }
                     }
+                    
+                    // To check whether return variables have been assigned
+                    varRecord->assigned = true;
 
                     if (outputNode == NULL) {
                         printf(RED BOLD "[Semantic Analyser] Too many output parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
@@ -1044,7 +1054,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
                     }
                     
-                    printf("%s\n", name);
                     curr = curr->next;
                 }
                 break;
@@ -1190,7 +1199,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
     currChild->next = NULL;
     symbolTableNode->children = sentinel->next;
-    printf("%p: %p\n",symbolTableNode, symbolTableNode->children);
     free(sentinel);
     return;
 }
@@ -1236,6 +1244,18 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     funcRecord->called = true;
     populateSymbolTable(funcRecord->funcST, statementsNode);
     funcRecord->called = false;
+
+    // Check if all the output variables have been assigned some value or not
+    for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+        Record* varRecord = funcRecord->outputST->hashTable[i];
+        if (varRecord == NULL) { continue; }
+        while (varRecord != NULL) {
+            if (!varRecord->assigned) {
+                printf(RED BOLD "[Semantic Analyser] Output variable %s not assigned a value before return from module %s at line %d\n" RESET, varRecord->name, name, moduleNode->leaf.tok->linenum);
+            }
+            varRecord = varRecord->next;
+        }
+    }
 
     return;
 }
@@ -1289,7 +1309,6 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
 }
 
 void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FILE* fp, int level) {
-    printf("%p\n", symbolTableNode);   
     if (symbolTableNode == NULL) {
         return;
     }
@@ -1401,7 +1420,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         if (varRecord->type.array.rightNegative) {
                             right = -right;
                         }
-                        
+
                         unsigned long typeSize = 0;
                         if (varRecord->type.array.arrType == INT) {
                             typeSize = sizeof(int);
@@ -1503,7 +1522,7 @@ void generateSymbolTable(AST* ast) {
         GlobalRecord* funcRecord = symbolTable->global[i];
         while (funcRecord != NULL) {
             if (funcRecord->defined == false) {
-                printf("Module %s declared but not defined.\n", funcRecord->name);
+                printf(RED BOLD "[Semantic Analyser] Module %s declared but not defined.\n" RESET, funcRecord->name);
             }
             funcRecord = funcRecord->next;
         }
