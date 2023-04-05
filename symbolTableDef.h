@@ -46,7 +46,8 @@ typedef struct Record {
 typedef struct SymbolTableNode {
     Record* hashTable[HASH_TABLE_SIZE];
     struct SymbolTableNode* children;
-    int numChildren;
+    int scopeStart;
+    int scopeEnd;
     unsigned int nextOffset;
     struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;

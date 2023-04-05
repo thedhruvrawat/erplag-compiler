@@ -33,10 +33,13 @@ SymbolTableNode* initSymbolTableNode(void) {
     // newNode->hashTable is a fixed-length array
     memset(newNode->hashTable, 0, sizeof(Record*) * HASH_TABLE_SIZE);
     newNode->children = NULL;
+    newNode->scopeStart = 0;
+    newNode->scopeEnd = 0;
     newNode->nextOffset = 0;
     newNode->funcOutputST = NULL;
     newNode->next = NULL;
     newNode->parent = NULL;
+
 
     return newNode;
 }
@@ -573,11 +576,19 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
     */
     SymbolTableNode* sentinel = initSymbolTableNode();
     SymbolTableNode* currChild = sentinel;
+
+    int lastLineNum = 0;
     while (statement != NULL) {
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
                 ASTNode* idNode = statement->leftMostChild;
                 char* name = idNode->leaf.tok->lexeme;
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = idNode->leaf.tok->linenum;
+                }
+                lastLineNum = idNode->leaf.tok->linenum;
 
                 // Check if variable exists
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
@@ -594,6 +605,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
             }
             case 'P': { // PRINT
                 ASTNode* printNode = statement->leftMostChild;
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = printNode->leaf.tok->linenum;
+                }
+                lastLineNum = printNode->leaf.tok->linenum;
+
                 if (strcmp(printNode->label, "ID") == 0) { // ID
                     char* name = printNode->leaf.tok->lexeme;
                     Record* varRecord = variableExists(symbolTableNode, name, hash(name));
@@ -649,6 +667,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 if (arrayAccess) {
                     idNode = statement->leftMostChild->leftMostChild;
                 }
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = idNode->leaf.tok->linenum;
+                }
+                lastLineNum = idNode->leaf.tok->linenum;
 
                 // Check existence of idNode and store type
                 VAR_TYPE idType;
@@ -796,6 +820,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 ASTNode* outputListNode = statement->leftMostChild;
                 ASTNode* moduleNode = outputListNode->next;
                 ASTNode* inputListNode = moduleNode->next;
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = moduleNode->leaf.tok->linenum;
+                }
+                lastLineNum = moduleNode->leaf.tok->linenum;
+
                 char* moduleName = moduleNode->leaf.tok->lexeme;
                 GlobalRecord* moduleRecord = moduleExists(moduleName, hash(moduleName));
                 if (moduleRecord == NULL) {
@@ -1030,6 +1061,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 ASTNode* assignListNode = statement->leftMostChild;
                 ASTNode* dataTypeNode = statement->rightMostChild;
 
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = statement->leaf.tok->linenum;
+                }
+                lastLineNum = statement->leaf.tok->linenum;
+
                 ASTNode* curr = assignListNode->leftMostChild;
                 while (curr != NULL) {
                     // Checking if already exists
@@ -1061,6 +1098,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
             case 'S': { // SWITCH
                 // ID in SWITCH
                 ASTNode* idNode = statement->leftMostChild;
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = idNode->leaf.tok->linenum;
+                }
+                lastLineNum = idNode->leaf.tok->linenum;
+
                 VAR_TYPE switchType;
                 char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
@@ -1098,6 +1142,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             } else {
                                 populateSymbolTable(currChild, caseStatements->leftMostChild->next);
                             }
+
+                            lastLineNum = currChild->scopeEnd;
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -1133,6 +1179,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             } else {
                                 populateSymbolTable(currChild, caseStatements->leftMostChild->next);
                             }
+
+                            lastLineNum = currChild->scopeEnd;
                             caseStatements = caseStatements->next;
                         }
                         break;
@@ -1156,6 +1204,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 currChild->parent = symbolTableNode;
                 currChild->funcOutputST = symbolTableNode->funcOutputST;
 
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = statement->leftMostChild->leaf.tok->linenum;
+                }
+                lastLineNum = statement->leftMostChild->leaf.tok->linenum;
+
                 // ID IN FOR LOOP 
                 ASTNode* idNode = statement->leftMostChild; 
                 char* name = idNode->leaf.tok->lexeme;
@@ -1172,6 +1226,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // Statements inside the for loop
                 populateSymbolTable(currChild, statement->leftMostChild->next->next);
+                lastLineNum = currChild->scopeEnd;
                 break;
             }
             case 'W': { // WHILE
@@ -1180,6 +1235,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 currChild->nextOffset = symbolTableNode->nextOffset;
                 currChild->parent = symbolTableNode;
                 currChild->funcOutputST = symbolTableNode->funcOutputST;
+
+                // Setting scopeStart and lastLineNum
+                if (symbolTableNode->scopeStart == 0) {
+                    symbolTableNode->scopeStart = statement->leftMostChild->leaf.tok->linenum;
+                }
+                lastLineNum = statement->leftMostChild->leaf.tok->linenum;
 
                 // Check whether the expression is a boolean expression or not
                 ASTNode* exprNode = statement->leftMostChild;
@@ -1191,6 +1252,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                 // Statements inside the while loop
                 populateSymbolTable(currChild, statement->leftMostChild->next);
+                lastLineNum = currChild->scopeEnd;
                 break;
             }
         }
@@ -1199,6 +1261,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
     currChild->next = NULL;
     symbolTableNode->children = sentinel->next;
+    symbolTableNode->scopeEnd = lastLineNum;
     free(sentinel);
     return;
 }
@@ -1234,16 +1297,15 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
 
     if (funcRecord->defined) { return; }
     funcRecord->defined = true;
-    ASTNode* statementsNode;
-    if (driver) {
-        statementsNode = moduleNode->leftMostChild->leftMostChild;
-    } else {
-        statementsNode = moduleNode->rightMostChild->leftMostChild;
-    }
+    ASTNode* statementsNode = moduleNode->rightMostChild->leftMostChild;
 
     funcRecord->called = true;
     populateSymbolTable(funcRecord->funcST, statementsNode);
     funcRecord->called = false;
+
+    // Setting the scope of the output variables
+    funcRecord->outputST->scopeStart = funcRecord->funcST->scopeStart;
+    funcRecord->outputST->scopeEnd = funcRecord->funcST->scopeEnd;
 
     // Check if all the output variables have been assigned some value or not
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
@@ -1318,14 +1380,16 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
         Record* varRecord = symbolTableNode->hashTable[i];
         int offset;
         while (varRecord != NULL) {
-            fprintf(fp, "%-25s%-25s", varRecord->name, moduleName);
+            char scope[25];
+            sprintf(scope, "%d-%d", symbolTableNode->scopeStart, symbolTableNode->scopeEnd);
+            fprintf(fp, "%-25s%-25s%-25s", varRecord->name, moduleName, scope);
             switch (varRecord->type.varType) {
                 case INT: {
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(int), 
                     "NO", 
-                    "--------------------",
-                    "----------------------------------------",
+                    "---",
+                    "---",
                     "INTEGER"
                     );
                     break;
@@ -1334,8 +1398,8 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(double), 
                     "NO", 
-                    "--------------------",
-                    "----------------------------------------",
+                    "---",
+                    "---",
                     "REAL"
                     );
                     break;
@@ -1344,8 +1408,8 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(bool), 
                     "NO", 
-                    "--------------------",
-                    "----------------------------------------",
+                    "---",
+                    "---",
                     "BOOLEAN"
                     );
                     break;
@@ -1467,9 +1531,10 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
 void printSymbolTable(char* filename) {
     FILE* fp = fopen(filename, "w");
-    fprintf(fp, "%-25s%-25s%-7s%-10s%-20s%-50s%-20s%-10s%-10s\n",
+    fprintf(fp, "%-25s%-25s%-25s%-7s%-10s%-20s%-50s%-20s%-10s%-15s\n",
         "Variable_name",
         "Scope (Module Name)",
+        "Scope (Line Numbers)",
         "Width",
         "isArray",
         "Static or Dynamic",
