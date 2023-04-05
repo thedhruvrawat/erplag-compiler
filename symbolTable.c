@@ -1289,7 +1289,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
             fprintf(fp, "%-25s%-25s", varRecord->name, moduleName);
             switch (varRecord->type.varType) {
                 case INT: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(int), 
                     "NO", 
                     "--------------------",
@@ -1299,7 +1299,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     break;
                 }
                 case DOUBLE: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(double), 
                     "NO", 
                     "--------------------",
@@ -1309,7 +1309,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     break;
                 }
                 case BOOL: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-45s%-20s", 
+                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
                     sizeof(bool), 
                     "NO", 
                     "--------------------",
