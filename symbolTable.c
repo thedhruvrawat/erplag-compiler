@@ -1390,8 +1390,32 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         }
                     }
 
+                    unsigned long width = 8;
+                    // Calculate size in case of static array
+                    if (isStatic) {
+                        int left = varRecord->type.array.left;
+                        int right = varRecord->type.array.right;
+                        if (varRecord->type.array.leftNegative) {
+                            left = -left;
+                        }
+                        if (varRecord->type.array.rightNegative) {
+                            right = -right;
+                        }
+                        
+                        unsigned long typeSize = 0;
+                        if (varRecord->type.array.arrType == INT) {
+                            typeSize = sizeof(int);
+                        } else if (varRecord->type.array.arrType == DOUBLE) {
+                            typeSize = sizeof(double);
+                        } else if (varRecord->type.array.arrType == BOOL) {
+                            typeSize = sizeof(bool);
+                        }
+
+                        width = (right - left + 1) * typeSize;
+                    }
+
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    sizeof(void*), 
+                    width, 
                     "YES", 
                     (isStatic ? "Static" : "Dynamic"),
                     range,
