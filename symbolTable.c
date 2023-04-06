@@ -864,7 +864,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 // Check if the input parameters match
                 Record* inputNode = moduleRecord->inputList;
                 ASTNode* curr = inputListNode->leftMostChild;
+                bool errorPrinted = false;
                 while (curr != NULL) {
+                    // Check if there are too many input parameters
+                    if (inputNode == NULL && !errorPrinted) {
+                        printf(RED BOLD "[Semantic Analyser] Too many input parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
+                        errorPrinted = true;;
+                    }
 
                     // Check if it is a MINUS_NODE
                     bool isMinus = false;
@@ -884,18 +890,16 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 curr = curr->parent;
                             }
                             curr = curr->next;
-                            inputNode = inputNode->next;
+                            if (inputNode != NULL) {
+                                inputNode = inputNode->next;
+                            }
                             continue;
                         }
                     }
                     
-                    if (inputNode == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] Too many input parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
-                        break;
-                    }
 
                     VAR_TYPE inputType = typeExtractor(curr, symbolTableNode);
-                    if (inputNode->type.varType == ARR) {
+                    if (inputNode != NULL && inputNode->type.varType == ARR) {
                         if (inputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
                         } else if (inputType == ARR && isMinus) {
@@ -938,7 +942,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 }
                             }
                         }
-                    } else if (inputType != inputNode->type.varType && inputType != ERROR) {
+                    } else if (inputNode != NULL && inputType != inputNode->type.varType && inputType != ERROR) {
                         printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[inputNode->type.varType]);
                     }
 
@@ -946,7 +950,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         curr = curr->parent;
                     }
                     curr = curr->next;
-                    inputNode = inputNode->next;
+                    if (inputNode != NULL) {
+                        inputNode = inputNode->next;
+                    }
                 }
 
                 if (inputNode != NULL) {
@@ -956,7 +962,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 // Check if the output parameters match
                 Record* outputNode = moduleRecord->outputList;
                 curr = outputListNode->leftMostChild;
+                errorPrinted = false;
                 while (curr != NULL) {
+                    // Check if there are any more output parameters expected
+                    if (outputNode == NULL && !errorPrinted) {
+                        printf(RED BOLD "[Semantic Analyser] Too many output parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
+                        errorPrinted = true;
+                    }
+
                     // Check if it is a MINUS_NODE
                     bool isMinus = false;
                     if (strcmp(curr->label, "MINUS_NODE") == 0) {
@@ -975,7 +988,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 curr = curr->parent;
                             }
                             curr = curr->next;
-                            outputNode = outputNode->next;
+                            if (outputNode != NULL) {
+                                outputNode = outputNode->next;
+                            }
                             continue;
                         } else if (varRecord->iterator) {
                             printf(RED BOLD "[Semantic Analyser] Iterator variable %s cannot be used as output parameter at line %d\n" RESET, name, curr->leaf.tok->linenum);
@@ -983,7 +998,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 curr = curr->parent;
                             }
                             curr = curr->next;
-                            outputNode = outputNode->next;
+                            if (outputNode != NULL) {
+                                outputNode = outputNode->next;
+                            }
                             continue;
                         }
                     }
@@ -991,13 +1008,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     // To check whether return variables have been assigned
                     varRecord->assigned = true;
 
-                    if (outputNode == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] Too many output parameters for module %s at line %d\n" RESET, moduleName, curr->leaf.tok->linenum);
-                        break;
-                    }
-
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
-                    if (outputNode->type.varType == ARR) {
+                    if (outputNode != NULL && outputNode->type.varType == ARR) {
                         if (outputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
                         } else if (outputType == ARR && isMinus) {
@@ -1040,7 +1052,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 }
                             }
                         }
-                    } else if (outputType != outputNode->type.varType && outputType != ERROR) {
+                    } else if (outputNode != NULL && outputType != outputNode->type.varType && outputType != ERROR) {
                         printf(RED BOLD "[Semantic Analyser] Type mismatch at line %d. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[outputNode->type.varType]);
                     }
 
@@ -1048,7 +1060,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         curr = curr->parent;
                     }
                     curr = curr->next;
-                    outputNode = outputNode->next;
+                    if (outputNode != NULL) {
+                        outputNode = outputNode->next;
+                    }
                 }
 
                 if (outputNode != NULL) {
