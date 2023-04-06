@@ -322,7 +322,6 @@ Record* generateTempRecord(SymbolTableNode* symbolTableNode, Quadruple* quad, in
     newRec->iterator = false;
     newRec->next = NULL;
 
-    printf("%d\n", *offset);
     // Modify offset
     switch (quad->type) {
         case INT: {
