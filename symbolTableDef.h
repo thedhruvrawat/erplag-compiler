@@ -15,6 +15,24 @@ Group Number : 2
 
 #define HASH_TABLE_SIZE 1021
 
+typedef enum {
+    PLUS_OP,
+    MINUS_OP,
+    MUL_OP,
+    DIV_OP,
+    GT_OP,
+    LT_OP,
+    LE_OP,
+    GE_OP,
+    EQ_OP,
+    NE_OP,
+    AND_OP,
+    OR_OP,
+    UPLUS_OP,
+    UMINUS_OP,
+    ASSIGN_QOP
+} OPERATOR;
+
 typedef struct Type {
     VAR_TYPE varType;
     struct array {
@@ -33,22 +51,6 @@ typedef struct Type {
         };
     } array;
 } Type;
-typedef enum {
-    PLUS_OP,
-    MINUS_OP,
-    MUL_OP,
-    DIV_OP,
-    GT_OP,
-    LT_OP,
-    LE_OP,
-    GE_OP,
-    EQ_OP,
-    NE_OP,
-    AND_OP,
-    OR_OP,
-    UPLUS_OP,
-    UMINUS_OP
-} OPERATOR;
 
 typedef struct Quadruple {
     OPERATOR op;

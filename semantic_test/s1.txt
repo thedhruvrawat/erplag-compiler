@@ -5,7 +5,7 @@ takes input [data: array[100..150] of boolean, weight: real, length: integer, b:
 returns [R1: real, R2: integer, R3: boolean, R4: integer];
 start
 	declare e,f,k: integer;
-	declare a: real;
+	declare a: real;	
 	switch(k)
 	start
 		case 10: declare A:real;

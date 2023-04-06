@@ -28,6 +28,7 @@ void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode);
 void addFunctionToSymbolTable(ASTNode* moduleNode);
 void printSymbolTableRec(SymbolTableNode* symbolTableNode);
 void printSymbolTable(char* filename);
+void printQuadrupleTable(void);
 void generateSymbolTable(AST* ast);
 
 #endif
