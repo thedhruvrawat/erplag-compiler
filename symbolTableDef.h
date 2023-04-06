@@ -33,6 +33,39 @@ typedef struct Type {
         };
     } array;
 } Type;
+typedef enum {
+    PLUS_OP,
+    MINUS_OP,
+    MUL_OP,
+    DIV_OP,
+    GT_OP,
+    LT_OP,
+    LE_OP,
+    GE_OP,
+    EQ_OP,
+    NE_OP,
+    AND_OP,
+    OR_OP,
+    UPLUS_OP,
+    UMINUS_OP
+} OPERATOR;
+
+typedef struct Quadruple {
+    OPERATOR op;
+    char arg1[20];
+    char arg2[20];
+    char result[20];
+    bool isUnary;
+    VAR_TYPE type;
+    struct Quadruple* next;
+} Quadruple;
+
+typedef struct QuadrupleTable {
+    int currentNumber;
+    Quadruple* head;
+    Quadruple* tail;
+    int size;
+} QuadrupleTable;
 
 typedef struct Record {
     char name[20];
@@ -49,6 +82,7 @@ typedef struct SymbolTableNode {
     int scopeStart;
     int scopeEnd;
     unsigned int nextOffset;
+    QuadrupleTable* quadTable;
     struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;
     struct SymbolTableNode* parent;

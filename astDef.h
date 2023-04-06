@@ -23,6 +23,7 @@ typedef struct ASTNode {
     char label[20];
     bool isLeaf;
     Leaf leaf;
+    char symbolTableLabel[20]; // Required for quadruple generation
     struct ASTNode* parent;
     struct ASTNode* leftMostChild;
     struct ASTNode* rightMostChild;

@@ -28,6 +28,16 @@ unsigned int hash(const char *str) {
     return (((res % HASH_TABLE_SIZE) + HASH_TABLE_SIZE) % HASH_TABLE_SIZE);
 }
 
+QuadrupleTable* initQuadrupleTable(void) {
+    QuadrupleTable* quadTable = malloc(sizeof(QuadrupleTable));
+    quadTable->currentNumber = 0;
+    quadTable->head = NULL;
+    quadTable->tail = NULL;
+    quadTable->size = 0;
+
+    return quadTable;
+}
+
 SymbolTableNode* initSymbolTableNode(void) {
     SymbolTableNode* newNode = malloc(sizeof(SymbolTableNode));
     // newNode->hashTable is a fixed-length array
@@ -36,10 +46,10 @@ SymbolTableNode* initSymbolTableNode(void) {
     newNode->scopeStart = 0;
     newNode->scopeEnd = 0;
     newNode->nextOffset = 0;
+    newNode->quadTable = initQuadrupleTable();
     newNode->funcOutputST = NULL;
     newNode->next = NULL;
     newNode->parent = NULL;
-
 
     return newNode;
 }
@@ -140,7 +150,6 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     newRec->iterator = false;
     newRec->assigned = false;
     newRec->offset = *nextOffset;
-    // newRec->linenum = idNode->leaf.tok->linenum;
     newRec->next = NULL;
 
     switch (dataTypeNode->leaf.tok->tok) {
@@ -304,6 +313,82 @@ Record* findVariableInsertion(SymbolTableNode* symbolTableNode, char* name, unsi
 
     return curr;
 }
+Record* generateTempRecord(SymbolTableNode* symbolTableNode, Quadruple* quad, int* offset) {
+    Record* newRec = (Record*) malloc(sizeof(Record));
+    strcpy(newRec->name, quad->result);
+    newRec->offset = *offset;
+    newRec->type.varType = quad->type;
+    newRec->assigned = false;
+    newRec->iterator = false;
+    newRec->next = NULL;
+
+    printf("%d\n", *offset);
+    // Modify offset
+    switch (quad->type) {
+        case INT: {
+            *offset += sizeof(int);
+            break;
+        }
+        case REAL: {
+            *offset += sizeof(float);
+            break;
+        }
+        case BOOL: {
+            *offset += sizeof(bool);
+            break;
+        }
+        default: {
+            // Should never reach here
+            break;
+        }
+    }
+
+    printf("%d\n", *offset);
+
+    return newRec;
+}
+
+void appendQuadruple(SymbolTableNode* symbolTableNode, Quadruple* quad) {
+    // Adding to the end of the quadruple table
+    QuadrupleTable* quadTable = symbolTableNode->quadTable;
+    if (quadTable->head == NULL) {
+        quadTable->head = quad;
+        quadTable->tail = quad;
+    } else {
+        quadTable->tail->next = quad;
+        quadTable->tail = quad;
+    }
+    quadTable->size++;
+
+    // Adding to the symbolTable
+    Record* varRecord = generateTempRecord(symbolTableNode, quad, &symbolTableNode->nextOffset);
+    unsigned int hashVal = hash(varRecord->name);
+    Record* insertAt = findVariableInsertion(symbolTableNode, varRecord->name, hashVal);
+    if (insertAt == NULL) {
+        symbolTableNode->hashTable[hashVal] = varRecord;
+    } else {
+        insertAt->next = varRecord;
+    }
+
+    return;
+}
+
+Quadruple* generateQuadruple(QuadrupleTable* quadTable, OPERATOR op, ASTNode* arg1, ASTNode* arg2, VAR_TYPE type) {
+    Quadruple* newQuad = (Quadruple*) malloc(sizeof(Quadruple));
+    newQuad->op = op;
+    strcpy(newQuad->arg1, arg1->symbolTableLabel);
+    if (arg2 != NULL) {
+        strcpy(newQuad->arg2, arg2->symbolTableLabel);
+    } else {
+        strcpy(newQuad->arg2, "");
+    }
+    sprintf(newQuad->result, "$_t%d", ++quadTable->currentNumber);
+    newQuad->type = type;
+    newQuad->isUnary = (arg2 == NULL);
+    newQuad->next = NULL;
+    return newQuad;
+}
+
 
 void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList) {
     unsigned int* offset = &funcRecord->funcST->nextOffset;
@@ -409,6 +494,23 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 printf(RED BOLD "[Semantic Analyser] Unary operations are not allowed on arrays at line %d\n" RESET, exprNode->rightMostChild->leaf.tok->linenum);
                 return ERROR;
             } else {
+                // Adding to quadruple table
+                switch (exprNode->leftMostChild->leaf.tok->tok) {
+                    case PLUS: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, UPLUS_OP, exprNode->rightMostChild, NULL, rhsType);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case MINUS: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, UMINUS_OP, exprNode->rightMostChild, NULL, rhsType);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    default: {
+                        // Should never reach here
+                        break;
+                    }
+                }
                 return rhsType;
             }
         } else {
@@ -453,6 +555,9 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             }
         }
 
+        // Adding to quadruple table
+        // TODO: Add quadruple for array access
+
         return varRecord->type.array.arrType;
     }
     
@@ -463,6 +568,31 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         case MUL: {
             int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+
+            // Add to quadruple table if no error
+            if ((leftType != ERROR && rightType != ERROR) && (leftType == rightType) && (leftType == INT || leftType == DOUBLE)) {
+                switch (exprNode->leaf.tok->tok) {
+                    case PLUS: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, PLUS_OP, exprNode->leftMostChild, exprNode->rightMostChild, leftType);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case MINUS: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, MINUS_OP, exprNode->leftMostChild, exprNode->rightMostChild, leftType);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case MUL: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, MUL_OP, exprNode->leftMostChild, exprNode->rightMostChild, leftType);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    default: {
+                        // Should never reach here
+                        break;
+                    }
+                }
+            }
 
             if (leftType == INT && rightType == INT) {
                 return INT;
@@ -481,6 +611,10 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if ((leftType == INT || leftType == DOUBLE) && (rightType == INT || rightType == DOUBLE)) {
+                // Add to quadruple table
+                Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, DIV_OP, exprNode->leftMostChild, exprNode->rightMostChild, DOUBLE);
+                appendQuadruple(symbolTableNode, quad);
+
                 return DOUBLE;
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
@@ -497,6 +631,24 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if (leftType == BOOL && rightType == BOOL) {
+                // Add to quadruple table
+                switch (exprNode->leaf.tok->tok) {
+                    case AND: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, AND_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case OR: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, OR_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    default: {
+                        // Should never reach here
+                        break;
+                    }
+                }
+
                 return BOOL;
             } else if (leftType == ERROR || rightType == ERROR) {
                 return ERROR;
@@ -516,6 +668,46 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int leftType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
+            // Add to quadruple table
+            if ((leftType != ERROR && rightType != ERROR) && (leftType == rightType) && (leftType == INT || leftType == DOUBLE)) {
+                switch (exprNode->leaf.tok->tok) {
+                    case GT: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, GT_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case LT: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, LT_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case GE: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, GE_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case LE: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, LE_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case EQ: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, EQ_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    case NE: {
+                        Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, NE_OP, exprNode->leftMostChild, exprNode->rightMostChild, BOOL);
+                        appendQuadruple(symbolTableNode, quad);
+                        break;
+                    }
+                    default: {
+                        // Should never reach here
+                        break;
+                    }
+                }
+            }
+
             if (leftType == INT && rightType == INT) {
                 return BOOL;
             } else if (leftType == DOUBLE && rightType == DOUBLE) {
@@ -529,15 +721,21 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             break;
         }
         case NUM: {
+            // Modify symbolTableLabel
+            strcpy(exprNode->symbolTableLabel, exprNode->leaf.tok->lexeme);
             return INT;
             break;
         }
         case RNUM: {
+            // Modify symbolTableLabel
+            strcpy(exprNode->symbolTableLabel, exprNode->leaf.tok->lexeme);
             return DOUBLE;
             break;
         }
         case TRUE:
         case FALSE: {
+            // Modify symbolTableLabel
+            strcpy(exprNode->symbolTableLabel, exprNode->leaf.tok->lexeme);
             return BOOL;
             break;
         }
@@ -549,6 +747,8 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, exprNode->leaf.tok->linenum);
                 return ERROR;
             } else {
+                // Modify symbolTableLabel
+                strcpy(exprNode->symbolTableLabel, name);
                 return varRecord->type.varType;
             }
             break;
