@@ -155,17 +155,17 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     switch (dataTypeNode->leaf.tok->tok) {
         case INTEGER: {
             newRec->type.varType = INT;
-            *nextOffset += sizeof(int);
+            *nextOffset += SIZEOF_INT;
             break;
         }
         case REAL: {
             newRec->type.varType = DOUBLE;
-            *nextOffset += sizeof(double);
+            *nextOffset += SIZEOF_REAL;
             break;
         }
         case BOOLEAN: {
             newRec->type.varType = BOOL;
-            *nextOffset += sizeof(bool);
+            *nextOffset += SIZEOF_BOOL;
             break;
         }
         case ARRAY: {
@@ -176,17 +176,17 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
             switch (dataTypeNode->rightMostChild->leaf.tok->tok) {
                 case INTEGER: {
                     newRec->type.array.arrType = INT;
-                    elementSize = sizeof(int);
+                    elementSize = SIZEOF_INT;
                     break;
                 }
                 case REAL: {
                     newRec->type.array.arrType = DOUBLE;
-                    elementSize = sizeof(double);
+                    elementSize = SIZEOF_REAL;
                     break;
                 }
                 case BOOLEAN: {
                     newRec->type.array.arrType = BOOL;
-                    elementSize = sizeof(bool);
+                    elementSize = SIZEOF_BOOL;
                     break;
                 }
                 default: {
@@ -245,7 +245,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     printf(RED BOLD "[Semantic Analyser] Specified subrange for array \"%s\" are illegal. (%d > %d)\n" RESET, name, left, right);
                     return NULL;
                 }
-                *nextOffset += elementSize * (right - left);
+                *nextOffset += elementSize * (right - left + 1);
             } else {
                 // Adding the size of pointer
                 *nextOffset += sizeof(void*);
@@ -325,15 +325,15 @@ Record* generateTempRecord(SymbolTableNode* symbolTableNode, Quadruple* quad, in
     // Modify offset
     switch (quad->type) {
         case INT: {
-            *offset += sizeof(int);
+            *offset += SIZEOF_INT;
             break;
         }
         case REAL: {
-            *offset += sizeof(float);
+            *offset += SIZEOF_REAL;
             break;
         }
         case BOOL: {
-            *offset += sizeof(bool);
+            *offset += SIZEOF_BOOL;
             break;
         }
         default: {
@@ -1034,13 +1034,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 varRecord->assigned = true;
 
                 // Add to quadTable
-                if (arrayAccess) {
-                    Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, ASSIGN_QOP, statement->rightMostChild, NULL, statement->leftMostChild, varRecord->type.array.arrType);
-                } else if (idType != ARR) {
-                    strcpy(idNode->symbolTableLabel, varRecord->name);
-                    Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, ASSIGN_QOP, statement->rightMostChild, NULL, idNode, idType);
-                    appendQuadruple(symbolTableNode, quad);
-                }
+                // if (arrayAccess) {
+                //     Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, ASSIGN_QOP, statement->rightMostChild, NULL, statement->leftMostChild, varRecord->type.array.arrType);
+                // } else if (idType != ARR) {
+                //     strcpy(idNode->symbolTableLabel, varRecord->name);
+                //     Quadruple* quad = generateQuadruple(symbolTableNode->quadTable, ASSIGN_QOP, statement->rightMostChild, NULL, idNode, idType);
+                //     appendQuadruple(symbolTableNode, quad);
+                // }
 
                 break;
             }
@@ -1462,7 +1462,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 strcpy(varRecord->name, name);
                 varRecord->iterator = true;
                 varRecord->offset = currChild->nextOffset;
-                currChild->nextOffset += sizeof(int);
+                currChild->nextOffset += SIZEOF_INT;
                 // varRecord->linenum = idNode->leaf.tok->linenum;
                 varRecord->type.varType = INT;
                 varRecord->next = NULL;
@@ -1629,7 +1629,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
             switch (varRecord->type.varType) {
                 case INT: {
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    sizeof(int), 
+                    SIZEOF_INT, 
                     "NO", 
                     "---",
                     "---",
@@ -1639,7 +1639,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                 }
                 case DOUBLE: {
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    sizeof(double), 
+                    SIZEOF_REAL, 
                     "NO", 
                     "---",
                     "---",
@@ -1649,7 +1649,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                 }
                 case BOOL: {
                     fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    sizeof(bool), 
+                    SIZEOF_BOOL, 
                     "NO", 
                     "---",
                     "---",
@@ -1730,11 +1730,11 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
                         unsigned long typeSize = 0;
                         if (varRecord->type.array.arrType == INT) {
-                            typeSize = sizeof(int);
+                            typeSize = SIZEOF_INT;
                         } else if (varRecord->type.array.arrType == DOUBLE) {
-                            typeSize = sizeof(double);
+                            typeSize = SIZEOF_REAL;
                         } else if (varRecord->type.array.arrType == BOOL) {
-                            typeSize = sizeof(bool);
+                            typeSize = SIZEOF_BOOL;
                         }
 
                         width = (right - left + 1) * typeSize;

@@ -14,6 +14,9 @@ Group Number : 2
 #include "ast.h"
 
 #define HASH_TABLE_SIZE 1021
+#define SIZEOF_INT 2
+#define SIZEOF_REAL 4
+#define SIZEOF_BOOL 1
 
 typedef enum {
     PLUS_OP,

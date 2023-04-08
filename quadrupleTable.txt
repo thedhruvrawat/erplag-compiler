@@ -1,13 +1,6 @@
 Operator  Arg1      Arg2      Result    Type      Scope (Line Numbers)     
 PLUS_OP   q         1         $_t1      INTEGER   7-51                     
-ASSIGN_OP $_t1                R2        INTEGER   7-51                     
 DIV_OP    weight    20.50     $_t2      REAL      7-51                     
 PLUS_OP   a         $_t2      $_t3      REAL      7-51                     
-ASSIGN_OP $_t3                R1        REAL      7-51                     
-ASSIGN_OP true                R3        BOOLEAN   7-51                     
 PLUS_OP   f         100       $_t4      INTEGER   7-51                     
-ASSIGN_OP $_t4                R4        INTEGER   7-51                     
 PLUS_OP   U1        32.65     $_t1      REAL      23-27                    
-ASSIGN_OP $_t1                a         REAL      23-27                    
-ASSIGN_OP 6                   Q3        INTEGER   34-42                    
-ASSIGN_OP 120.45              Q5        REAL      38-40                    

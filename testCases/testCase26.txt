@@ -1,5 +1,5 @@
 <<<driver program>>>
 start
     declare s, f, t, b: integer;
-    s[10] := -f;
+    s[f + t] := -f;
 end

@@ -11,7 +11,8 @@
         "cstring": "c",
         "symboltabledef.h": "c",
         "ratio": "c",
-        "lexerdef.h": "c"
+        "lexerdef.h": "c",
+        "stdbool.h": "c"
     },
     "makefile.launchConfigurations": [
         {
