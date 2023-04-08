@@ -28,14 +28,13 @@ end
 takes input [s:integer, d: boolean];
 returns [std:real, t:boolean];
 start
+	declare b : boolean;
 	for(m in 5..10)
 	start
-    	switch(m)
+    	switch(b)
     	start
-    	case 100:
+    	case false:
         	std := 10.0;
-        	break;
-    	default:
         	break;
     	end
 	end

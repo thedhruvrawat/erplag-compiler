@@ -1437,12 +1437,40 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             defaultCase = NULL;
                         }
 
+                        CaseLabel** caseLabelsTable = malloc(sizeof(CaseLabel*) * HASH_TABLE_SIZE);
+                        memset(caseLabelsTable, 0, sizeof(CaseLabel*) * HASH_TABLE_SIZE);
+
                         // Iterating through all the case statements
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type INTEGER
                             if (caseStatements != defaultCase && caseStatements->leftMostChild->leaf.tok->tok != NUM) {
                                 printf(RED BOLD "[Semantic Analyser] Case label not of type INTEGER at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                            }
+
+                            // Checking if the case label is unique
+                            if (caseStatements != defaultCase) {
+                                char* caseLabel = caseStatements->leftMostChild->leaf.tok->lexeme;
+                                unsigned int hashVal = hash(caseLabel);
+                                CaseLabel* caseLabelRecord = caseLabelsTable[hashVal];
+                                if (caseLabelRecord == NULL) {
+                                    caseLabelsTable[hashVal] = malloc(sizeof(CaseLabel));
+                                    caseLabelsTable[hashVal]->label = caseLabel;
+                                    caseLabelsTable[hashVal]->next = NULL;
+                                } else {
+                                    CaseLabel* prev = caseLabelRecord;
+                                    while (caseLabelRecord != NULL) {
+                                        if (strcmp(caseLabelRecord->label, caseLabel) == 0) {
+                                            printf(RED BOLD "[Semantic Analyser] Duplicate case label %s at line %d.\n" RESET, caseLabel, caseStatements->leftMostChild->leaf.tok->linenum);
+                                            break;
+                                        }
+                                        prev = caseLabelRecord;
+                                        caseLabelRecord = caseLabelRecord->next;
+                                    }
+                                    prev->next = malloc(sizeof(CaseLabel));
+                                    prev->next->label = caseLabel;
+                                    prev->next->next = NULL;
+                                }
                             }
 
                             // Populating the symbol table for the statements in the case
@@ -1474,12 +1502,29 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             defaultStatement = statement->rightMostChild;
                         }
 
+                        bool trueDone = false;
+                        bool falseDone = false;
+
                         // Iterating through all the case statements
                         ASTNode* caseStatements = statement->leftMostChild->next;
                         while (caseStatements != NULL) {
                             // Checking if the case statement is of type BOOLEAN
                             if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
                                 printf(RED BOLD "[Semantic Analyser] Case label not of type BOOLEAN at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                            }
+
+                            if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok == TRUE) {
+                                if (trueDone) {
+                                    printf(RED BOLD "[Semantic Analyser] Duplicate case label for TRUE at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                } else {
+                                    trueDone = true;
+                                }
+                            } else if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok == FALSE) {
+                                if (falseDone) {
+                                    printf(RED BOLD "[Semantic Analyser] Duplicate case label for FALSE at line %d\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                } else {
+                                    falseDone = true;
+                                }
                             }
 
                             // Populating the symbol table for the statements in the case
@@ -1496,6 +1541,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
 
                             lastLineNum = currChild->scopeEnd;
                             caseStatements = caseStatements->next;
+                        }
+
+                        if (!trueDone) {
+                            printf(RED BOLD "[Semantic Analyser] Missing case label for TRUE at line %d.\n" RESET, statement->rightMostChild->leaf.tok->linenum);
+                        }
+                        if (!falseDone) {
+                            printf(RED BOLD "[Semantic Analyser] Missing case label for FALSE at line %d.\n" RESET, statement->rightMostChild->leaf.tok->linenum);
                         }
                         break;
                     }

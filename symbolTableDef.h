@@ -92,6 +92,11 @@ typedef struct RecordList {
     int size;
 } RecordList;
 
+typedef struct CaseLabel {
+    char* label;
+    struct CaseLabel* next;
+} CaseLabel;
+
 typedef struct SymbolTableNode {
     Record* hashTable[HASH_TABLE_SIZE];
     struct SymbolTableNode* children;
