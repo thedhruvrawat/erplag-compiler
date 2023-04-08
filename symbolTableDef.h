@@ -106,6 +106,7 @@ typedef struct GlobalRecord { // These are Records at the first layer/row of Sym
     bool called;
     bool declared;
     bool defined;
+    bool error;
     bool checkedRedundancy;
     Record* inputList;
     unsigned int inputListSize;

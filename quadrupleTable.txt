@@ -1,6 +1,2 @@
 Operator  Arg1      Arg2      Result    Type      Scope (Line Numbers)     
-PLUS_OP   q         1         $_t1      INTEGER   7-51                     
-DIV_OP    weight    20.50     $_t2      REAL      7-51                     
-PLUS_OP   a         $_t2      $_t3      REAL      7-51                     
-PLUS_OP   f         100       $_t4      INTEGER   7-51                     
-PLUS_OP   U1        32.65     $_t1      REAL      23-27                    
+UMINUS_OP f                   $_t1      INTEGER   3-11                     

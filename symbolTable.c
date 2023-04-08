@@ -408,6 +408,10 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     while (inputNode != NULL) {
         // Adding the input variable to the inputList
         Record* newRecord = generateRecord(symbolTableNode, inputNode->leftMostChild, inputNode->rightMostChild, offset);
+        if (newRecord == NULL) { 
+            funcRecord->error = true;
+            continue; 
+        }
         curr->next = newRecord;
         curr = curr->next;
         inputListSize++;
@@ -445,6 +449,10 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     while (outputNode != NULL) {
         // Adding the output variable to the outputList
         Record* newRecord = generateRecord(symbolTableNode, outputNode->leftMostChild, outputNode->rightMostChild, offset);
+        if (newRecord == NULL) { 
+            funcRecord->error = true;
+            continue; 
+        }
         curr->next = newRecord;
         curr = curr->next;
         outputListSize++;
@@ -870,7 +878,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             char* indexName = indexNode->rightMostChild->leaf.tok->lexeme;
                             Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
                             if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
-                                printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, indexName, indexNode->leaf.tok->linenum);
+                                printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, indexName, indexNode->rightMostChild->leaf.tok->linenum);
                             } else if (indexRecord->type.varType != INTEGER) {
                                 printf(RED BOLD "[Semantic Analyser] Index %s is not an integer at line %d\n" RESET, indexName, indexNode->leaf.tok->linenum);
                             }
@@ -1060,6 +1068,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 GlobalRecord* moduleRecord = moduleExists(moduleName, hash(moduleName));
                 if (moduleRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined module %s at line %d\n" RESET, moduleName, moduleNode->leaf.tok->linenum);
+                    break;
+                }
+
+                if (moduleRecord->error) {
+                    printf(RED BOLD "[Semantic Analyser] Erroneous Module %s called at line %d\n" RESET, moduleName, moduleNode->leaf.tok->linenum);
                     break;
                 }
 
@@ -1463,9 +1476,30 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 varRecord->iterator = true;
                 varRecord->offset = currChild->nextOffset;
                 currChild->nextOffset += SIZEOF_INT;
-                // varRecord->linenum = idNode->leaf.tok->linenum;
                 varRecord->type.varType = INT;
                 varRecord->next = NULL;
+
+                // Bound checking for the FOR loop
+                ASTNode* rangeNode = statement->leftMostChild->next;
+                ASTNode* leftIndexNode = rangeNode->leftMostChild;
+                ASTNode* rightIndexNode = rangeNode->rightMostChild;
+
+                int left = leftIndexNode->rightMostChild->leaf.tok->num;
+                int right = rightIndexNode->rightMostChild->leaf.tok->num;
+                if (leftIndexNode->numChildren == 2) {
+                    if (leftIndexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                        left = -left;
+                    }
+                }
+                if (rightIndexNode->numChildren == 2) {
+                    if (rightIndexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                        right = -right;
+                    }
+                }
+
+                if (left > right) {
+                    printf(RED BOLD "[Semantic Analyser] Invalid Bounds in FOR loop at line %d.\n" RESET, idNode->leaf.tok->linenum);
+                }
 
                 // Statements inside the for loop
                 populateSymbolTable(currChild, statement->leftMostChild->next->next);
@@ -1596,6 +1630,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     funcRecord->declared = false;
     funcRecord->defined = false;
     funcRecord->driver = driver;
+    funcRecord->error = false;
     funcRecord->funcST = initSymbolTableNode();
     funcRecord->outputST = initSymbolTableNode();
     funcRecord->funcST->funcOutputST = funcRecord->outputST;

@@ -1,7 +1,7 @@
 ** Test case s1.txt: Symbol table printing**
 
 <<module function1>>
-takes input [data: array[100..150] of boolean, weight: real, length: integer, b:array[35..50] of real, q:integer];
+takes input [data: array[200..150] of boolean, weight: real, length: integer, b:array[35..50] of real, q:integer];
 returns [R1: real, R2: integer, R3: boolean, R4: integer];
 start
 	declare e,f,k: integer;

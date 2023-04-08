@@ -2,4 +2,13 @@
 start
     declare s, f, t, b: integer;
     s[f + t] := -f;
+
+    declare A: array[1..10] of integer;
+    print(A[k]);
+
+    for (k in 7..5)
+    start 
+        declare b: integer;
+    end
+
 end
