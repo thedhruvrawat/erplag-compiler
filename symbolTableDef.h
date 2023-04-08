@@ -74,12 +74,23 @@ typedef struct QuadrupleTable {
 
 typedef struct Record {
     char name[20];
-    bool assigned;
+    int assigned;
     bool iterator;
     Type type;
     unsigned int offset;
     struct Record* next;
 } Record;
+
+typedef struct RecordListNode {
+    Record* record;
+    struct RecordListNode* next;
+} RecordListNode;
+
+typedef struct RecordList {
+    RecordListNode* head;
+    RecordListNode* tail;
+    int size;
+} RecordList;
 
 typedef struct SymbolTableNode {
     Record* hashTable[HASH_TABLE_SIZE];

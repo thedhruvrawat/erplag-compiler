@@ -148,7 +148,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
     newRec->iterator = false;
-    newRec->assigned = false;
+    newRec->assigned = 0;
     newRec->offset = *nextOffset;
     newRec->next = NULL;
 
@@ -318,7 +318,7 @@ Record* generateTempRecord(SymbolTableNode* symbolTableNode, Quadruple* quad, in
     strcpy(newRec->name, quad->result);
     newRec->offset = *offset;
     newRec->type.varType = quad->type;
-    newRec->assigned = false;
+    newRec->assigned = 0;
     newRec->iterator = false;
     newRec->next = NULL;
 
@@ -789,6 +789,64 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
     
 }
 
+void createWhileExprIDListRec(RecordList* recordList, ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
+    if (exprNode == NULL) {
+        return;
+    }
+
+    if (exprNode->numChildren == 2) {
+        createWhileExprIDListRec(recordList, exprNode->leftMostChild, symbolTableNode);
+        createWhileExprIDListRec(recordList, exprNode->rightMostChild, symbolTableNode);
+    } else {
+        if (strcmp(exprNode->label, "ID") == 0) {
+            char* name = exprNode->leaf.tok->lexeme;
+            Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+            if (varRecord == NULL) {
+                return;
+            }
+
+            RecordListNode* newNode = malloc(sizeof(RecordListNode));
+            newNode->record = varRecord;
+            if (recordList->size == 0) {
+                recordList->head = recordList->tail = newNode;
+            } else {
+                recordList->tail->next = newNode;
+                recordList->tail = newNode;
+            }
+            recordList->size++;
+        } else if (strcmp(exprNode->label, "ARRAY_INDEX") == 0) {
+            char* name = exprNode->leftMostChild->leaf.tok->lexeme;
+            Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+            if (varRecord == NULL) {
+                return;
+            }
+
+            RecordListNode* newNode = malloc(sizeof(RecordListNode));
+            newNode->record = varRecord;
+            if (recordList->size == 0) {
+                recordList->head = recordList->tail = newNode;
+            } else {
+                recordList->tail->next = newNode;
+                recordList->tail = newNode;
+            }
+            recordList->size++;
+        } else {
+            return;
+        }
+    }
+
+    return;
+}
+
+RecordList* createWhileExprIDList(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
+    RecordList* recordList = malloc(sizeof(RecordList));
+    recordList->head = recordList->tail = NULL;
+    recordList->size = 0;
+
+    createWhileExprIDListRec(recordList, exprNode, symbolTableNode);
+    return recordList;
+}
+
 void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
     /*
         Types of statements possible:
@@ -827,7 +885,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     break;
                 }
 
-                varRecord->assigned = true;
+                varRecord->assigned++;
                 break;
             }
             case 'P': { // PRINT
@@ -1039,7 +1097,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 }
 
                 // To check whether return variables have been assigned
-                varRecord->assigned = true;
+                varRecord->assigned++;
 
                 // Add to quadTable
                 // if (arrayAccess) {
@@ -1248,7 +1306,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     }
                     
                     // To check whether return variables have been assigned
-                    varRecord->assigned = true;
+                    varRecord->assigned++;
 
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
                     if (outputNode != NULL && outputNode->type.varType == ARR) {
@@ -1527,9 +1585,37 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     printf(RED BOLD "[Semantic Analyser] Expression in while loop not of type BOOLEAN at line %d\n" RESET, exprNode->leaf.tok->linenum);
                 }
 
+                // For checking whether any of the variables in the expression are changing or not
+                RecordList* exprIDList = createWhileExprIDList(exprNode, symbolTableNode);
+                int* currCount = NULL;
+                if (exprIDList > 0) {
+                    currCount = malloc(sizeof(int) * exprIDList->size);
+                }
+                RecordListNode* curr = exprIDList->head;
+
+
+                for (int i = 0; i < exprIDList->size; ++i) {
+                    currCount[i] = curr->record->assigned;
+                    curr = curr->next;
+                }
+
                 // Statements inside the while loop
                 populateSymbolTable(currChild, statement->leftMostChild->next);
                 lastLineNum = currChild->scopeEnd;
+
+                // Checking whether any of the variables in the expression are changing or not
+                curr = exprIDList->head;
+                bool changed = false;
+                for (int i = 0; i < exprIDList->size; ++i) {
+                    if (currCount[i] < curr->record->assigned) {
+                        changed = true;
+                    }
+                    curr = curr->next;
+                }
+
+                if (!changed && exprIDList->size > 0) {
+                    printf(RED BOLD "[Semantic Analyser] No variable in while loop expression is changing at line %d.\n" RESET, exprNode->leaf.tok->linenum);
+                }
                 break;
             }
         }
@@ -1576,6 +1662,12 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     funcRecord->defined = true;
     ASTNode* statementsNode = moduleNode->rightMostChild->leftMostChild;
 
+    // Checking for redundancy of declaration
+    if (funcRecord->declared && !funcRecord->checkedRedundancy) {
+        funcRecord->checkedRedundancy = true;
+        printf(RED BOLD "[Semantic Analyser] Redundant declaration of module %s.\n" RESET, name);
+    }
+
     funcRecord->called = true;
     populateSymbolTable(funcRecord->funcST, statementsNode);
     funcRecord->called = false;
@@ -1589,7 +1681,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         Record* varRecord = funcRecord->outputST->hashTable[i];
         if (varRecord == NULL) { continue; }
         while (varRecord != NULL) {
-            if (!varRecord->assigned) {
+            if (varRecord->assigned == 0) {
                 printf(RED BOLD "[Semantic Analyser] Output variable %s not assigned a value before return from module %s at line %d\n" RESET, varRecord->name, name, moduleNode->leaf.tok->linenum);
             }
             varRecord = varRecord->next;

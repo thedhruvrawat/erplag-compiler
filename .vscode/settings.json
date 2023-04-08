@@ -19,7 +19,7 @@
             "cwd": "/home/vaibhav/Documents/Compiler/erplag-compiler",
             "binaryPath": "/home/vaibhav/Documents/Compiler/erplag-compiler/stage1exe",
             "binaryArgs": [
-                "./semantic_test/s1.txt",
+                "./semantic_test/s15.txt",
                 "parseTable.txt",
                 "21"
             ]
