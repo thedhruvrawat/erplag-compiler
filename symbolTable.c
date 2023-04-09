@@ -555,6 +555,10 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         // Bound checking for the array
         if (strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
             int index = indexNode->rightMostChild->leaf.tok->num;
+            if (indexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                index = -index;
+            }
+
             if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID) {
                 int left = varRecord->type.array.left;
                 if (varRecord->type.array.leftNegative) {
@@ -1035,6 +1039,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                                 int left = varRecord->type.array.left;
                                 int right = varRecord->type.array.right;
 
+                                if (indexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                                    index = -index;
+                                }
+
                                 if (varRecord->type.array.leftNegative) {
                                     left = -left;
                                 }
@@ -1499,7 +1507,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         // Checking that there is no default statement
                         ASTNode* defaultStatement = NULL;
                         if (statement->rightMostChild->leaf.tok->tok == DEFAULT) {
-                            printf(RED BOLD "[Semantic Analyser] Default statement not allowed in switch statement of type BOOLEAN at line %d\n" RESET, idNode->leaf.tok->linenum);
+                            printf(RED BOLD "[Semantic Analyser] Default statement not allowed in switch statement of type BOOLEAN at line %d\n" RESET, statement->rightMostChild->leaf.tok->linenum);
                             defaultStatement = statement->rightMostChild;
                         }
 
