@@ -1,2 +1,4 @@
-Operator  Arg1      Arg2      Result    Type      Scope (Line Numbers)     
-PLUS_OP   s         ¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾¾$_t1$_t1      REAL      21-21                    
+Operator  Arg1      Arg2      Result    Type      
+PLUS_OP   s         (null)    $_t1      REAL      
+PLUS_OP   a         b         $_t2      INTEGER   
+UMINUS_OP $_t2                $_t3      INTEGER   

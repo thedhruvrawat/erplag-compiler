@@ -1,4 +1,4 @@
-declare module arraysum; ** Arraysum is defined before array1sum **
+**declare module arraysum;  Arraysum is defined before array1sum **
 declare module array1sum;
 <<<driver program>>>
 start
@@ -13,6 +13,7 @@ takes input[list:array[4..20] of real];
 returns [sum:real, t:boolean];
 start
 	declare s: real;
+	declare a, b, c: integer;
 	s := 5.4321e-3;
 	declare index : integer;
 	for (index in 4..20)
@@ -20,6 +21,7 @@ start
     	s := s + list[index];
 	end
 	sum := s;
+	c := -(a + b);
 	t := true;
 	[sum, t] := use module array1sum with parameters 1, false;
 end
@@ -36,6 +38,8 @@ start
     	case false:
         	std := 10.0;
         	break;
+		case true:
+			break;
     	end
 	end
 	t := true;

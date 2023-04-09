@@ -33,7 +33,19 @@ typedef enum {
     OR_OP,
     UPLUS_OP,
     UMINUS_OP,
-    ASSIGN_QOP
+    ASSIGN_QOP,
+    MODULE_OP,
+    DRIVER_OP,
+    GET_VALUE_OP,
+    PRINT_ID_OP,
+    PRINT_ARR_ELE_OP,
+    MODULE_USE_OP,
+    SWITCH_OP,
+    CASE_OP,
+    FOR_OP,
+    WHILE_OP,
+    START_OP,
+    END_OP
 } OPERATOR;
 
 typedef struct Type {
@@ -118,7 +130,6 @@ typedef struct SymbolTableNode {
     int scopeStart;
     int scopeEnd;
     unsigned int nextOffset;
-    // QuadrupleTable* quadTable;
     struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;
     struct SymbolTableNode* parent;
@@ -165,5 +176,6 @@ typedef struct SymbolTableStack {
 } SymbolTableStack;
 
 extern SymbolTable* symbolTable;
+extern QuadrupleTable* quadTable;
 
 #endif
