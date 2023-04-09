@@ -14,9 +14,9 @@ Group Number : 2
 #include "ast.h"
 
 #define HASH_TABLE_SIZE 1021
-#define SIZEOF_INT 2
-#define SIZEOF_REAL 4
-#define SIZEOF_BOOL 1
+#define SIZEOF_INT 2L
+#define SIZEOF_REAL 4L
+#define SIZEOF_BOOL 1L
 
 typedef enum {
     PLUS_OP,
@@ -55,23 +55,6 @@ typedef struct Type {
     } array;
 } Type;
 
-typedef struct Quadruple {
-    OPERATOR op;
-    char arg1[20];
-    char arg2[20];
-    char result[20];
-    bool isUnary;
-    VAR_TYPE type;
-    struct Quadruple* next;
-} Quadruple;
-
-typedef struct QuadrupleTable {
-    int currentNumber;
-    Quadruple* head;
-    Quadruple* tail;
-    int size;
-} QuadrupleTable;
-
 typedef struct Record {
     char name[20];
     int assigned;
@@ -92,6 +75,38 @@ typedef struct RecordList {
     int size;
 } RecordList;
 
+typedef struct Quadruple {
+    OPERATOR op;
+    bool isArg1ID;
+    bool isArg2ID;
+    VAR_TYPE arg1Type;
+    VAR_TYPE arg2Type;
+    union {
+        int arg1Num;
+        double arg1Real;
+        bool arg1Bool;
+        Record* arg1ID;
+        RecordList* inputList;
+    };
+    union {
+        int arg2Num;
+        double arg2Real;
+        bool arg2Bool;
+        Record* arg2ID;
+        RecordList* outputList;
+    };
+
+    Record* result;
+    struct Quadruple* next;
+} Quadruple;
+
+typedef struct QuadrupleTable {
+    int currentNumber;
+    Quadruple* head;
+    Quadruple* tail;
+    int size;
+} QuadrupleTable;
+
 typedef struct CaseLabel {
     char* label;
     struct CaseLabel* next;
@@ -103,7 +118,7 @@ typedef struct SymbolTableNode {
     int scopeStart;
     int scopeEnd;
     unsigned int nextOffset;
-    QuadrupleTable* quadTable;
+    // QuadrupleTable* quadTable;
     struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;
     struct SymbolTableNode* parent;
