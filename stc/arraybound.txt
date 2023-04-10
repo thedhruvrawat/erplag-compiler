@@ -3,7 +3,7 @@ takes input[list:array[-4..20] of real];
 returns [sum:real];
 start
     declare s: real;
-    list[-20] := 5.4321e-3; 
+    list[2] := 5.4321e-3; 
     s := 5.4321e-3; 
     **list := 5.4321e-3;              Error : lHS of assignment shouldn't be anything except **
     **index := 5.4321e-3;             Error : lHS of assignment shouldn't be anything except **
@@ -18,7 +18,7 @@ end
 start
     declare num, k:integer;
     declare A:array [-4..20] of real;
-    for( k in 6..10)
+    for( k in 6..25) ** ERROR -> Dynamic Check shoudl tell that A[21] is out of bounds **
     start
         A[k]:=2.3;
         print(A[k]);

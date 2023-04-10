@@ -20,10 +20,13 @@ start
         A[k]:=(num - s)*(num-s);
         print(A[k]);
         declare k_new: integer;
-        for(m in -1..2)
+        for(A in -1..2)
         start
-            get_value(k);
-            A[k] := num;
+            get_value(k); ** ERROR: Cannot store value in the iterator 'k' **
+            print(A);
+            A := k_new;
+            k := k;
+            A[k] := num; ** Should it be considered an error ** 
         end
         **[A] := use module arraysum with parameters A;**
     end

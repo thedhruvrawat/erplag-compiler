@@ -1,4 +1,4 @@
-
+** What if dependent cross F1--calls-->F2->F3->F2. Too Complicated Lite**
 declare module arraysum; ** dec of F2 **
 declare module array1sum; ** dec of F1 **
 <<<driver program>>>
