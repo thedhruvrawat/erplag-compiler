@@ -42,6 +42,7 @@ typedef struct Record {
     int assigned;
     bool iterator;
     Type type;
+    int width;
     unsigned int offset;
     struct Record* next;
 } Record;

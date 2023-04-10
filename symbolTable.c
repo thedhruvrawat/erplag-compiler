@@ -135,7 +135,7 @@ Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned in
     }
 }
 
-Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNode* dataTypeNode, unsigned int* nextOffset) {
+Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNode* dataTypeNode, unsigned int* nextOffset, bool parameterVariable) {
     char* name = idNode->leaf.tok->lexeme;
     Record* newRec = malloc(sizeof(Record));
     strcpy(newRec->name, name);
@@ -147,16 +147,19 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
     switch (dataTypeNode->leaf.tok->tok) {
         case INTEGER: {
             newRec->type.varType = INT;
+            newRec->width = SIZEOF_INT;
             *nextOffset += SIZEOF_INT;
             break;
         }
         case REAL: {
             newRec->type.varType = DOUBLE;
+            newRec->width = SIZEOF_REAL;
             *nextOffset += SIZEOF_REAL;
             break;
         }
         case BOOLEAN: {
             newRec->type.varType = BOOL;
+            newRec->width = SIZEOF_BOOL;
             *nextOffset += SIZEOF_BOOL;
             break;
         }
@@ -237,9 +240,17 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     printf(RED BOLD "[Semantic Analyser] Specified subrange for array \"%s\" are illegal. (%d > %d)\n" RESET, name, left, right);
                     return NULL;
                 }
-                *nextOffset += elementSize * (right - left + 1);
+
+                if (parameterVariable) {
+                    newRec->width = sizeof(void*) + 2 * SIZEOF_INT;
+                    *nextOffset += newRec->width;
+                } else {
+                    newRec->width = sizeof(void*)  + elementSize * (right - left + 1);
+                    *nextOffset += newRec->width;
+                }
             } else {
                 // Adding the size of pointer
+                newRec->width = sizeof(void*);
                 *nextOffset += sizeof(void*);
                 // Check whether both the dynamic bounds have been declared and are of integer type
                 if (newRec->type.array.isLeftID) {
@@ -320,7 +331,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     ASTNode* inputNode = inputList->leftMostChild;
     while (inputNode != NULL) {
         // Adding the input variable to the inputList
-        Record* newRecord = generateRecord(inputST, inputNode->leftMostChild, inputNode->rightMostChild, offset);
+        Record* newRecord = generateRecord(inputST, inputNode->leftMostChild, inputNode->rightMostChild, offset, true);
         if (newRecord == NULL) { 
             funcRecord->error = true;
             continue; 
@@ -361,7 +372,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     ASTNode* outputNode = outputList->leftMostChild;
     while (outputNode != NULL) {
         // Adding the output variable to the outputList
-        Record* newRecord = generateRecord(symbolTableNode, outputNode->leftMostChild, outputNode->rightMostChild, offset);
+        Record* newRecord = generateRecord(symbolTableNode, outputNode->leftMostChild, outputNode->rightMostChild, offset, true);
         if (newRecord == NULL) { 
             funcRecord->error = true;
             continue; 
@@ -1188,12 +1199,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     // Otherwise, check in current symbol table
                     Record* varRecord = findVariableInsertion(symbolTableNode, name, hashVal);
                     if (varRecord == NULL) {
-                        varRecord = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
+                        varRecord = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset, false);
                         symbolTableNode->hashTable[hashVal] = varRecord;
                     } else if (strcmp(varRecord->name, name) == 0) {
                         printf(RED BOLD "[Semantic Analyser] Redeclaration of variable %s at line %d\n" RESET, name, curr->leaf.tok->linenum);
                     } else {
-                        varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset);
+                        varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset, false);
                     }
                     
                     curr = curr->next;
@@ -1617,34 +1628,31 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
         while (varRecord != NULL) {
             char scope[25];
             sprintf(scope, "%d-%d", symbolTableNode->scopeStart, symbolTableNode->scopeEnd);
-            fprintf(fp, "%-25s%-25s%-25s", varRecord->name, moduleName, scope);
+            fprintf(fp, "%-25s%-25s%-25s%-7d", varRecord->name, moduleName, scope, varRecord->width);
             switch (varRecord->type.varType) {
                 case INT: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    SIZEOF_INT, 
+                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
                     "NO", 
-                    "---",
-                    "---",
+                    "**",
+                    "**",
                     "INTEGER"
                     );
                     break;
                 }
                 case DOUBLE: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    SIZEOF_REAL, 
+                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
                     "NO", 
-                    "---",
-                    "---",
+                    "**",
+                    "**",
                     "REAL"
                     );
                     break;
                 }
                 case BOOL: {
-                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    SIZEOF_BOOL, 
+                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
                     "NO", 
-                    "---",
-                    "---",
+                    "**",
+                    "**",
                     "BOOLEAN"
                     );
                     break;
@@ -1708,32 +1716,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         }
                     }
 
-                    unsigned long width = 8;
-                    // Calculate size in case of static array
-                    if (isStatic) {
-                        int left = varRecord->type.array.left;
-                        int right = varRecord->type.array.right;
-                        if (varRecord->type.array.leftNegative) {
-                            left = -left;
-                        }
-                        if (varRecord->type.array.rightNegative) {
-                            right = -right;
-                        }
-
-                        unsigned long typeSize = 0;
-                        if (varRecord->type.array.arrType == INT) {
-                            typeSize = SIZEOF_INT;
-                        } else if (varRecord->type.array.arrType == DOUBLE) {
-                            typeSize = SIZEOF_REAL;
-                        } else if (varRecord->type.array.arrType == BOOL) {
-                            typeSize = SIZEOF_BOOL;
-                        }
-
-                        width = (right - left + 1) * typeSize;
-                    }
-
-                    fprintf(fp, "%-7ld%-10s%-20s%-50s%-20s", 
-                    width, 
+                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
                     "YES", 
                     (isStatic ? "Static" : "Dynamic"),
                     range,

@@ -1093,6 +1093,7 @@ void prettyPrintAST(void) {
     }
 
     printf("Number of nodes in AST: %d\n", tree->size);
+    printf("Memory Allocated for AST: %d bytes\n", tree->size * sizeof(ASTNode));
 
     return;
 }
@@ -1108,6 +1109,10 @@ void ASTCreator(ParseTree* parseTree) {
     // printAST(tree->root, false);
     prettyPrintAST();
     printf("Number of nodes in Parse Tree: %d\n", pt->sz);
-    printf("Compression Ratio: %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);
+    int ASTMemSize = tree->size * sizeof(ASTNode);
+    int ParseTreeMemSize = pt->sz * sizeof(ParseTreeNode);
+    printf("Memory Allocated for Parse Tree: %d bytes\n", ParseTreeMemSize);
+    printf("Compression Ratio (Count): %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);
+    printf("Compression Ratio (Memory): %.2lf%%\n", (1 - ((double) ASTMemSize) / ParseTreeMemSize) * 100);
     return;
 }
