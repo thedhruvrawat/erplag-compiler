@@ -221,7 +221,6 @@ int main(int argc, char* argv[])
             ASTCreator(pt);
             generateSymbolTable(tree);
             printSymbolTable("symbolTable.txt");
-            printQuadrupleTable();
             break;
         }
         default: {

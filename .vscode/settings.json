@@ -12,7 +12,8 @@
         "symboltabledef.h": "c",
         "ratio": "c",
         "lexerdef.h": "c",
-        "stdbool.h": "c"
+        "stdbool.h": "c",
+        "symboltable.h": "c"
     },
     "makefile.launchConfigurations": [
         {

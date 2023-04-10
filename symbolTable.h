@@ -20,6 +20,8 @@ void popSymbolTableStack(SymbolTableStack* st);
 SymbolTableStack* initSymbolTableStack(void);
 Record* generateRecord(ASTNode* idNode, ASTNode* dataTypeNode, int* nextOffset);
 GlobalRecord* findFunction(char* name, unsigned int hashVal);
+Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal);
+GlobalRecord* moduleExists(char* name, unsigned int hashVal);
 Record* findVariableInsertion(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal);
 void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList);
 void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement);

@@ -11,7 +11,7 @@ Group Number : 2
 #include <string.h>
 #include <ctype.h>
 #include "codegen.h"
-#include "symbolTable.h"
+#include "intermedCodeGen.h"
 
 int labelCount = 0;
 
@@ -127,7 +127,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 break;
             }
-            case ASSIGN_QOP: {
+            case ASSIGN_VAR_OP: {
                 if(currQuad->arg1Type == REAL && currQuad->arg2Type == REAL) {
                     insertAssignmentOperation(codefile, currQuad, 'F');
                 } else if(currQuad->arg1Type == INTEGER && currQuad->arg2Type == INTEGER){
