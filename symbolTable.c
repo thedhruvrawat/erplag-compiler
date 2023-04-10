@@ -1230,13 +1230,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
                 }
 
+                int scopeStart = statement->scopeStart;
                 int scopeEnd = statement->scopeEnd;
                 switch (switchType) {
                     case INT: {
                         // Checking if default statement exists
                         ASTNode* defaultCase = statement->rightMostChild;
                         if (statement->rightMostChild->leaf.tok->tok != DEFAULT) {
-                            printf(RED BOLD "[Semantic Analyser] Line %d: Default statement required for switch statement of type INTEGER\n" RESET, scopeEnd);
+                            printf(RED BOLD "[Semantic Analyser] Line %d: Default statement required for the switch statement from line %d to line %d of type INTEGER\n" RESET, scopeEnd, scopeStart, scopeEnd);
                             defaultCase = NULL;
                         }
 
@@ -1481,7 +1482,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 }
 
                 if (!changed && exprIDList->size > 0) {
-                    printf(RED BOLD "[Semantic Analyser] Line %d: No variable in while loop expression is changing.\n" RESET, statement->scopeEnd);
+                    printf(RED BOLD "[Semantic Analyser] Line %d: No variable in the conditional expression for while loop from line %d to line %d is changing.\n" RESET, statement->scopeEnd, statement->scopeStart, statement->scopeEnd);
                 }
                 break;
             }
