@@ -1101,7 +1101,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         if (outputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
                         } else if (outputType == ARR && isMinus) {
-                            printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array.\n" RESET, curr->leaf.tok->linenum, outputNode->name);
+                            printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array %s.\n" RESET, curr->leaf.tok->linenum, outputNode->name);
                         } else {
                             // Check if the array types match
                             VAR_TYPE arrayType = outputNode->type.array.arrType; 
