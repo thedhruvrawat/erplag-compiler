@@ -260,6 +260,10 @@ void createAST(void) {
             if (isUsefulTerminal(stackNode)) {
                 ASTNode* leafNode = createASTNode(token_types[stackNode->parseTreeNode->tokenID], stackNode->parseTreeNode);
                 appendASTNodeAsChild(leafNode, stackNode->parent);
+            } else if (stackNode->parseTreeNode->tokenID == START) {
+                stackNode->parent->scopeStart = stackNode->parseTreeNode->leaf.tok->linenum;
+            } else if (stackNode->parseTreeNode->tokenID == END) {
+                stackNode->parent->scopeEnd = stackNode->parseTreeNode->leaf.tok->linenum;
             }
         } else {
             switch (stackNode->parseTreeNode->productionID) {

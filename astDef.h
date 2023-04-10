@@ -30,6 +30,9 @@ typedef struct ASTNode {
     struct ASTNode* next;
     struct ASTNode* prev;
     int numChildren;
+
+    int scopeStart;
+    int scopeEnd;
 } ASTNode;
 
 typedef struct AST {

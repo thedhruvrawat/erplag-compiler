@@ -1408,6 +1408,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 // Statements inside the for loop
                 populateSymbolTable(currChild, statement->leftMostChild->next->next, level + 1);
                 lastLineNum = currChild->scopeEnd;
+
+                // Setting the scope fetched earlier from the AST
+                currChild->scopeStart = statement->scopeStart;
+                currChild->scopeEnd = statement->scopeEnd;
                 break;
             }
             case 'W': { // WHILE
@@ -1449,6 +1453,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 // Statements inside the while loop
                 populateSymbolTable(currChild, statement->leftMostChild->next, level + 1);
                 lastLineNum = currChild->scopeEnd;
+
+                // Setting the scope fetched earlier from the AST
+                currChild->scopeStart = statement->scopeStart;
+                currChild->scopeEnd = statement->scopeEnd;
 
                 // Checking whether any of the variables in the expression are changing or not
                 curr = exprIDList->head;
@@ -1519,9 +1527,13 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     populateSymbolTable(funcRecord->funcST, statementsNode, 1);
     funcRecord->called = false;
 
-    // Setting the scope of the output variables
-    funcRecord->outputST->scopeStart = funcRecord->funcST->scopeStart;
-    funcRecord->outputST->scopeEnd = funcRecord->funcST->scopeEnd;
+    // Setting the scope fetched earlier from the AST
+    funcRecord->funcST->scopeStart = moduleNode->rightMostChild->scopeStart;
+    funcRecord->funcST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
+    funcRecord->inputST->scopeStart = moduleNode->rightMostChild->scopeStart;
+    funcRecord->inputST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
+    funcRecord->outputST->scopeStart = moduleNode->rightMostChild->scopeStart;
+    funcRecord->outputST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
 
     // Check if all the output variables have been assigned some value or not
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
