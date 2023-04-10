@@ -1537,7 +1537,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     }
 
     funcRecord->called = true;
-    populateSymbolTable(funcRecord->funcST, statementsNode, 1);
+    populateSymbolTable(funcRecord->funcST, statementsNode, 2);
     funcRecord->called = false;
 
     // Setting the scope fetched earlier from the AST
