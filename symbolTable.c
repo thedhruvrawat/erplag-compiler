@@ -238,6 +238,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
 
                 if (left > right) {
                     printf(RED BOLD "[Semantic Analyser] Specified subrange for array \"%s\" are illegal. (%d > %d)\n" RESET, name, left, right);
+                    SEMANTIC_ERROR = true;
                     return NULL;
                 }
 
@@ -258,8 +259,10 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     Record* leftRec = variableExists(symbolTableNode, leftID, hash(leftID));
                     if (leftRec == NULL) {
                         printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not declared.\n" RESET, name);
+                        SEMANTIC_ERROR = true;
                     } else if (leftRec->type.varType != INT) {
                         printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not of type integer.\n" RESET, name);
+                        SEMANTIC_ERROR = true;
                     }
                 }
 
@@ -268,8 +271,10 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     Record* rightRec = variableExists(symbolTableNode, rightID, hash(rightID));
                     if (rightRec == NULL) {
                         printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not declared.\n" RESET, name);
+                       SEMANTIC_ERROR = true;
                     } else if (rightRec->type.varType != INT) {
                         printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not of type integer.\n" RESET, name);
+                        SEMANTIC_ERROR = true;
                     }
                 }
             }
@@ -352,6 +357,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
             inputST->hashTable[hashVal] = varRecord;
         } else if (strcmp(varRecord->name, name) == 0) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of variable %s in input list of module %s\n" RESET, linenum, name, funcRecord->name);
+            SEMANTIC_ERROR = true;
         } else {
             varRecord->next = malloc(sizeof(Record));
             varRecord = varRecord->next;
@@ -390,6 +396,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         Record* varRecord = variableExists(funcRecord->funcST, name, hashVal);
         if (varRecord != NULL) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of variable %s in output list of module %s\n" RESET, outputNode->leftMostChild->leaf.tok->linenum, name, funcRecord->name);
+            SEMANTIC_ERROR = true;
             outputNode = outputNode->next;
             continue;
         }
@@ -403,6 +410,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
             outputST->hashTable[hashVal] = varRecord;
         } else if (strcmp(varRecord->name, name) == 0) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of variable %s in output list of module %s\n" RESET, linenum, name, funcRecord->name);
+            SEMANTIC_ERROR = true;
         } else {
             varRecord->next = malloc(sizeof(Record));
             varRecord = varRecord->next;
@@ -429,6 +437,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             // Unary operations are not allowed on arrays
             if (rhsType == ARR) {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Unary operations are not allowed on arrays\n" RESET, exprNode->rightMostChild->leaf.tok->linenum);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             } else {
                 return rhsType;
@@ -445,6 +454,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         Record* varRecord = variableExists(symbolTableNode, name, hashVal);
         if (varRecord == NULL) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s.\n" RESET, exprNode->leftMostChild->leaf.tok->linenum, name);
+            SEMANTIC_ERROR = true;
             return ERROR;
         }
 
@@ -453,6 +463,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
         if (indexType != INT) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Array index must be of type INTEGER.\n" RESET, exprNode->leftMostChild->leaf.tok->linenum);
+            SEMANTIC_ERROR = true;
             return ERROR;
         }
 
@@ -475,6 +486,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
 
                 if (index < left || index > right) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Array index out of bounds.\n" RESET, indexNode->rightMostChild->leaf.tok->linenum);
+                    SEMANTIC_ERROR = true;
                 }
             }
         }
@@ -498,6 +510,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 return ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             }
             break;
@@ -512,6 +525,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 return ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for DIV.\n" RESET, exprNode->leaf.tok->linenum);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             }
             break;
@@ -528,6 +542,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 return ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             }
             break;
@@ -550,6 +565,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 return ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET,exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             }
             break;
@@ -573,6 +589,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             Record* varRecord = variableExists(symbolTableNode, name, hashVal);
             if (varRecord == NULL) {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, exprNode->leaf.tok->linenum, name);
+                SEMANTIC_ERROR = true;
                 return ERROR;
             } else {
                 return varRecord->type.varType;
@@ -677,9 +694,11 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                     break;
                 } else if (varRecord->iterator) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Cannot get value of iterator %s \n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                     break;
                 }
 
@@ -700,6 +719,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                     if (varRecord == NULL) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, printNode->leaf.tok->linenum, name);
+                        SEMANTIC_ERROR = true;
                     }
 
                     if (printNode->next == NULL) { break; }
@@ -708,6 +728,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     ASTNode* indexNode = printNode->next;
                     if (varRecord->type.varType != ARR) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Variable %s is not an array\n" RESET, printNode->leaf.tok->linenum, name);
+                        SEMANTIC_ERROR = true;
                     } else {
                         // If array is static, check if the index is within bounds
                         if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID && strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
@@ -728,6 +749,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             }
                             if (index < left || index > right) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Index %d out of bounds for array %s\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
+                                SEMANTIC_ERROR = true;
                             }
                         } else if (strcmp(indexNode->rightMostChild->label, "ID") == 0) {
                             // Checking for existence of the index variable and the type
@@ -735,8 +757,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
                             if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, indexNode->rightMostChild->leaf.tok->linenum, indexName);
+                                SEMANTIC_ERROR = true;
                             } else if (indexRecord->type.varType != INTEGER) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Index %s is not an integer\n" RESET, indexNode->leaf.tok->linenum, indexName);
+                                SEMANTIC_ERROR = true;
                             }
                         }
                     }
@@ -763,6 +787,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                     break;
                 } else {
                     idType = varRecord->type.varType;
@@ -770,10 +795,12 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (arrayAccess && idType != ARR) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Variable %s is not an array\n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                 }
 
                 if (varRecord->iterator) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Cannot assign to iterator %s\n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                 }
 
                 switch (idType) {
@@ -782,6 +809,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != INTEGER && rhsType != ERROR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected INTEGER type on the RHS.\n" RESET, idNode->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         }
                         break;
                     }
@@ -790,6 +818,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != DOUBLE && rhsType != ERROR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected REAL type on the RHS.\n" RESET, idNode->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         }
                         break;
                     }
@@ -798,6 +827,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                         if (rhsType != BOOLEAN && rhsType != ERROR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected BOOLEAN type on the RHS.\n" RESET, idNode->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         }
                         break;
                     }
@@ -813,6 +843,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                             if (rhsType != arrayType && rhsType != ERROR) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected %s on the RHS.\n" RESET, idNode->leaf.tok->linenum, typeStrings[arrayType]);
+                                SEMANTIC_ERROR = true;
                             }
 
                             // Check if the index is within bounds
@@ -820,6 +851,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
                             if (indexType != INTEGER && indexType != ERROR) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Index is not an integer\n" RESET, indexNode->leaf.tok->linenum);
+                                SEMANTIC_ERROR = true;
                             } else if (indexType == INTEGER) {
                                 if (strcmp(indexNode->rightMostChild->label, "NUM") != 0) {
                                     break;
@@ -846,6 +878,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                                 if (index < left || index > right) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Index %d out of bounds for array %s\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
+                                    SEMANTIC_ERROR = true;
                                 }
                             }
                         } else {
@@ -853,6 +886,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             VAR_TYPE rhsType = typeExtractor(statement->rightMostChild, symbolTableNode);
                             if (rhsType != ARR && rhsType != ERROR) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type on the RHS.\n" RESET, idNode->leaf.tok->linenum);
+                                SEMANTIC_ERROR = true;
                                 break;
                             } else if (rhsType == ERROR) {
                                 break;
@@ -890,6 +924,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                                 if (sizeLHS != sizeRHS) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Array sizes do not match.\n" RESET, idNode->leaf.tok->linenum);
+                                    SEMANTIC_ERROR = true;
                                 }
                             }
                         }
@@ -922,22 +957,26 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 GlobalRecord* moduleRecord = moduleExists(moduleName, hash(moduleName));
                 if (moduleRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined module %s\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                    SEMANTIC_ERROR = true;
                     break;
                 }
 
                 if (moduleRecord->error) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Erroneous Module %s called\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                    SEMANTIC_ERROR = true;
                     break;
                 }
 
                 // Check if the module has been declared or defined
                 if (!moduleRecord->declared && !moduleRecord->defined) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Module %s has not been declared or defined yet.\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                    SEMANTIC_ERROR = true;
                 }
 
                 // Check for recursion
                 if (moduleRecord->called) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Recursion is not permitted.\n" RESET, moduleNode->leaf.tok->linenum);
+                    SEMANTIC_ERROR = true;
                     break;
                 }
 
@@ -946,6 +985,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 if (moduleRecord->checkedRedundancy == false) {
                     if (moduleRecord->declared && moduleRecord->defined) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Redundant declaration of module %s.\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                        SEMANTIC_ERROR = true;
                     }
                     moduleRecord->checkedRedundancy = true;
                 }
@@ -965,6 +1005,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     // Check if there are too many input parameters
                     if (inputNode == NULL && !errorPrinted) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Too many input parameters for module %s\n" RESET, curr->leaf.tok->linenum, moduleName);
+                        SEMANTIC_ERROR = true;
                         errorPrinted = true;;
                     }
 
@@ -982,6 +1023,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         varRecord = variableExists(symbolTableNode, name, hash(name));
                         if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s" RESET, curr->leaf.tok->linenum, name);
+                            SEMANTIC_ERROR = true;
                             if (isMinus) {
                                 curr = curr->parent;
                             }
@@ -998,8 +1040,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     if (inputNode != NULL && inputNode->type.varType == ARR) {
                         if (inputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         } else if (inputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array %s.\n" RESET, curr->leaf.tok->linenum, inputNode->name);
+                            SEMANTIC_ERROR = true;
                         } else {
                             // Check if the array types match
                             VAR_TYPE arrayType = inputNode->type.array.arrType; 
@@ -1007,6 +1051,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                             if (arrayType != inputArrayType) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Array type mismatch. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
+                                SEMANTIC_ERROR = true;
                             }
                             
                             // Check if the array dimensions match if both are static
@@ -1038,11 +1083,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                                 if (inputNodeSize != varRecordSize) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, inputNodeLeft, inputNodeRight);
+                                    SEMANTIC_ERROR = true;
                                 }
                             }
                         }
                     } else if (inputNode != NULL && inputType != inputNode->type.varType && inputType != ERROR) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[inputNode->type.varType]);
+                        SEMANTIC_ERROR = true;
                     }
 
                     if (isMinus) {
@@ -1056,6 +1103,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (inputNode != NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Too few input parameters for module %s\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                    SEMANTIC_ERROR = true;
                 }
 
                 // Check if the output parameters match
@@ -1066,6 +1114,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     // Check if there are any more output parameters expected
                     if (outputNode == NULL && !errorPrinted) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Too many output parameters for module %s\n" RESET, curr->leaf.tok->linenum, moduleName);
+                        SEMANTIC_ERROR = true;
                         errorPrinted = true;
                     }
 
@@ -1083,6 +1132,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         varRecord = variableExists(symbolTableNode, name, hash(name));
                         if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, curr->leaf.tok->linenum, name);
+                            SEMANTIC_ERROR = true;
                             if (isMinus) {
                                 curr = curr->parent;
                             }
@@ -1093,6 +1143,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             continue;
                         } else if (varRecord->iterator) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Iterator variable %s cannot be used as output parameter\n" RESET, curr->leaf.tok->linenum, name);
+                            SEMANTIC_ERROR = true;
                             if (isMinus) {
                                 curr = curr->parent;
                             }
@@ -1111,8 +1162,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     if (outputNode != NULL && outputNode->type.varType == ARR) {
                         if (outputType != ARR) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         } else if (outputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array %s.\n" RESET, curr->leaf.tok->linenum, outputNode->name);
+                            SEMANTIC_ERROR = true;
                         } else {
                             // Check if the array types match
                             VAR_TYPE arrayType = outputNode->type.array.arrType; 
@@ -1120,6 +1173,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                             if (arrayType != outputArrayType) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Array type mismatch. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
+                                SEMANTIC_ERROR = true;
                             }
                             
                             // Check if the array dimensions match if both are static
@@ -1151,11 +1205,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                                 if (outputNodeSize != varRecordSize) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, outputNodeLeft, outputNodeRight);
+                                    SEMANTIC_ERROR = true;
                                 }
                             }
                         }
                     } else if (outputNode != NULL && outputType != outputNode->type.varType && outputType != ERROR) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[outputNode->type.varType]);
+                        SEMANTIC_ERROR = true;
                     }
 
                     if (isMinus) {
@@ -1169,6 +1225,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (outputNode != NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Too few output parameters for module %s\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
+                    SEMANTIC_ERROR = true;
                 }
 
                 break;
@@ -1192,6 +1249,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     // In outputList
                     if (variableExists(symbolTableNode->funcOutputST, name, hashVal) != NULL) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of output variable %s\n" RESET, curr->leaf.tok->linenum, name);
+                        SEMANTIC_ERROR = true;
                         curr = curr->next;
                         continue;
                     }
@@ -1203,6 +1261,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         symbolTableNode->hashTable[hashVal] = varRecord;
                     } else if (strcmp(varRecord->name, name) == 0) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of variable %s\n" RESET, curr->leaf.tok->linenum, name);
+                        SEMANTIC_ERROR = true;
                     } else {
                         varRecord->next = generateRecord(symbolTableNode, curr, dataTypeNode, &symbolTableNode->nextOffset, false);
                     }
@@ -1228,6 +1287,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     switchType = varRecord->type.varType;
                 } else {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
+                    SEMANTIC_ERROR = true;
                 }
 
                 int scopeStart = statement->scopeStart;
@@ -1238,6 +1298,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         ASTNode* defaultCase = statement->rightMostChild;
                         if (statement->rightMostChild->leaf.tok->tok != DEFAULT) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Default statement required for the switch statement from line %d to line %d of type INTEGER\n" RESET, scopeEnd, scopeStart, scopeEnd);
+                            SEMANTIC_ERROR = true;
                             defaultCase = NULL;
                         }
 
@@ -1250,6 +1311,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             // Checking if the case statement is of type INTEGER
                             if (caseStatements != defaultCase && caseStatements->leftMostChild->leaf.tok->tok != NUM) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Case label not of type INTEGER \n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                SEMANTIC_ERROR = true;
                             }
 
                             // Checking if the case label is unique
@@ -1266,6 +1328,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                                     while (caseLabelRecord != NULL) {
                                         if (strcmp(caseLabelRecord->label, caseLabel) == 0) {
                                             printf(RED BOLD "[Semantic Analyser] Line %d: Duplicate case label %s.\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum, caseLabel);
+                                            SEMANTIC_ERROR = true;
                                             break;
                                         }
                                         prev = caseLabelRecord;
@@ -1297,6 +1360,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     }
                     case DOUBLE: {
                         printf(RED BOLD "[Semantic Analyser] Line %d: REAL type identifier not allowed in switch statement \n" RESET, idNode->leaf.tok->linenum);
+                        SEMANTIC_ERROR = true;
                         break;
                     }
                     case BOOL: {
@@ -1304,6 +1368,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         ASTNode* defaultStatement = NULL;
                         if (statement->rightMostChild->leaf.tok->tok == DEFAULT) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Default statement not allowed in switch statement of type BOOLEAN\n" RESET, statement->rightMostChild->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                             defaultStatement = statement->rightMostChild;
                         }
 
@@ -1316,17 +1381,20 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             // Checking if the case statement is of type BOOLEAN
                             if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok != TRUE && caseStatements->leftMostChild->leaf.tok->tok != FALSE) {
                                 printf(RED BOLD "[Semantic Analyser] Line %d: Case label not of type BOOLEAN \n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                SEMANTIC_ERROR = true;
                             }
 
                             if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok == TRUE) {
                                 if (trueDone) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Duplicate case label for TRUE \n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                    SEMANTIC_ERROR = true;
                                 } else {
                                     trueDone = true;
                                 }
                             } else if (caseStatements != defaultStatement && caseStatements->leftMostChild->leaf.tok->tok == FALSE) {
                                 if (falseDone) {
                                     printf(RED BOLD "[Semantic Analyser] Line %d: Duplicate case label for FALSE\n" RESET, caseStatements->leftMostChild->leaf.tok->linenum);
+                                    SEMANTIC_ERROR = true;
                                 } else {
                                     falseDone = true;
                                 }
@@ -1351,14 +1419,17 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                         if (!trueDone) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Missing case label for TRUE .\n" RESET, statement->rightMostChild->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         }
                         if (!falseDone) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Missing case label for FALSE.\n" RESET, statement->rightMostChild->leaf.tok->linenum);
+                            SEMANTIC_ERROR = true;
                         }
                         break;
                     }
                     case ARR: {
                         printf(RED BOLD "[Semantic Analyser] Line %d: ARRAY type identifier not allowed in switch statement\n" RESET, idNode->leaf.tok->linenum);
+                        SEMANTIC_ERROR = true;
                         break;
                     }
                     default: {
@@ -1417,6 +1488,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (left > right) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Invalid Bounds in FOR loop.\n" RESET, idNode->leaf.tok->linenum);
+                    SEMANTIC_ERROR = true;
                 }
 
                 // Statements inside the for loop
@@ -1448,6 +1520,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (exprType != BOOL && exprType != ERROR) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Expression in while loop not of type BOOLEAN\n" RESET, exprNode->leaf.tok->linenum);
+                    SEMANTIC_ERROR = true;
                 }
 
                 // For checking whether any of the variables in the expression are changing or not
@@ -1484,6 +1557,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 if (!changed && exprIDList->size > 0) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: No variable in the conditional expression for while loop from line %d to line %d is changing.\n" RESET, statement->scopeEnd, statement->scopeStart, statement->scopeEnd);
+                    SEMANTIC_ERROR = true;
                 }
                 break;
             }
@@ -1504,11 +1578,13 @@ void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
 
     if (funcRecord == NULL) {
         printf(RED BOLD "[Semantic Analyser] Module %s declared but never defined\n" RESET, name);
+        SEMANTIC_ERROR = true;
         return;
     }
 
     if (funcRecord->declared) {
         printf(RED BOLD "[Semantic Analyser] Line %d: Module %s redeclared\n" RESET, moduleDeclarationNode->leftMostChild->leaf.tok->linenum, name);
+        SEMANTIC_ERROR = true;
         return;
     } else {
         funcRecord->declared = true;
@@ -1535,6 +1611,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     if (funcRecord->declared && !funcRecord->checkedRedundancy) {
         funcRecord->checkedRedundancy = true;
         printf(RED BOLD "[Semantic Analyser] Line %d: Redundant declaration of module %s.\n" RESET, moduleNode->leftMostChild->leaf.tok->linenum, name);
+        SEMANTIC_ERROR = true;
     }
 
     funcRecord->called = true;
@@ -1556,6 +1633,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         while (varRecord != NULL) {
             if (varRecord->assigned == 0) {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Output variable %s not assigned a value before return from module %s \n" RESET, funcRecord->funcST->scopeEnd, varRecord->name, name);
+                SEMANTIC_ERROR = true;
             }
             varRecord = varRecord->next;
         }
@@ -1579,6 +1657,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
         funcRecord = findFunction(name, hashVal);
         if (strcmp(funcRecord->name, name) == 0) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Overloading of module %s .\n" RESET, moduleSignatureNode->leftMostChild->leaf.tok->linenum, name);
+            SEMANTIC_ERROR = true;
             return;
         } else {
             funcRecord->next = malloc(sizeof(GlobalRecord));
@@ -1809,6 +1888,7 @@ void generateSymbolTable(AST* ast) {
         while (funcRecord != NULL) {
             if (funcRecord->defined == false) {
                 printf(RED BOLD "[Semantic Analyser] Module %s declared but not defined.\n" RESET, funcRecord->name);
+                SEMANTIC_ERROR = true;
             }
             funcRecord = funcRecord->next;
         }
