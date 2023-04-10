@@ -37,6 +37,8 @@ SymbolTableNode* initSymbolTableNode(void) {
     newNode->scopeStart = 0;
     newNode->scopeEnd = 0;
     newNode->nextOffset = 0;
+    newNode->nestingLevel = 0;
+    newNode->funcInputST = NULL;
     newNode->funcOutputST = NULL;
     newNode->next = NULL;
     newNode->parent = NULL;
@@ -223,7 +225,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                 newRec->type.array.right = rightIDNum->leaf.tok->num;
             }
 
-            // The static flag of the ast node itself (required during code generation (maybe))
+            // The static flag of the ast node itself (required d6433b4dcdee72uring code generation (maybe))
             bool isStatic = !(newRec->type.array.isLeftID || newRec->type.array.isRightID);
 
             // Calculating next offset
@@ -307,6 +309,8 @@ Record* findVariableInsertion(SymbolTableNode* symbolTableNode, char* name, unsi
 void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList) {
     unsigned int* offset = &funcRecord->funcST->nextOffset;
     SymbolTableNode* symbolTableNode = funcRecord->funcST;
+    SymbolTableNode* inputST = funcRecord->inputST;
+    SymbolTableNode* outputST = funcRecord->outputST;
 
     // Creating the inputList
     int inputListSize = 0;
@@ -316,7 +320,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
     ASTNode* inputNode = inputList->leftMostChild;
     while (inputNode != NULL) {
         // Adding the input variable to the inputList
-        Record* newRecord = generateRecord(symbolTableNode, inputNode->leftMostChild, inputNode->rightMostChild, offset);
+        Record* newRecord = generateRecord(inputST, inputNode->leftMostChild, inputNode->rightMostChild, offset);
         if (newRecord == NULL) { 
             funcRecord->error = true;
             continue; 
@@ -328,13 +332,13 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         // Adding the input variable to the symbolTableNode
         char* name = newRecord->name;
         unsigned int hashVal = hash(name);
-        Record* varRecord = findVariableInsertion(symbolTableNode, name, hashVal);
+        Record* varRecord = findVariableInsertion(inputST, name, hashVal);
         int linenum = inputNode->leftMostChild->leaf.tok->linenum;
         if (varRecord == NULL) {
             varRecord = malloc(sizeof(Record));
             memcpy(varRecord, newRecord, sizeof(Record));
             varRecord->next = NULL;
-            symbolTableNode->hashTable[hashVal] = varRecord;
+            inputST->hashTable[hashVal] = varRecord;
         } else if (strcmp(varRecord->name, name) == 0) {
             printf(RED BOLD "[Semantic Analyser] Redeclaration of variable %s in input list of module %s at line %d\n" RESET, name, funcRecord->name, linenum);
         } else {
@@ -428,6 +432,9 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         char* name = exprNode->leftMostChild->leaf.tok->lexeme;
         unsigned int hashVal = hash(name);
         Record* varRecord = variableExists(symbolTableNode, name, hashVal);
+        if (varRecord == NULL) {
+            varRecord = variableExists(symbolTableNode->funcInputST, name, hashVal);
+        }
         if (varRecord == NULL) {
             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d.\n" RESET, name, exprNode->leftMostChild->leaf.tok->linenum);
             return ERROR;
@@ -557,6 +564,9 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             unsigned int hashVal = hash(name);
             Record* varRecord = variableExists(symbolTableNode, name, hashVal);
             if (varRecord == NULL) {
+                varRecord = variableExists(symbolTableNode->funcInputST, name, hashVal);
+            }
+            if (varRecord == NULL) {
                 printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, exprNode->leaf.tok->linenum);
                 return ERROR;
             } else {
@@ -630,7 +640,7 @@ RecordList* createWhileExprIDList(ASTNode* exprNode, SymbolTableNode* symbolTabl
     return recordList;
 }
 
-void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
+void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, int level) {
     /*
         Types of statements possible:
         1. GET_VALUE                    Use
@@ -661,6 +671,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 // Check if variable exists
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
+                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                }
+                if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                     break;
                 } else if (varRecord->iterator) {
@@ -683,6 +696,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 if (strcmp(printNode->label, "ID") == 0) { // ID
                     char* name = printNode->leaf.tok->lexeme;
                     Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                    if (varRecord == NULL) {
+                        varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                    }
                     if (varRecord == NULL) {
                         printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, printNode->leaf.tok->linenum);
                     }
@@ -718,6 +734,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             // Checking for existence of the index variable and the type
                             char* indexName = indexNode->rightMostChild->leaf.tok->lexeme;
                             Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
+                            if (indexRecord == NULL) {
+                                indexRecord = variableExists(symbolTableNode->funcInputST, indexName, hash(indexName));
+                            }
                             if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
                                 printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, indexName, indexNode->rightMostChild->leaf.tok->linenum);
                             } else if (indexRecord->type.varType != INTEGER) {
@@ -746,6 +765,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 VAR_TYPE idType;
                 char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+                if (varRecord == NULL) {
+                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                }
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                     break;
@@ -966,6 +988,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
                         if (varRecord == NULL) {
+                            varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                        }
+                        if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, curr->leaf.tok->linenum);
                             if (isMinus) {
                                 curr = curr->parent;
@@ -1066,6 +1091,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                     if (strcmp(curr->label, "ID") == 0) {
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
+                        if (varRecord == NULL) {
+                            varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                        }
                         if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, curr->leaf.tok->linenum);
                             if (isMinus) {
@@ -1210,6 +1238,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord != NULL) {
+                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
+                }
+                if (varRecord != NULL) {
                     switchType = varRecord->type.varType;
                 } else {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
@@ -1263,13 +1294,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             // Populating the symbol table for the statements in the case
                             currChild->next = initSymbolTableNode();
                             currChild = currChild->next;
+                            currChild->nestingLevel = level;
                             currChild->nextOffset = symbolTableNode->nextOffset;
                             currChild->parent = symbolTableNode;
                             currChild->funcOutputST = symbolTableNode->funcOutputST;
                             if (caseStatements == defaultCase) {
-                                populateSymbolTable(currChild, caseStatements->leftMostChild);
+                                populateSymbolTable(currChild, caseStatements->leftMostChild, level + 1);
                             } else {
-                                populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                                populateSymbolTable(currChild, caseStatements->leftMostChild->next, level + 1);
                             }
 
                             lastLineNum = currChild->scopeEnd;
@@ -1317,13 +1349,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                             // Populating the symbol table for the statements in the case
                             currChild->next = initSymbolTableNode();
                             currChild = currChild->next;
+                            currChild->nestingLevel = level;
                             currChild->nextOffset = symbolTableNode->nextOffset;
                             currChild->parent = symbolTableNode;
                             currChild->funcOutputST = symbolTableNode->funcOutputST;
                             if (caseStatements == defaultStatement) {
-                                populateSymbolTable(currChild, caseStatements->leftMostChild);
+                                populateSymbolTable(currChild, caseStatements->leftMostChild, level + 1);
                             } else {
-                                populateSymbolTable(currChild, caseStatements->leftMostChild->next);
+                                populateSymbolTable(currChild, caseStatements->leftMostChild->next, level + 1);
                             }
 
                             lastLineNum = currChild->scopeEnd;
@@ -1353,6 +1386,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
             case 'F': { // FOR
                 currChild->next = initSymbolTableNode();
                 currChild = currChild->next;
+                currChild->nestingLevel = level;
                 currChild->nextOffset = symbolTableNode->nextOffset;
                 currChild->parent = symbolTableNode;
                 currChild->funcOutputST = symbolTableNode->funcOutputST;
@@ -1399,13 +1433,14 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 }
 
                 // Statements inside the for loop
-                populateSymbolTable(currChild, statement->leftMostChild->next->next);
+                populateSymbolTable(currChild, statement->leftMostChild->next->next, level + 1);
                 lastLineNum = currChild->scopeEnd;
                 break;
             }
             case 'W': { // WHILE
                 currChild->next = initSymbolTableNode();
                 currChild = currChild->next;
+                currChild->nestingLevel = level;
                 currChild->nextOffset = symbolTableNode->nextOffset;
                 currChild->parent = symbolTableNode;
                 currChild->funcOutputST = symbolTableNode->funcOutputST;
@@ -1439,7 +1474,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement) {
                 }
 
                 // Statements inside the while loop
-                populateSymbolTable(currChild, statement->leftMostChild->next);
+                populateSymbolTable(currChild, statement->leftMostChild->next, level + 1);
                 lastLineNum = currChild->scopeEnd;
 
                 // Checking whether any of the variables in the expression are changing or not
@@ -1508,7 +1543,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     }
 
     funcRecord->called = true;
-    populateSymbolTable(funcRecord->funcST, statementsNode);
+    populateSymbolTable(funcRecord->funcST, statementsNode, 1);
     funcRecord->called = false;
 
     // Setting the scope of the output variables
@@ -1563,6 +1598,9 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     funcRecord->driver = driver;
     funcRecord->error = false;
     funcRecord->funcST = initSymbolTableNode();
+    funcRecord->funcST->nestingLevel = 1;
+    funcRecord->inputST = initSymbolTableNode();
+    funcRecord->funcST->funcInputST = funcRecord->inputST;
     funcRecord->outputST = initSymbolTableNode();
     funcRecord->funcST->funcOutputST = funcRecord->outputST;
     funcRecord->inputList = NULL;
@@ -1579,10 +1617,12 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     return;
 }
 
-void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FILE* fp, int level) {
+void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FILE* fp) {
     if (symbolTableNode == NULL) {
         return;
     }
+
+    int level = symbolTableNode->nestingLevel;
     
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
         if (symbolTableNode->hashTable[i] == NULL) { continue; }
@@ -1731,7 +1771,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
     SymbolTableNode* child = symbolTableNode->children;
     while (child != NULL) {
-        printSymbolTableRec(child, moduleName, fp, level + 1);
+        printSymbolTableRec(child, moduleName, fp);
         child = child->next;
     }
 
@@ -1755,8 +1795,9 @@ void printSymbolTable(char* filename) {
         if (symbolTable->global[i] == NULL) { continue; }
         GlobalRecord* funcRecord = symbolTable->global[i];
         while (funcRecord != NULL) {
-            printSymbolTableRec(funcRecord->outputST, funcRecord->name, fp, 0);
-            printSymbolTableRec(funcRecord->funcST, funcRecord->name, fp, 0);
+            printSymbolTableRec(funcRecord->inputST, funcRecord->name, fp);
+            printSymbolTableRec(funcRecord->outputST, funcRecord->name, fp);
+            printSymbolTableRec(funcRecord->funcST, funcRecord->name, fp);
             funcRecord = funcRecord->next;
         }
     }

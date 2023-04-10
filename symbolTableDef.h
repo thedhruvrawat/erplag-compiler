@@ -68,6 +68,8 @@ typedef struct SymbolTableNode {
     int scopeStart;
     int scopeEnd;
     unsigned int nextOffset;
+    int nestingLevel;
+    struct SymbolTableNode* funcInputST;
     struct SymbolTableNode* funcOutputST;
     struct SymbolTableNode* next;
     struct SymbolTableNode* parent;
@@ -93,6 +95,7 @@ typedef struct GlobalRecord { // These are Records at the first layer/row of Sym
     Record* outputList;
     unsigned int outputListSize;
     SymbolTableNode* funcST;
+    SymbolTableNode* inputST;
     SymbolTableNode* outputST;
     struct GlobalRecord* next;
 } GlobalRecord;
