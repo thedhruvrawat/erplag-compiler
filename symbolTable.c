@@ -394,13 +394,13 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
             continue;
         }
 
-        varRecord = findVariableInsertion(symbolTableNode, name, hashVal);
+        varRecord = findVariableInsertion(outputST, name, hashVal);
         int linenum = outputNode->leftMostChild->leaf.tok->linenum;
         if (varRecord == NULL) {
             varRecord = malloc(sizeof(Record));
             memcpy(varRecord, newRecord, sizeof(Record));
             varRecord->next = NULL;
-            symbolTableNode->hashTable[hashVal] = varRecord;
+            outputST->hashTable[hashVal] = varRecord;
         } else if (strcmp(varRecord->name, name) == 0) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Redeclaration of variable %s in output list of module %s\n" RESET, linenum, name, funcRecord->name);
         } else {
@@ -1391,6 +1391,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 currChild->hashTable[hashVal] = varRecord;
                 strcpy(varRecord->name, name);
                 varRecord->iterator = true;
+                varRecord->width = SIZEOF_INT;
                 varRecord->offset = currChild->nextOffset;
                 currChild->nextOffset += SIZEOF_INT;
                 varRecord->type.varType = INT;
