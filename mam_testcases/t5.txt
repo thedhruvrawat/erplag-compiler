@@ -18,7 +18,7 @@ start
 	start
 		declare p, u:integer;
 		declare b: array[2..20] of integer;
-		b:= m;
+		b:= m;					   ** ERROR : different structures **
 		b[2]:= u+m[25];			   **ERROR: element of array m is out of bound** 
 		p:= b[18]*18.56E+2;		   **ERROR: type mismatch **
 	end					   **ERROR: none of the conditional variables k, x and m is assigned any value in scope of while at lines 17-24**
