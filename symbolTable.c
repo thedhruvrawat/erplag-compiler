@@ -1219,12 +1219,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                 }
 
+                int scopeEnd = statement->scopeEnd;
                 switch (switchType) {
                     case INT: {
                         // Checking if default statement exists
                         ASTNode* defaultCase = statement->rightMostChild;
                         if (statement->rightMostChild->leaf.tok->tok != DEFAULT) {
-                            printf(RED BOLD "[Semantic Analyser] Default statement required for switch statement of type INTEGER at line %d\n" RESET, idNode->leaf.tok->linenum);
+                            printf(RED BOLD "[Semantic Analyser] Default statement required for switch statement of type INTEGER at line %d\n" RESET, scopeEnd);
                             defaultCase = NULL;
                         }
 
@@ -1469,7 +1470,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 }
 
                 if (!changed && exprIDList->size > 0) {
-                    printf(RED BOLD "[Semantic Analyser] No variable in while loop expression is changing at line %d.\n" RESET, exprNode->leaf.tok->linenum);
+                    printf(RED BOLD "[Semantic Analyser] No variable in while loop expression is changing at line %d.\n" RESET, statement->scopeEnd);
                 }
                 break;
             }
@@ -1541,7 +1542,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
         if (varRecord == NULL) { continue; }
         while (varRecord != NULL) {
             if (varRecord->assigned == 0) {
-                printf(RED BOLD "[Semantic Analyser] Output variable %s not assigned a value before return from module %s at line %d\n" RESET, varRecord->name, name, moduleNode->leaf.tok->linenum);
+                printf(RED BOLD "[Semantic Analyser] Output variable %s not assigned a value before return from module %s at line %d\n" RESET, varRecord->name, name, funcRecord->funcST->scopeEnd);
             }
             varRecord = varRecord->next;
         }
