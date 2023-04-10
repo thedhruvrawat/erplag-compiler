@@ -1093,7 +1093,7 @@ void prettyPrintAST(void) {
     }
 
     printf("Number of nodes in AST: %d\n", tree->size);
-    printf("Memory Allocated for AST: %d bytes\n", tree->size * sizeof(ASTNode));
+    printf("Memory Allocated for AST: %ld bytes\n", tree->size * sizeof(ASTNode));
 
     return;
 }
