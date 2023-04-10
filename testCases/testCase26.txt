@@ -6,4 +6,12 @@ start
 	declare a : integer;
 	a := 5;
 	A := B;
+
+	for (k in 3..4)
+	start
+		for (k in 1..10)
+		start
+			a := k;
+		end
+	end
 end

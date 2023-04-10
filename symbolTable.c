@@ -129,7 +129,7 @@ Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned in
     }
 
     if (symbolTableNode->parent == NULL) {
-        return NULL;
+        return variableExists(symbolTableNode->funcInputST, name, hashVal);
     } else {
         return variableExists(symbolTableNode->parent, name, hashVal);
     }
@@ -433,9 +433,6 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         unsigned int hashVal = hash(name);
         Record* varRecord = variableExists(symbolTableNode, name, hashVal);
         if (varRecord == NULL) {
-            varRecord = variableExists(symbolTableNode->funcInputST, name, hashVal);
-        }
-        if (varRecord == NULL) {
             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d.\n" RESET, name, exprNode->leftMostChild->leaf.tok->linenum);
             return ERROR;
         }
@@ -564,9 +561,6 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             unsigned int hashVal = hash(name);
             Record* varRecord = variableExists(symbolTableNode, name, hashVal);
             if (varRecord == NULL) {
-                varRecord = variableExists(symbolTableNode->funcInputST, name, hashVal);
-            }
-            if (varRecord == NULL) {
                 printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, exprNode->leaf.tok->linenum);
                 return ERROR;
             } else {
@@ -671,9 +665,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 // Check if variable exists
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
                 if (varRecord == NULL) {
-                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                }
-                if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                     break;
                 } else if (varRecord->iterator) {
@@ -696,9 +687,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 if (strcmp(printNode->label, "ID") == 0) { // ID
                     char* name = printNode->leaf.tok->lexeme;
                     Record* varRecord = variableExists(symbolTableNode, name, hash(name));
-                    if (varRecord == NULL) {
-                        varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                    }
                     if (varRecord == NULL) {
                         printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, printNode->leaf.tok->linenum);
                     }
@@ -734,9 +722,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             // Checking for existence of the index variable and the type
                             char* indexName = indexNode->rightMostChild->leaf.tok->lexeme;
                             Record* indexRecord = variableExists(symbolTableNode, indexName, hash(indexName));
-                            if (indexRecord == NULL) {
-                                indexRecord = variableExists(symbolTableNode->funcInputST, indexName, hash(indexName));
-                            }
                             if (indexRecord == NULL || strcmp(indexRecord->name, indexName) != 0) {
                                 printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, indexName, indexNode->rightMostChild->leaf.tok->linenum);
                             } else if (indexRecord->type.varType != INTEGER) {
@@ -765,9 +750,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 VAR_TYPE idType;
                 char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
-                if (varRecord == NULL) {
-                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                }
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, idNode->leaf.tok->linenum);
                     break;
@@ -952,7 +934,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 // Module is redundant if it has been both declared and defined when called for the first time
                 if (moduleRecord->checkedRedundancy == false) {
                     if (moduleRecord->declared && moduleRecord->defined) {
-                        printf(RED BOLD "[Semantic Analyser] Redundant declaration of module %s.\n" RESET, moduleName);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: Redundant declaration of module %s.\n" RESET, moduleNode->leaf.tok->linenum, moduleName);
                     }
                     moduleRecord->checkedRedundancy = true;
                 }
@@ -987,9 +969,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     if (strcmp(curr->label, "ID") == 0) {
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
-                        if (varRecord == NULL) {
-                            varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                        }
                         if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, curr->leaf.tok->linenum);
                             if (isMinus) {
@@ -1091,9 +1070,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     if (strcmp(curr->label, "ID") == 0) {
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
-                        if (varRecord == NULL) {
-                            varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                        }
                         if (varRecord == NULL) {
                             printf(RED BOLD "[Semantic Analyser] Undefined variable %s at line %d\n" RESET, name, curr->leaf.tok->linenum);
                             if (isMinus) {
@@ -1237,9 +1213,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 VAR_TYPE switchType;
                 char* name = idNode->leaf.tok->lexeme;
                 Record* varRecord = variableExists(symbolTableNode, name, hash(name));
-                if (varRecord != NULL) {
-                    varRecord = variableExists(symbolTableNode->funcInputST, name, hash(name));
-                }
                 if (varRecord != NULL) {
                     switchType = varRecord->type.varType;
                 } else {
@@ -1539,7 +1512,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     // Checking for redundancy of declaration
     if (funcRecord->declared && !funcRecord->checkedRedundancy) {
         funcRecord->checkedRedundancy = true;
-        printf(RED BOLD "[Semantic Analyser] Redundant declaration of module %s.\n" RESET, name);
+        printf(RED BOLD "[Semantic Analyser] Line %d: Redundant declaration of module %s.\n" RESET, moduleNode->leftMostChild->leaf.tok->linenum, name);
     }
 
     funcRecord->called = true;
