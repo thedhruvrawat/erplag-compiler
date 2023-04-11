@@ -554,3 +554,39 @@ void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) { //only
         fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset);
     }
 }
+
+void dynArrBoundCheck(FILE *codefile, Quadruple* q){
+
+    // rcx has the index, rax and rbx will store the lower and upper bound respectively
+    // Go to label exit if not in bounds
+    char *leftVar, *rightVar;
+
+    if(q->arg1ID->type.array.isLeftID){
+        strcpy(leftVar,q->arg1ID->type.array.leftID);
+        int offset = q->arg1ID->offset;
+        // Load lower bound into RAX
+        fprintf(codefile,"\tMOV rax, [rbp - %d] \n", offset);
+    }
+    else{
+        int leftBound = q->arg1ID->type.array.left;
+        // Load lower bound into RAX
+        fprintf(codefile,"\tMOV rax, %d \n", leftBound);
+    }
+
+
+    if(q->arg1ID->type.array.isRightID){
+        strcpy(leftVar,q->arg1ID->type.array.rightID);
+        int offset = q->arg1ID->offset;
+        // Load upper bound into RBX
+        fprintf(codefile,"\tMOV rbx, [rbp - %d] \n", offset);
+    }
+    else{
+        int rightBound = q->arg1ID->type.array.right;
+        // Load upper bound into RBX
+        fprintf(codefile,"\tMOV rbx, %d \n", rightBound);
+    }
+    fprintf(codefile,"\t CMP rcx, rax \n");
+    fprintf(codefile,"\t JL exit \n");
+    fprintf(codefile,"\t CMP rcx, rbx \n");
+    fprintf(codefile,"\t JG exit \n");
+}
