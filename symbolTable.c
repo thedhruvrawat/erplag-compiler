@@ -798,19 +798,28 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 if (varRecord == NULL) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
                     SEMANTIC_ERROR = true;
-                    break;
                 } else {
                     idType = varRecord->type.varType;
                 }
 
-                if (arrayAccess && idType != ARR) {
+                if (varRecord != NULL && arrayAccess && idType != ARR) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Variable %s is not an array\n" RESET, idNode->leaf.tok->linenum, name);
                     SEMANTIC_ERROR = true;
                 }
 
-                if (varRecord->iterator) {
+                if (varRecord != NULL && varRecord->iterator) {
                     printf(RED BOLD "[Semantic Analyser] Line %d: Cannot assign to iterator %s\n" RESET, idNode->leaf.tok->linenum, name);
                     SEMANTIC_ERROR = true;
+                }
+
+                if (varRecord != NULL) {
+                    typeExtractor(statement->rightMostChild, symbolTableNode);
+                    if (arrayAccess) {
+                        ASTNode* indexNode = statement->leftMostChild->rightMostChild;
+                        typeExtractor(indexNode->rightMostChild, symbolTableNode);
+                    }
+
+                    break;
                 }
 
                 switch (idType) {
@@ -947,7 +956,10 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 }
 
                 // To check whether return variables have been assigned
-                varRecord->assigned++;
+                if (varRecord != NULL) {
+                    printf("%s\n", varRecord->name);
+                    varRecord->assigned++;
+                }
 
                 break;
             }
@@ -1166,7 +1178,9 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     }
                     
                     // To check whether return variables have been assigned
-                    varRecord->assigned++;
+                    if (varRecord != NULL) {
+                        varRecord->assigned++;
+                    }
 
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
                     if (outputNode != NULL && outputNode->type.varType == ARR) {
