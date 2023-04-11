@@ -86,6 +86,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
     Quadruple* quad = (Quadruple*) malloc(sizeof(Quadruple));
     quad->op = op;
     quad->next = NULL;
+    quad->symbolTableNode = symbolTableNode;
 
     switch(op) {
         case PLUS_OP:

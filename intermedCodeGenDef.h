@@ -68,6 +68,8 @@ typedef struct Quadruple {
         Record* result;
         char moduleName[20];
     };
+
+    SymbolTableNode* symbolTableNode;
     struct Quadruple* next;
 } Quadruple;
 
