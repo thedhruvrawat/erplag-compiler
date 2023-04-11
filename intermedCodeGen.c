@@ -121,6 +121,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = quad->arg1ID->type.varType;
             }
 
             if (arg2->isLeaf && arg2->leaf.tok->tok == NUM) {
@@ -143,6 +144,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg2ID = true;
                 char* name = arg2->symbolTableLabel;
                 quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg2Type = quad->arg2ID->type.varType;
             }
 
             Record* resultRecord;
@@ -172,6 +174,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = quad->arg1ID->type.varType;
             }
 
             Record* resultRecord;
@@ -210,6 +213,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = quad->arg1ID->type.varType;
             }
 
             quad->isArg2ID = true;
@@ -256,6 +260,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = ARR;
             }
 
             if (arg2->isLeaf && arg2->leaf.tok->tok == NUM) {
@@ -278,6 +283,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg2ID = true;
                 char* name = arg2->symbolTableLabel;
                 quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg2Type = INT;
             }
 
             char* name = result->leaf.tok->lexeme;
@@ -289,6 +295,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             quad->isArg1ID = true;
             char* name = arg1->leaf.tok->lexeme;
             quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+            quad->arg1Type = ARR;
 
             if (arg2->isLeaf && arg2->leaf.tok->tok == NUM) {
                 quad->isArg2ID = false;
@@ -297,6 +304,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             } else {
                 quad->isArg2ID = true;
                 name = arg2->symbolTableLabel;
+                quad->arg2Type = INT;
                 quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
             }
 
@@ -315,7 +323,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             quad->arg2ID = NULL;
 
             quad->result = NULL;
-            
+
             break;
         }
         case GET_VALUE_OP: {
@@ -351,6 +359,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->leaf.tok->lexeme;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = quad->arg1ID->type.varType;
             }
 
             quad->isArg2ID = true;
@@ -372,6 +381,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg2ID = true;
                 name = arg2->symbolTableLabel;
                 quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg2Type = quad->arg2ID->type.array.arrType;
             }
 
             quad->result = NULL;
@@ -392,6 +402,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             quad->isArg1ID = true;
             char* name = arg1->leaf.tok->lexeme;
             quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+            quad->arg1Type = quad->arg1ID->type.varType;
 
             quad->isArg2ID = true;
             quad->arg2ID = NULL;
@@ -459,6 +470,7 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
                 quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+                quad->arg1Type = quad->arg1ID->type.varType;
             }
 
             quad->isArg2ID = true;
