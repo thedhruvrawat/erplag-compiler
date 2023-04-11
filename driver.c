@@ -222,8 +222,10 @@ int main(int argc, char* argv[])
             ASTCreator(pt);
             generateSymbolTable(tree);
             printSymbolTable("symbolTable.txt");
-            createQuadrupleTable();
-            printQuadrupleTable();
+            if (SEMANTIC_ERROR == false) {
+                createQuadrupleTable();
+                printQuadrupleTable();
+            }
             break;
         }
         default: {

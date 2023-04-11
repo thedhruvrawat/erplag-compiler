@@ -339,6 +339,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         Record* newRecord = generateRecord(inputST, inputNode->leftMostChild, inputNode->rightMostChild, offset, true);
         if (newRecord == NULL) { 
             funcRecord->error = true;
+            inputNode = inputNode->next;
             continue; 
         }
         curr->next = newRecord;
@@ -381,6 +382,7 @@ void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNo
         Record* newRecord = generateRecord(symbolTableNode, outputNode->leftMostChild, outputNode->rightMostChild, offset, true);
         if (newRecord == NULL) { 
             funcRecord->error = true;
+            outputNode = outputNode->next;
             continue; 
         }
         curr->next = newRecord;
