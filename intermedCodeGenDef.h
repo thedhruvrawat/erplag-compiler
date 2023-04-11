@@ -63,7 +63,10 @@ typedef struct Quadruple {
         RecordList* outputList;
     };
 
-    Record* result;
+    union {
+        Record* result;
+        char moduleName[20];
+    };
     struct Quadruple* next;
 } Quadruple;
 

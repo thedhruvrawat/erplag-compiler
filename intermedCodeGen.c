@@ -36,7 +36,7 @@ void appendQuadruple(SymbolTableNode* symbolTableNode, Quadruple* quad) {
 
     // Adding to the symbolTable
     // Checking if the quadruple result if for a temporary or an actual variable
-    if (quad->result->name[0] != '$') {
+    if (quad->result == NULL || quad->result->name[0] != '$') {
         return;
     }
     Record* varRecord = quad->result;
@@ -293,18 +293,6 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->isArg2ID = false;
                 quad->arg2Type = INT;
                 quad->arg2Num = arg2->leaf.tok->num;
-            } else if (arg2->isLeaf && arg2->leaf.tok->tok == RNUM) {
-                quad->isArg2ID = false;
-                quad->arg2Type = DOUBLE;
-                quad->arg2Real = arg2->leaf.tok->rnum;
-            } else if (arg2->isLeaf && arg2->leaf.tok->tok == TRUE) {
-                quad->isArg2ID = false;
-                quad->arg2Type = BOOL;
-                quad->arg2Bool = true;
-            } else if (arg2->isLeaf && arg2->leaf.tok->tok == FALSE) {
-                quad->isArg2ID = false;
-                quad->arg2Type = BOOL;
-                quad->arg2Bool = false;
             } else {
                 quad->isArg2ID = true;
                 name = arg2->symbolTableLabel;
@@ -334,7 +322,54 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case PRINT_ID_OP: {
+            if (arg1->isLeaf && arg1->leaf.tok->tok == NUM) {
+                quad->isArg1ID = false;
+                quad->arg1Type = INT;
+                quad->arg1Num = arg1->leaf.tok->num;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == RNUM) {
+                quad->isArg1ID = false;
+                quad->arg1Type = DOUBLE;
+                quad->arg1Real = arg1->leaf.tok->rnum;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == TRUE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = true;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == FALSE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = false;
+            } else {
+                quad->isArg1ID = true;
+                char* name = arg1->leaf.tok->lexeme;
+                quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+            }
 
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+            quad->result = NULL;
+
+            break;
+        }
+        case PRINT_ARR_ELE_OP: {
+            quad->isArg1ID = true;
+            char* name = arg1->leaf.tok->lexeme;
+            quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+
+            if (arg2->isLeaf && arg2->leaf.tok->tok == NUM) {
+                quad->isArg2ID = false;
+                quad->arg2Type = INT;
+                quad->arg2Num = arg2->leaf.tok->num;
+            } else {
+                quad->isArg2ID = true;
+                name = arg2->symbolTableLabel;
+                quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
+            }
+
+            quad->result = NULL;
+
+            break;
+        }
     }
 
     appendQuadruple(symbolTableNode, quad);
@@ -498,12 +533,12 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 break;
             }
             case 'P': { // PRINT
-                if (statement->rightMostChild->numChildren == 1) {
-                    generateQuadruple(symbolTableNode, PRINT_ID_OP, NULL, NULL, statement->rightMostChild->leftMostChild, 0);
+                if (statement->numChildren == 1) {
+                    generateQuadruple(symbolTableNode, PRINT_ID_OP, statement->leftMostChild, NULL, NULL, 0);
                 } else {
-                    ASTNode* indexNode = statement->rightMostChild->rightMostChild;
+                    ASTNode* indexNode = statement->rightMostChild;
                     populateQuadrupleForExpressions(indexNode, symbolTableNode);
-                    generateQuadruple(symbolTableNode, PRINT_ARR_ELE_OP, NULL, indexNode->leftMostChild, statement->rightMostChild->leftMostChild, 0);
+                    generateQuadruple(symbolTableNode, PRINT_ARR_ELE_OP, statement->leftMostChild, indexNode->leftMostChild, NULL, 0);
                 }
 
                 break;
@@ -658,9 +693,29 @@ void printQuadrupleTable(void) {
             }
         }
 
-        fprintf(fp, "%-10s", quad->result->name);
-        fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
-        fprintf(fp, "%-10d\n", quad->result->offset);
+        if (quad->result == NULL) {
+            fprintf(fp, "%-10s", "**");
+            if (quad->op == PRINT_ID_OP) {
+                if (quad->isArg1ID) {
+                    fprintf(fp, "%-10s", typeStrings[quad->arg1ID->type.varType]);
+                } else {
+                    fprintf(fp, "%-10s", typeStrings[quad->arg1Type]);
+                }
+            } else if (quad->op == PRINT_ARR_ELE_OP) {
+                fprintf(fp, "%-10s", typeStrings[quad->arg1ID->type.array.arrType]);
+            } else {
+                fprintf(fp, "%-10s", "**");
+            }
+        } else {
+            fprintf(fp, "%-10s", quad->result->name);
+            fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
+        }
+
+        if (quad->result == NULL) {
+            fprintf(fp, "%-10s\n", "**");
+        } else {
+            fprintf(fp, "%-10d\n", quad->result->offset);
+        }
 
         quad = quad->next;
     }

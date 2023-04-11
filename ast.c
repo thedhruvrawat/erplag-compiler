@@ -374,7 +374,7 @@ void createAST(void) {
                     break;
                 }
                 case 21: { // <index_arr> = <sign> <new_index>
-                    ASTNode* indexNode = createASTNode("INDEX", stackNode->parseTreeNode);
+                    ASTNode* indexNode = createASTNode("ARRAY_INDEX", stackNode->parseTreeNode);
                     appendASTNodeAsChild(indexNode, stackNode->parent);
                     pushChildrenToASTStack(st, indexNode, stackNode->parseTreeNode->child);
                     break;

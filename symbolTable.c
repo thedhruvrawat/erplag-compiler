@@ -740,13 +740,16 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         printf(RED BOLD "[Semantic Analyser] Line %d: Variable %s is not an array\n" RESET, printNode->leaf.tok->linenum, name);
                         SEMANTIC_ERROR = true;
                     } else {
+                        indexNode->type = INT;
+                        indexNode->rightMostChild->type = INT;
+                        
                         // If array is static, check if the index is within bounds
                         if (!varRecord->type.array.isLeftID && !varRecord->type.array.isRightID && strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
                             int left = varRecord->type.array.left;
                             if (varRecord->type.array.leftNegative) {
                                 left = -left;
                             }
-                            int right = varRecord->type.array.right;;
+                            int right = varRecord->type.array.right;
                             if (varRecord->type.array.rightNegative) {
                                 right = -right;
                             }
