@@ -494,7 +494,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
 
 void printQuadrupleTable(void) {
     FILE* fp = fopen("quadrupleTable.txt", "w");
-    fprintf(fp, "%-25s%-10s%-10s%-10s%-10s\n", "Operator", "Arg1", "Arg2", "Result", "Type");
+    fprintf(fp, "%-25s%-10s%-10s%-10s%-10s%-10s\n", "Operator", "Arg1", "Arg2", "Result", "Type", "Offset");
 
     Quadruple* quad = quadTable->head;
     char* opStrings[] = {
@@ -587,6 +587,7 @@ void printQuadrupleTable(void) {
 
         fprintf(fp, "%-10s", quad->result->name);
         fprintf(fp, "%-10s\n", typeStrings[quad->result->type.varType]);
+        fprintf(fp, "%-10d\n", quad->result->offset);
 
         quad = quad->next;
     }
