@@ -137,6 +137,10 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 break;
             }
+            default: {
+                printf("Not handled yet.\n");
+                break;
+            }
         }
         currQuad = currQuad->next;
     }

@@ -388,7 +388,6 @@ void populateQuadrupleForExpressions(ASTNode* exprNode, SymbolTableNode* symbolT
         case TRUE:
         case FALSE: {
             // Modify symbolTableLabel
-            printf("%s\n", exprNode->leaf.tok->lexeme);
             strcpy(exprNode->symbolTableLabel, exprNode->leaf.tok->lexeme);
             return;
         }
@@ -560,6 +559,10 @@ void printQuadrupleTable(void) {
                     fprintf(fp, "%-10s", (quad->arg1Bool ? "TRUE" : "FALSE"));
                     break;
                 }
+                default: {
+                    // Should never reach here
+                    break;
+                }
             }
         }
 
@@ -581,6 +584,10 @@ void printQuadrupleTable(void) {
                 }
                 case BOOL: {
                     fprintf(fp, "%-10s", (quad->arg2Bool ? "TRUE" : "FALSE"));
+                    break;
+                }
+                default: {
+                    // Should never reach here
                     break;
                 }
             }
