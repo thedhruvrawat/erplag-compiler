@@ -317,6 +317,23 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case MODULE_OP:
+        case DRIVER_OP: {
+            printf("IR: Not handled yet!.\n");
+            break;
+        }
+        case GET_VALUE_OP: {
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            char* name = result->leaf.tok->lexeme;
+            quad->result = variableExists(symbolTableNode, name, hash(name));
+
+            break;
+        }
 
     }
 
@@ -477,18 +494,17 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
     while (statement != NULL) {
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
-                // generateQuadruple(symbolTableNode, GET_VALUE_OP, NULL, NULL, statement->rightMostChild, 0);
+                generateQuadruple(symbolTableNode, GET_VALUE_OP, NULL, NULL, statement->rightMostChild, 0);
                 break;
             }
             case 'P': { // PRINT
-                // Make two cases: one for single element and one for array access
-                /* if (statement->rightMostChild->numChildren == 1) {
+                if (statement->rightMostChild->numChildren == 1) {
                     generateQuadruple(symbolTableNode, PRINT_ID_OP, NULL, NULL, statement->rightMostChild->leftMostChild, 0);
                 } else {
                     ASTNode* indexNode = statement->rightMostChild->rightMostChild;
                     populateQuadrupleForExpressions(indexNode, symbolTableNode);
                     generateQuadruple(symbolTableNode, PRINT_ARR_ELE_OP, NULL, indexNode->leftMostChild, statement->rightMostChild->leftMostChild, 0);
-                } */
+                }
 
                 break;
             }
