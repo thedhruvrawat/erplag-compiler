@@ -812,7 +812,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     SEMANTIC_ERROR = true;
                 }
 
-                if (varRecord != NULL) {
+                if (varRecord == NULL) {
                     typeExtractor(statement->rightMostChild, symbolTableNode);
                     if (arrayAccess) {
                         ASTNode* indexNode = statement->leftMostChild->rightMostChild;
@@ -957,7 +957,6 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
 
                 // To check whether return variables have been assigned
                 if (varRecord != NULL) {
-                    printf("%s\n", varRecord->name);
                     varRecord->assigned++;
                 }
 

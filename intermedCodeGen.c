@@ -586,7 +586,7 @@ void printQuadrupleTable(void) {
         }
 
         fprintf(fp, "%-10s", quad->result->name);
-        fprintf(fp, "%-10s\n", typeStrings[quad->result->type.varType]);
+        fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
         fprintf(fp, "%-10d\n", quad->result->offset);
 
         quad = quad->next;

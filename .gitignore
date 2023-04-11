@@ -11,4 +11,5 @@ stage1exe
 .DS_Store
 symbolTable.txt
 parseTable.txt
+quadrupleTable.txt
 code.asm
