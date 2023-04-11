@@ -736,6 +736,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                     RecordListNode* newNode = malloc(sizeof(RecordListNode));
                     newNode->isMinus = isMinus;
                     newNode->isID = false;
+                    newNode->prev = NULL;
                     newNode->next = NULL;
 
                     Record* varRecord = NULL;
@@ -763,6 +764,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         inputList->head = inputList->tail = newNode;
                     } else {
                         inputList->tail->next = newNode;
+                        newNode->prev = inputList->tail;
                         inputList->tail = newNode;
                     }
                     inputList->size++;
@@ -784,6 +786,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                     RecordListNode* newNode = malloc(sizeof(RecordListNode));
                     newNode->isMinus = false;
                     newNode->isID = false;
+                    newNode->prev = NULL;
                     newNode->next = NULL;
 
                     Record* varRecord = NULL;
@@ -811,6 +814,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         outputList->head = outputList->tail = newNode;
                     } else {
                         outputList->tail->next = newNode;
+                        newNode->prev = outputList->tail;
                         outputList->tail = newNode;
                     }
                     outputList->size++;
