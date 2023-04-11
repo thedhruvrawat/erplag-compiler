@@ -35,6 +35,7 @@ typedef enum {
     MODULE_USE_OP,
     SWITCH_OP,
     CASE_OP,
+    DEFAULT_OP,
     FOR_OP,
     WHILE_OP,
     START_OP,

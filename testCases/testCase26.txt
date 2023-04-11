@@ -6,4 +6,24 @@ start
 	a := 5;
 	A[5 * a + 6 * b] := a * b + 6 * a + B[a * b + 7];
 	print(A[a]);
+
+	declare c: boolean;
+
+	switch(c)
+	start
+		case true:
+			a := b;
+			break;
+		case false:
+			b := a * b + 5;
+			break;
+	end
+
+	while (a > 5)
+	start
+		declare k: integer;
+
+		a := a + 1;
+		b := b + 1;
+	end
 end

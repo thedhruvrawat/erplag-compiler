@@ -370,12 +370,122 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case MODULE_USE_OP: {
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+            break;
+        }
+        case SWITCH_OP: {
+            quad->isArg1ID = true;
+            char* name = arg1->leaf.tok->lexeme;
+            quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
+        case CASE_OP: {
+            if (arg1->isLeaf && arg1->leaf.tok->tok == NUM) {
+                quad->isArg1ID = false;
+                quad->arg1Type = INT;
+                quad->arg1Num = arg1->leaf.tok->num;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == TRUE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = true;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == FALSE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = false;
+            }
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
+        case DEFAULT_OP: {
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
+        case FOR_OP: {
+            quad->isArg1ID = false;
+            quad->arg1ID = NULL;
+            quad->arg1Type = INT;
+
+            quad->isArg2ID = false;
+            quad->arg2ID = NULL;
+            quad->arg2Type = INT;
+
+            char* name = result->leaf.tok->lexeme;
+            quad->result = variableExists(symbolTableNode, name, hash(name));
+            break;
+        }
+        case WHILE_OP: {
+            if (arg1->isLeaf && arg1->leaf.tok->tok == TRUE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = true;
+            } else if (arg1->isLeaf && arg1->leaf.tok->tok == FALSE) {
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = false;
+            } else {
+                quad->isArg1ID = true;
+                char* name = arg1->symbolTableLabel;
+                quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+            }
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
+        case START_OP: 
+        case END_OP: {
+            // Just the operator itself is sufficient
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
     }
 
     appendQuadruple(symbolTableNode, quad);
     return quad;
 }
 
+Quadruple* generateStartQuadruple(void) {
+    return generateQuadruple(NULL, START_OP, NULL, NULL, NULL, 0);
+}
+
+Quadruple* generateEndQuadruple(void) {
+    return generateQuadruple(NULL, END_OP, NULL, NULL, NULL, 0);
+}
 
 void populateQuadrupleForExpressions(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
     // We are entering the function for the first time
@@ -570,6 +680,40 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 break;
             }
             case 'M': { // MODULE_REUSE_STMT
+                Quadruple* quad = generateQuadruple(symbolTableNode, MODULE_USE_OP, NULL, NULL, NULL, 0);
+
+                // TODO
+                /* ASTNode* outputNode = statement->leftMostChild;
+                ASTNode* moduleNode = outputNode->next;
+                ASTNode* inputNode = moduleNode->next;
+
+                strcpy(quad->moduleName, moduleNode->leaf.tok->lexeme);
+
+                RecordList* inputList = malloc(sizeof(RecordList));
+                inputList->head = inputList->tail = NULL;
+                inputList->size = 0;
+
+                ASTNode* curr = inputNode->leftMostChild;
+                while (curr != NULL) {
+                    bool isMinus = false;
+                    if (strcmp(curr->label, "MINUS_NODE") == 0) {
+                        isMinus = true;
+                        curr = curr->leftMostChild;
+                    }
+
+                    Record* varRecord = NULL;
+                    if (strcmp(curr->label, "ID") == 0) {
+                        char* name = curr->leaf.tok->lexeme;
+                        varRecord = variableExists(symbolTableNode, name, hash(name));
+                    }
+
+                    
+                }
+                
+
+                RecordList* outputList = malloc(sizeof(RecordList));
+                outputList->head = outputList->tail = NULL;
+                outputList->size = 0; */
                 break;
             }
             case 'D': { // DECLARE
@@ -577,12 +721,59 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 break;
             }
             case 'S': { // SWITCH
+                generateQuadruple(symbolTableNode, SWITCH_OP, statement->leftMostChild, NULL, NULL, 0);
+
+                ASTNode* caseNode = statement->leftMostChild->next;
+                while (caseNode != NULL) {
+                    if (caseNode->leaf.tok->tok == DEFAULT) {
+                        generateQuadruple(symbolTableNode, DEFAULT_OP, NULL, NULL, NULL, 0);
+                    } else {
+                        generateQuadruple(symbolTableNode, CASE_OP, caseNode->leftMostChild, NULL, NULL, 0);
+                    }
+                    generateStartQuadruple();
+                    populateQuadrupleTable(caseNode->leftMostChild->next, symbolTableNode);
+                    generateEndQuadruple();
+
+                    caseNode = caseNode->next;
+                }
                 break;
             }
             case 'F': { // FOR
+                ASTNode* idNode = statement->leftMostChild; 
+                ASTNode* rangeNode = statement->leftMostChild->next;
+                ASTNode* leftIndexNode = rangeNode->leftMostChild;
+                ASTNode* rightIndexNode = rangeNode->rightMostChild;
+
+                int left = leftIndexNode->rightMostChild->leaf.tok->num;
+                int right = rightIndexNode->rightMostChild->leaf.tok->num;
+                if (leftIndexNode->numChildren == 2) {
+                    if (leftIndexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                        left = -left;
+                    }
+                }
+                if (rightIndexNode->numChildren == 2) {
+                    if (rightIndexNode->leftMostChild->leaf.tok->tok == MINUS) {
+                        right = -right;
+                    }
+                }
+
+                Quadruple* quad = generateQuadruple(symbolTableNode, FOR_OP, NULL, NULL, idNode, 0);
+                quad->arg1Num = left;
+                quad->arg2Num = right;
+
+                generateStartQuadruple();
+                populateQuadrupleTable(statement->leftMostChild->next->next, symbolTableNode);
+                generateEndQuadruple();
+
                 break;
             }
             case 'W': { // WHILE
+                populateQuadrupleForExpressions(statement->leftMostChild, symbolTableNode);
+                generateQuadruple(symbolTableNode, WHILE_OP, statement->leftMostChild, NULL, NULL, 0);
+
+                generateStartQuadruple();
+                populateQuadrupleTable(statement->leftMostChild->next, symbolTableNode);
+                generateEndQuadruple();
                 break;
             }
 
@@ -623,6 +814,7 @@ void printQuadrupleTable(void) {
         "MODULE_USE_OP",
         "SWITCH_OP",
         "CASE_OP",
+        "DEFAULT_OP",
         "FOR_OP",
         "WHILE_OP",
         "START_OP",
@@ -639,6 +831,7 @@ void printQuadrupleTable(void) {
     while (quad != NULL) {
         fprintf(fp, "%-25s", opStrings[quad->op]);
 
+        printf("%s\n", opStrings[quad->op]);
         if (quad->isArg1ID) {
             if (quad->arg1ID == NULL) { 
                 fprintf(fp, "%-10s", "**");
