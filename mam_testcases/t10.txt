@@ -51,7 +51,7 @@ start
 			 declare E: array[4..10] of integer;
 			 B[12]:= k*20; 	                  	
 			 break;
-		case 20: A:= 12.90 + p;       		**ERROR: 1.Case value is incorrect as condiiton variable type is boolean,(Errata 11 April)-> 2. Q is not declared**
+		case 20: A:= 12.90 + p;       		**ERROR: 1.Case value is incorrect as condiiton variable type is boolean,(Errata 11 April)-> 2. A is not declared**
 			 get_value(Q);    **ERROR: Variable Q is not declared**
 			 for(m in 10..15)
 			 start
