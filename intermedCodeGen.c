@@ -51,7 +51,7 @@ void appendQuadruple(SymbolTableNode* symbolTableNode, Quadruple* quad) {
     return;
 }
 
-Record* generateTempRecord(SymbolTableNode* symbolTableNode, char* name, VAR_TYPE type, int* offset) {
+Record* generateTempRecord(SymbolTableNode* symbolTableNode, char* name, VAR_TYPE type, unsigned int* offset) {
     Record* newRec = (Record*) malloc(sizeof(Record));
     strcpy(newRec->name, name);
     newRec->offset = *offset;
@@ -198,13 +198,13 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
                 quad->arg1Type = DOUBLE;
                 quad->arg1Real = arg1->leaf.tok->rnum;
             } else if (arg1->isLeaf && arg1->leaf.tok->tok == TRUE) {
-                quad->isArg2ID = false;
-                quad->arg2Type = BOOL;
-                quad->arg2Bool = true;
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = true;
             } else if (arg1->isLeaf && arg1->leaf.tok->tok == FALSE) {
-                quad->isArg2ID = false;
-                quad->arg2Type = BOOL;
-                quad->arg2Bool = false;
+                quad->isArg1ID = false;
+                quad->arg1Type = BOOL;
+                quad->arg1Bool = false;
             } else {
                 quad->isArg1ID = true;
                 char* name = arg1->symbolTableLabel;
@@ -388,6 +388,7 @@ void populateQuadrupleForExpressions(ASTNode* exprNode, SymbolTableNode* symbolT
         case TRUE:
         case FALSE: {
             // Modify symbolTableLabel
+            printf("%s\n", exprNode->leaf.tok->lexeme);
             strcpy(exprNode->symbolTableLabel, exprNode->leaf.tok->lexeme);
             return;
         }
