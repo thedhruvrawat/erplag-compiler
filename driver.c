@@ -16,7 +16,7 @@ Group Number : 2
 #include "parser.h"
 #include "ast.h"
 #include "symbolTable.h"
-#include "intermedCodeGen.h"
+#include "codegen.h"
 
 /**
  * @brief Removes the comments from the input file and outputs the same to console
@@ -225,6 +225,7 @@ int main(int argc, char* argv[])
             if (SEMANTIC_ERROR == false) {
                 createQuadrupleTable();
                 printQuadrupleTable();
+                codeGenerator(quadTable, "code.asm");
             }
             break;
         }
