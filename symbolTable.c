@@ -1564,7 +1564,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 }
 
                 if (!changed && exprIDList->size > 0) {
-                    printf(RED BOLD "[Semantic Analyser] Lines %d-%d: No variable in the conditional expression for while loop is changing.\n" RESET, statement->scopeStart, statement->scopeEnd);
+                    printf(RED BOLD "[Semantic Analyser] Lines %d-%d: No variable in the conditional expression for while loop is changing.\n" RESET, statement->scope.scopeStart, statement->scope.scopeEnd);
                     SEMANTIC_ERROR = true;
                 }
                 break;
