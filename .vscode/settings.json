@@ -13,7 +13,8 @@
         "ratio": "c",
         "lexerdef.h": "c",
         "stdbool.h": "c",
-        "symboltable.h": "c"
+        "symboltable.h": "c",
+        "intermedcodegendef.h": "c"
     },
     "makefile.launchConfigurations": [
         {
