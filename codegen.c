@@ -25,11 +25,13 @@ char *getNewLabelVariable() {
 void codeGenerator(QuadrupleTable *qt, char *output) {
     FILE *codefile = fopen(output, "w");
 
-    initASMFile(codefile);
-
+    initASMFile(codefile);    
+    // fprintf(codefile, "\tFILL_STACK\n");
+    fprintf(codefile, "\tmov rbp, rsp\n");
     Quadruple* currQuad = qt->head;
 
     while(currQuad!=NULL) {
+        
         switch(currQuad->op) {
             case PLUS_OP: {
                 if(currQuad->arg1Type == REAL && currQuad->arg2Type == REAL) {
@@ -137,16 +139,26 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 break;
             }
+            case PRINT_ID_OP: {
+                if(currQuad->arg1Type == REAL && currQuad->arg2Type == REAL) {
+                    insertPrintStatement(codefile, currQuad, '+', 'F');
+                } else if(currQuad->arg1Type == REAL && currQuad->arg2Type == REAL){
+                    insertArithmeticOperation(codefile, currQuad, '+', 'I');
+                }
+                break;
+            }
             default: {
                 printf("Not handled yet.\n");
                 break;
             }
         }
+        
         currQuad = currQuad->next;
     }
 
     fprintf(codefile, "\tpop rbp\n");
     fprintf(codefile, "\tmov rax, 0\n");
+    // fprintf(codefile, "\tEMPTY_STACK\n");
     fprintf(codefile, "\tret\n");
     fclose(codefile);
 }
@@ -210,12 +222,12 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
     resultOffset = q->result->offset;
     if(type == 'I') {
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
         }
         if(q->isArg2ID) {
-            fprintf(codefile, "\tMOVSXD rbx, DWORD[rbp-8-%d]\n", arg2Offset*8);
+            fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", arg2Offset);
         } else {
             fprintf(codefile, "\tMOV rbx, %d\n", q->arg2Num);
         }
@@ -241,10 +253,10 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], rax\n", resultOffset*8);
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset);
     } else { //Floating point arithmetic
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-8-%d]\n", arg1Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset);            
         } else {
             char *arg1Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -253,7 +265,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
             fprintf(codefile,"\tMOVSD xmm0, [%s]\n", arg1Label);
         }
         if(q->isArg2ID) {
-            fprintf(codefile, "\tMOVSD xmm1, QWORD[rbp-8-%d]\n", arg2Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm1, QWORD[rbp-%d]\n", arg2Offset);            
         } else {
             char *arg2Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -283,7 +295,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset);        
     }    
 }
 
@@ -301,12 +313,12 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
     fprintf(codefile, "\tMOV rdx, 1\n"); //True
     if(type == 'I') {
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
         }
         if(q->isArg2ID) {
-            fprintf(codefile, "\tMOVSXD rbx, DWORD[rbp-8-%d]\n", arg2Offset*8);
+            fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", arg2Offset);
         } else {
             fprintf(codefile, "\tMOV rbx, %d\n", q->arg2Num);
         }
@@ -348,10 +360,10 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV DWORD[rbp-8-%d], rcx\n", resultOffset*8);
+        fprintf(codefile, "\tMOV qword[rbp-%d], rcx\n", resultOffset);
     } else if (type == 'F') { //Floating point arithmetic
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-8-%d]\n", arg1Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset);            
         } else {
             char *arg1Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -360,7 +372,7 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
             fprintf(codefile,"\tMOVSD xmm0, [%s]\n", arg1Label);
         }
         if(q->isArg2ID) {
-            fprintf(codefile, "\tMOVSD xmm1, QWORD[rbp-8-%d]\n", arg2Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm1, QWORD[rbp-%d]\n", arg2Offset);            
         } else {
             char *arg2Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -406,15 +418,15 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], rcx\n", resultOffset*16);        
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], rcx\n", resultOffset);        
     } else { // Boolean
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
         }
         if(q->isArg2ID) {
-            fprintf(codefile, "\tMOVSXD rbx, DWORD[rbp-8-%d]\n", arg2Offset*8);
+            fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", arg2Offset);
         } else {
             fprintf(codefile, "\tMOV rbx, %d\n", q->arg2Num);
         }
@@ -432,7 +444,7 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV DWORD[rbp-8-%d], rcx\n", resultOffset*8);
+        fprintf(codefile, "\tMOV qword[rbp-%d], rcx\n", resultOffset);
     }
 }
 
@@ -448,12 +460,12 @@ void insertLogicalOperation(FILE *codefile, Quadruple *q, char op) { //only Bool
     fprintf(codefile, "\tMOV rcx, 0\n"); //False
     fprintf(codefile, "\tMOV rdx, 1\n"); //True
     if(q->isArg1ID) {
-        fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+        fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
     } else {
         fprintf(codefile, "\tMOV rax, %d\n", q->arg1Bool);
     }
     if(q->isArg2ID) {
-        fprintf(codefile, "\tMOVSXD rbx, DWORD[rbp-8-%d]\n", arg2Offset*8);
+        fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", arg2Offset);
     } else {
         fprintf(codefile, "\tMOV rbx, %d\n", q->arg2Bool);
     }
@@ -473,7 +485,7 @@ void insertLogicalOperation(FILE *codefile, Quadruple *q, char op) { //only Bool
             break;
         }
     }
-    fprintf(codefile, "\tMOV DWORD[rbp-8-%d], rcx\n", resultOffset*8);
+    fprintf(codefile, "\tMOV qword[rbp-%d], rcx\n", resultOffset);
 }
 
 void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only Boolean operations
@@ -484,16 +496,16 @@ void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only
     resultOffset = q->result->offset;
     if(type == 'I') {
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
         }
         fprintf(codefile, "\t; UNARY MINUS\n");
         fprintf(codefile, "\tNEG rax\n");
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], rax\n", resultOffset*8);
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset);
     } else { //Floating point arithmetic
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-8-%d]\n", arg1Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset);            
         } else {
             char *arg1Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -503,7 +515,7 @@ void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only
         }
         fprintf(codefile, "\t; UNARY MINUS\n");
         fprintf(codefile, "\tNEG xmm0\n");
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset);        
     }    
 }
 
@@ -517,14 +529,14 @@ void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) { //only
     fprintf(codefile, "\t; ASSIGNMENT OPERATION (NON-ARRAY)\n");
     if(type == 'I') {
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], rax\n", resultOffset*8);
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset);
     } else if(type == 'F'){ //Floating point 
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-8-%d]\n", arg1Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset);            
         } else {
             char *arg1Label = getNewLabelVariable();
             fprintf(codefile,"\tsection .data\n");
@@ -532,13 +544,13 @@ void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) { //only
             fprintf(codefile,"\tsection .text\n");
             fprintf(codefile,"\tMOVSD xmm0, [%s]\n", arg1Label);
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-8-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset);        
     } else { //Boolean
         if(q->isArg1ID) {
-            fprintf(codefile, "\tMOVSXD rax, DWORD[rbp-8-%d]\n", arg1Offset*8);
+            fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset);
         } else {
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Bool);
         }
-        fprintf(codefile, "\tMOV DWORD[rbp-8-%d], rax\n", resultOffset*8);
+        fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset);
     }
 }
