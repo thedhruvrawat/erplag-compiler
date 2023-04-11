@@ -58,6 +58,7 @@ typedef struct RecordListNode {
         bool boolean;
     };
     struct RecordListNode* next;
+    struct RecordListNode* prev;
 } RecordListNode;
 
 typedef struct RecordList {
