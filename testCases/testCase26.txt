@@ -4,5 +4,5 @@ start
 	declare A, B:array [1..10] of integer;
 	declare a, b : integer;
 	a := 5;
-	A[5 * a + 6 * b] := a * b + 6 * a;
+	A[5 * a + 6 * b] := a * b + 6 * a + B[a * b + 7];
 end

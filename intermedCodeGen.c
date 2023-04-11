@@ -284,6 +284,39 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case ARRAY_ACCESS_OP: {
+            quad->isArg1ID = true;
+            char* name = arg1->leaf.tok->lexeme;
+            quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+
+            if (arg2->isLeaf && arg2->leaf.tok->tok == NUM) {
+                quad->isArg2ID = false;
+                quad->arg2Type = INT;
+                quad->arg2Num = arg2->leaf.tok->num;
+            } else if (arg2->isLeaf && arg2->leaf.tok->tok == RNUM) {
+                quad->isArg2ID = false;
+                quad->arg2Type = DOUBLE;
+                quad->arg2Real = arg2->leaf.tok->rnum;
+            } else if (arg2->isLeaf && arg2->leaf.tok->tok == TRUE) {
+                quad->isArg2ID = false;
+                quad->arg2Type = BOOL;
+                quad->arg2Bool = true;
+            } else if (arg2->isLeaf && arg2->leaf.tok->tok == FALSE) {
+                quad->isArg2ID = false;
+                quad->arg2Type = BOOL;
+                quad->arg2Bool = false;
+            } else {
+                quad->isArg2ID = true;
+                name = arg2->symbolTableLabel;
+                quad->arg2ID = variableExists(symbolTableNode, name, hash(name));
+            }
+
+            char resName[20];
+            sprintf(resName, "$_t%d", ++quadTable->currentNumber);
+            quad->result = generateTempRecord(symbolTableNode, resName, type, &symbolTableNode->nextOffset);
+
+            break;
+        }
 
     }
 
@@ -325,9 +358,24 @@ void populateQuadrupleForExpressions(ASTNode* exprNode, SymbolTableNode* symbolT
 
     // If array (since there is no token in that case)
     if (strcmp(exprNode->label, "ARRAY") == 0) {
+        populateQuadrupleForExpressions(exprNode->rightMostChild, symbolTableNode);
+        Quadruple* quad = generateQuadruple(symbolTableNode, ARRAY_ACCESS_OP, exprNode->leftMostChild, exprNode->rightMostChild->leftMostChild, NULL, exprNode->type);
+        strcpy(exprNode->symbolTableLabel, quad->result->name);
+        return;
+    }
 
-        // Adding to quadruple table
-        // TODO: Add quadruple for array access
+    if (strcmp(exprNode->label, "ARRAY_INDEX") == 0) {
+        populateQuadrupleForExpressions(exprNode->rightMostChild, symbolTableNode);
+        if (exprNode->numChildren == 2) {
+            if (exprNode->leftMostChild->leaf.tok->tok == MINUS) {
+                int type = exprNode->rightMostChild->type;
+                Quadruple* quad = generateQuadruple(symbolTableNode, UMINUS_OP, exprNode->rightMostChild, NULL, NULL, type);
+                strcpy(exprNode->leftMostChild->symbolTableLabel, quad->result->name);
+            } else {
+                strcpy(exprNode->leftMostChild->symbolTableLabel, exprNode->rightMostChild->symbolTableLabel);
+            }
+        }
+
         return;
     }
     
@@ -515,6 +563,7 @@ void printQuadrupleTable(void) {
         "ASSIGN_VAR_OP",
         "ASSIGN_ARRAY_OP",
         "ASSIGN_ARRAY_ACCESS_OP",
+        "ARRAY_ACCESS_OP",
         "MODULE_OP",
         "DRIVER_OP",
         "GET_VALUE_OP",

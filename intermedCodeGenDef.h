@@ -26,6 +26,7 @@ typedef enum {
     ASSIGN_VAR_OP,
     ASSIGN_ARRAY_OP,
     ASSIGN_ARRAY_ACCESS_OP,
+    ARRAY_ACCESS_OP,
     MODULE_OP,
     DRIVER_OP,
     GET_VALUE_OP,
