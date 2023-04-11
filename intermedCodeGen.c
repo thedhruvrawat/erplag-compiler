@@ -308,7 +308,14 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
         }
         case MODULE_OP:
         case DRIVER_OP: {
-            printf("IR: Not handled yet!.\n");
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+            
             break;
         }
         case GET_VALUE_OP: {
@@ -925,13 +932,19 @@ void createQuadrupleTable(void) {
     while (module != NULL) {
         // make quadruple for module
         char* name;
+        Quadruple* quad;
         if (strcmp(module->label, "DRIVER") == 0) {
             name = "DRIVER";
+            quad = generateQuadruple(NULL, DRIVER_OP, NULL, NULL, NULL, 0);
         } else {
             name = module->leftMostChild->leaf.tok->lexeme;
+            quad = generateQuadruple(NULL, MODULE_OP, NULL, NULL, NULL, 0);
+            strcpy(quad->moduleName, name);
         }
         GlobalRecord* moduleRecord = moduleExists(name, hash(name));
+        generateStartQuadruple();
         populateQuadrupleTable(module->rightMostChild->leftMostChild, moduleRecord->funcST);
+        generateEndQuadruple();
 
         module = module->next;
     }
