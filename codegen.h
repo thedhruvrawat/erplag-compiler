@@ -9,11 +9,12 @@ Group Number : 2
 #ifndef CODEGEN_H
 #define CODEGEN_H
 
-#include "symbolTableDef.h"
+#include "intermedCodeGen.h"
 
 char *getNewLabelVariable();
 void codeGenerator(QuadrupleTable *qt, char *output);
 void initASMFile(FILE *fp);
+void initStrings(FILE *fp);
 void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type);
 void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type);
 void insertLogicalOperation(FILE *codefile, Quadruple *q, char op);

@@ -4,11 +4,11 @@
 #3 	Swastik Mantry 	2019B1A71019P 	Swastik-Mantry
 #4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 #5 	Vaibhav Prabhu 	2019B3A70593P 	prabhuvaibhav
-driver: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o intermedCodeGen.o
-	gcc -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o symbolTable.o intermedCodeGen.o -g -o stage1exe
+driver: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o intermedCodeGen.o codegen.o
+	gcc -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o symbolTable.o intermedCodeGen.o codegen.o -g -o stage1exe
 
-sanitized: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o intermedCodeGen.o
-	gcc -fsanitize=address -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o symbolTable.o intermedCodeGen.o ast.o -g -o stage1exe
+sanitized: driver.o parser.o lexer.o trie.o stackADT.o Set.o ast.o symbolTable.o intermedCodeGen.o codegen.o
+	gcc -fsanitize=address -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o symbolTable.o intermedCodeGen.o codegen.o ast.o -g -o stage1exe
 
 intermedCodeGen.o: intermedCodeGen.c intermedCodeGen.h intermedCodeGenDef.h
 	gcc -c -g intermedCodeGen.c
@@ -18,6 +18,9 @@ symbolTable.o: symbolTable.c symbolTable.h symbolTableDef.h
 
 stackADT.o: stackADT.c
 	gcc -c -g stackADT.c
+
+codegen.o: codegen.c 
+	gcc -c -g codegen.c
 
 parser.o: parser.c parser.h parserDef.h
 	gcc -c -g parser.c
