@@ -192,6 +192,18 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             quad->result = resultRecord;
             break;
         }
+        case DECLARE_DYNAMIC_ARRAY_OP: {
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            char* name = result->leaf.tok->lexeme;
+            quad->result = variableExists(symbolTableNode, name, hash(name));
+
+            break;
+        }
         case ASSIGN_VAR_OP: {
             if (arg1->isLeaf && arg1->leaf.tok->tok == NUM) {
                 quad->isArg1ID = false;
@@ -656,6 +668,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
         8. WHILE
     */
 
+    SymbolTableNode* currChild = symbolTableNode->children;
     while (statement != NULL) {
         switch (statement->label[0]) {
             case 'G': { // GET_VALUE
@@ -702,8 +715,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
             case 'M': { // MODULE_REUSE_STMT
                 Quadruple* quad = generateQuadruple(symbolTableNode, MODULE_USE_OP, NULL, NULL, NULL, 0);
 
-                // TODO
-                /* ASTNode* outputNode = statement->leftMostChild;
+                ASTNode* outputNode = statement->leftMostChild;
                 ASTNode* moduleNode = outputNode->next;
                 ASTNode* inputNode = moduleNode->next;
 
@@ -721,23 +733,112 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         curr = curr->leftMostChild;
                     }
 
+                    RecordListNode* newNode = malloc(sizeof(RecordListNode));
+                    newNode->isMinus = isMinus;
+                    newNode->isID = false;
+                    newNode->next = NULL;
+
                     Record* varRecord = NULL;
                     if (strcmp(curr->label, "ID") == 0) {
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
+                        newNode->type = varRecord->type.varType;
+                        newNode->isID = true;
+                        newNode->record = varRecord;
+                    } else if (strcmp(curr->label, "NUM") == 0) {
+                        newNode->num = curr->leaf.tok->num;
+                        newNode->type = INT;
+                    } else if (strcmp(curr->label, "RNUM") == 0) {
+                        newNode->rnum = curr->leaf.tok->rnum;
+                        newNode->type = REAL;
+                    } else if (strcmp(curr->label, "TRUE") == 0) {
+                        newNode->type = BOOL;
+                        newNode->boolean = true;
+                    } else if (strcmp(curr->label, "FALSE") == 0) {
+                        newNode->type = BOOL;
+                        newNode->boolean = false;
                     }
 
-                    
+                    if (inputList->head == NULL) {
+                        inputList->head = inputList->tail = newNode;
+                    } else {
+                        inputList->tail->next = newNode;
+                        inputList->tail = newNode;
+                    }
+                    inputList->size++;
+
+                    if (isMinus) {
+                        curr = curr->parent;
+                    }
+
+                    curr = curr->next;
                 }
                 
 
                 RecordList* outputList = malloc(sizeof(RecordList));
                 outputList->head = outputList->tail = NULL;
-                outputList->size = 0; */
+                outputList->size = 0;
+
+                curr = outputNode->leftMostChild;
+                while (curr != NULL) {
+                    RecordListNode* newNode = malloc(sizeof(RecordListNode));
+                    newNode->isMinus = false;
+                    newNode->isID = false;
+                    newNode->next = NULL;
+
+                    Record* varRecord = NULL;
+                    if (strcmp(curr->label, "ID") == 0) {
+                        char* name = curr->leaf.tok->lexeme;
+                        varRecord = variableExists(symbolTableNode, name, hash(name));
+                        newNode->type = varRecord->type.varType;
+                        newNode->isID = true;
+                        newNode->record = varRecord;
+                    } else if (strcmp(curr->label, "NUM") == 0) {
+                        newNode->num = curr->leaf.tok->num;
+                        newNode->type = INT;
+                    } else if (strcmp(curr->label, "RNUM") == 0) {
+                        newNode->rnum = curr->leaf.tok->rnum;
+                        newNode->type = REAL;
+                    } else if (strcmp(curr->label, "TRUE") == 0) {
+                        newNode->type = BOOL;
+                        newNode->boolean = true;
+                    } else if (strcmp(curr->label, "FALSE") == 0) {
+                        newNode->type = BOOL;
+                        newNode->boolean = false;
+                    }
+
+                    if (outputList->head == NULL) {
+                        outputList->head = outputList->tail = newNode;
+                    } else {
+                        outputList->tail->next = newNode;
+                        outputList->tail = newNode;
+                    }
+                    outputList->size++;
+
+                    curr = curr->next;
+                }
+
+                quad->inputList = inputList;
+                quad->outputList = outputList;
                 break;
             }
             case 'D': { // DECLARE
-                // No quadruple needed
+                // Quadruple needed in case of dynamic array declaration
+                ASTNode* node = statement->leftMostChild->leftMostChild;
+                
+                while (node != NULL) {
+                    char* name = node->leaf.tok->lexeme;
+                    Record* varRecord = variableExists(symbolTableNode, name, hash(name));
+
+                    if (varRecord->type.varType != ARR) { break; }
+
+                    bool isStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+                    if (isStatic) { break; }
+
+                    generateQuadruple(symbolTableNode, DECLARE_DYNAMIC_ARRAY_OP, NULL, NULL, node, 0);
+
+                    node = node->next;
+                }
                 break;
             }
             case 'S': { // SWITCH
@@ -751,7 +852,8 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         generateQuadruple(symbolTableNode, CASE_OP, caseNode->leftMostChild, NULL, NULL, 0);
                     }
                     generateStartQuadruple();
-                    populateQuadrupleTable(caseNode->leftMostChild->next, symbolTableNode);
+                    populateQuadrupleTable(caseNode->leftMostChild->next, currChild);
+                    currChild = currChild->next;
                     generateEndQuadruple();
 
                     caseNode = caseNode->next;
@@ -782,7 +884,8 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 quad->arg2Num = right;
 
                 generateStartQuadruple();
-                populateQuadrupleTable(statement->leftMostChild->next->next, symbolTableNode);
+                populateQuadrupleTable(statement->leftMostChild->next->next, currChild);
+                currChild = currChild->next;
                 generateEndQuadruple();
 
                 break;
@@ -792,7 +895,8 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 generateQuadruple(symbolTableNode, WHILE_OP, statement->leftMostChild, NULL, NULL, 0);
 
                 generateStartQuadruple();
-                populateQuadrupleTable(statement->leftMostChild->next, symbolTableNode);
+                populateQuadrupleTable(statement->leftMostChild->next, currChild);
+                currChild = currChild->next;
                 generateEndQuadruple();
                 break;
             }
@@ -802,9 +906,33 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
     }
 }
 
+void printRecordList(RecordList* list, FILE* fp) {
+    RecordListNode* curr = list->head;
+    while (curr != NULL) {
+        if (curr->isID) {
+            fprintf(fp, "%s", curr->record->name);
+        } else {
+            if (curr->type == INT) {
+                fprintf(fp, "%d", curr->num);
+            } else if (curr->type == DOUBLE) {
+                fprintf(fp, "%f", curr->rnum);
+            } else if (curr->type == BOOL) {
+                fprintf(fp, "%s", curr->boolean ? "true" : "false");
+            }
+        }
+        if (curr->next != NULL) {
+            fprintf(fp, ", ");
+        }
+        curr = curr->next;
+    }
+    fprintf(fp, "\n");
+
+    return;
+}
+
 void printQuadrupleTable(void) {
     FILE* fp = fopen("quadrupleTable.txt", "w");
-    fprintf(fp, "%-25s%-10s%-10s%-10s%-10s%-10s\n", "Operator", "Arg1", "Arg2", "Result", "Type", "Offset");
+    fprintf(fp, "%-25s%-10s%-10s%-20s%-10s%-10s\n", "Operator", "Arg1", "Arg2", "Result", "Type", "Offset");
 
     Quadruple* quad = quadTable->head;
     char* opStrings[] = {
@@ -822,6 +950,7 @@ void printQuadrupleTable(void) {
         "OR_OP",
         "UPLUS_OP",
         "UMINUS_OP",
+        "DECLARE_DYNAMIC_ARRAY_OP",
         "ASSIGN_VAR_OP",
         "ASSIGN_ARRAY_OP",
         "ASSIGN_ARRAY_ACCESS_OP",
@@ -852,6 +981,17 @@ void printQuadrupleTable(void) {
         fprintf(fp, "%-25s", opStrings[quad->op]);
 
         printf("%s\n", opStrings[quad->op]);
+
+        if (quad->op == MODULE_USE_OP) {
+            fprintf(fp, "%-10s%-10s%-20s%-10s%-10s\n", "**", "**", quad->moduleName, "**", "**");
+            fprintf(fp, "Input List: ");
+            printRecordList(quad->inputList, fp);
+            fprintf(fp, "Output List: ");
+            printRecordList(quad->outputList, fp);
+            quad = quad->next;
+            continue;
+        } 
+        
         if (quad->isArg1ID) {
             if (quad->arg1ID == NULL) { 
                 fprintf(fp, "%-10s", "**");
@@ -906,8 +1046,8 @@ void printQuadrupleTable(void) {
             }
         }
 
-        if (quad->result == NULL) {
-            fprintf(fp, "%-10s", "**");
+        if (quad->result == NULL || quad->op == MODULE_OP) {
+            fprintf(fp, "%-20s", "**");
             if (quad->op == PRINT_ID_OP) {
                 if (quad->isArg1ID) {
                     fprintf(fp, "%-10s", typeStrings[quad->arg1ID->type.varType]);
@@ -919,12 +1059,14 @@ void printQuadrupleTable(void) {
             } else {
                 fprintf(fp, "%-10s", "**");
             }
+        } else if (quad->op == MODULE_USE_OP) {
+            fprintf(fp, "%-20s", quad->moduleName);
         } else {
-            fprintf(fp, "%-10s", quad->result->name);
+            fprintf(fp, "%-20s", quad->result->name);
             fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
         }
 
-        if (quad->result == NULL) {
+        if (quad->result == NULL || quad->op == MODULE_OP || quad->op == MODULE_USE_OP) {
             fprintf(fp, "%-10s\n", "**");
         } else {
             fprintf(fp, "%-10d\n", quad->result->offset);

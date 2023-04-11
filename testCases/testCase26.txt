@@ -1,8 +1,8 @@
 **declare module arraysum;  Arraysum is defined before array1sum **
 <<<driver program>>>
 start
-	declare A, B:array [-10..10] of integer;
 	declare a, b : integer;
+	declare A, B:array [a..10] of integer;
 	a := 5;
 	A[5 * a + 6 * b] := a * b + 6 * a + B[a * b + 7];
 	print(A[a]);

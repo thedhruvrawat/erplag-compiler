@@ -48,7 +48,15 @@ typedef struct Record {
 } Record;
 
 typedef struct RecordListNode {
-    Record* record;
+    VAR_TYPE type;
+    bool isMinus;
+    bool isID;
+    union {
+        Record* record;
+        int num;
+        double rnum;
+        bool boolean;
+    };
     struct RecordListNode* next;
 } RecordListNode;
 
