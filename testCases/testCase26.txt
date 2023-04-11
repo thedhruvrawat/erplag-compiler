@@ -2,15 +2,7 @@
 <<<driver program>>>
 start
 	declare A, B:array [1..10] of integer;
-	declare a : integer;
+	declare a, b : integer;
 	a := 5;
-	a := (5 + 4) * 3;
-
-	for (k in 3..4)
-	start
-		for (k in 1..10)
-		start
-			a := k;
-		end
-	end
+	A[5 * a + 6 * b] := a * b + 6 * a;
 end

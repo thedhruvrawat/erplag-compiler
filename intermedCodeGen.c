@@ -460,8 +460,8 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 ASTNode* expr = statement->rightMostChild->leftMostChild;
                 if (arrayAccess) {
                     ASTNode* indexNode = statement->leftMostChild->rightMostChild;
-                    populateQuadrupleForExpressions(indexNode, symbolTableNode);
-                    generateQuadruple(symbolTableNode, ASSIGN_ARRAY_ACCESS_OP, expr, indexNode->leftMostChild, statement->leftMostChild, varRecord->type.array.arrType);
+                    populateQuadrupleForExpressions(indexNode->rightMostChild, symbolTableNode);
+                    generateQuadruple(symbolTableNode, ASSIGN_ARRAY_ACCESS_OP, expr, indexNode->leftMostChild, idNode, varRecord->type.array.arrType);
                 } else if (idType != ARR) {
                     strcpy(idNode->symbolTableLabel, varRecord->name);
                     generateQuadruple(symbolTableNode, ASSIGN_VAR_OP, expr, NULL, idNode, idType);
