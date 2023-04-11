@@ -7,3 +7,6 @@ Group Number : 2
 5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
 #include "intermedCodeGenDef.h"
+
+void createQuadrupleTable(void);
+void printQuadrupleTable(void);

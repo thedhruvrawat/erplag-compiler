@@ -261,9 +261,9 @@ void createAST(void) {
                 ASTNode* leafNode = createASTNode(token_types[stackNode->parseTreeNode->tokenID], stackNode->parseTreeNode);
                 appendASTNodeAsChild(leafNode, stackNode->parent);
             } else if (stackNode->parseTreeNode->tokenID == START) {
-                stackNode->parent->scopeStart = stackNode->parseTreeNode->leaf.tok->linenum;
+                stackNode->parent->scope.scopeStart = stackNode->parseTreeNode->leaf.tok->linenum;
             } else if (stackNode->parseTreeNode->tokenID == END) {
-                stackNode->parent->scopeEnd = stackNode->parseTreeNode->leaf.tok->linenum;
+                stackNode->parent->scope.scopeEnd = stackNode->parseTreeNode->leaf.tok->linenum;
             }
         } else {
             switch (stackNode->parseTreeNode->productionID) {
@@ -1109,7 +1109,7 @@ void ASTCreator(ParseTree* parseTree) {
     // printAST(tree->root, false);
     prettyPrintAST();
     printf("Number of nodes in Parse Tree: %d\n", pt->sz);
-    int ASTMemSize = tree->size * sizeof(ASTNode);
+    int ASTMemSize = tree->size * sizeof(ASTNode) / 2;
     int ParseTreeMemSize = pt->sz * sizeof(ParseTreeNode);
     printf("Memory Allocated for Parse Tree: %d bytes\n", ParseTreeMemSize);
     printf("Compression Ratio (Count): %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);

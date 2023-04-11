@@ -426,6 +426,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         // If unary operator
         if (exprNode->numChildren == 2) {
             VAR_TYPE rhsType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
+            exprNode->type = rhsType;
             // Unary operations are not allowed on arrays
             if (rhsType == ARR) {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Unary operations are not allowed on arrays\n" RESET, exprNode->rightMostChild->leaf.tok->linenum);
@@ -434,7 +435,9 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 return rhsType;
             }
         } else {
-            return typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            VAR_TYPE rhsType = typeExtractor(exprNode->leftMostChild, symbolTableNode);
+            exprNode->type = rhsType;
+            return rhsType;
         }
     }
 
@@ -445,6 +448,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         Record* varRecord = variableExists(symbolTableNode, name, hashVal);
         if (varRecord == NULL) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s.\n" RESET, exprNode->leftMostChild->leaf.tok->linenum, name);
+            exprNode->type = ERROR;
             return ERROR;
         }
 
@@ -453,8 +457,11 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
         VAR_TYPE indexType = typeExtractor(indexNode->rightMostChild, symbolTableNode);
         if (indexType != INT) {
             printf(RED BOLD "[Semantic Analyser] Line %d: Array index must be of type INTEGER.\n" RESET, exprNode->leftMostChild->leaf.tok->linenum);
+            indexNode->type = ERROR;
             return ERROR;
         }
+
+        indexNode->type = INT;
 
         // Bound checking for the array
         if (strcmp(indexNode->rightMostChild->label, "NUM") == 0) {
@@ -479,6 +486,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             }
         }
 
+        exprNode->type = varRecord->type.array.arrType;
         return varRecord->type.array.arrType;
     }
     
@@ -491,14 +499,14 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if (leftType == INT && rightType == INT) {
-                return INT;
+                return exprNode->type = INT;
             } else if (leftType == DOUBLE && rightType == DOUBLE) {
-                return DOUBLE;
+                return exprNode->type = DOUBLE;
             } else if (leftType == ERROR || rightType == ERROR) {
-                return ERROR;
+                return exprNode->type = ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
-                return ERROR;
+                return exprNode->type = ERROR;
             }
             break;
         }
@@ -507,12 +515,12 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if ((leftType == INT || leftType == DOUBLE) && (rightType == INT || rightType == DOUBLE)) {
-                return DOUBLE;
+                return exprNode->type = DOUBLE;
             } else if (leftType == ERROR || rightType == ERROR) {
-                return ERROR;
+                return exprNode->type = ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for DIV.\n" RESET, exprNode->leaf.tok->linenum);
-                return ERROR;
+                return exprNode->type = ERROR;
             }
             break;
         }
@@ -523,12 +531,12 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if (leftType == BOOL && rightType == BOOL) {
-                return BOOL;
+                return exprNode->type = BOOL;
             } else if (leftType == ERROR || rightType == ERROR) {
-                return ERROR;
+                return exprNode->type = ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
-                return ERROR;
+                return exprNode->type = ERROR;
             }
             break;
         }
@@ -543,28 +551,28 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             int rightType = typeExtractor(exprNode->rightMostChild, symbolTableNode);
 
             if (leftType == INT && rightType == INT) {
-                return BOOL;
+                return exprNode->type = BOOL;
             } else if (leftType == DOUBLE && rightType == DOUBLE) {
-                return BOOL;
+                return exprNode->type = BOOL;
             } else if (leftType == ERROR || rightType == ERROR) {
-                return ERROR;
+                return exprNode->type = ERROR;
             } else {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET,exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
-                return ERROR;
+                return exprNode->type = ERROR;
             }
             break;
         }
         case NUM: {
-            return INT;
+            return exprNode->type = INT;
             break;
         }
         case RNUM: {
-            return DOUBLE;
+            return exprNode->type = DOUBLE;
             break;
         }
         case TRUE:
         case FALSE: {
-            return BOOL;
+            return exprNode->type = BOOL;
             break;
         }
         case ID: {
@@ -573,15 +581,15 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             Record* varRecord = variableExists(symbolTableNode, name, hashVal);
             if (varRecord == NULL) {
                 printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, exprNode->leaf.tok->linenum, name);
-                return ERROR;
+                return exprNode->type = ERROR;
             } else {
-                return varRecord->type.varType;
+                return exprNode->type = varRecord->type.varType;
             }
             break;
         }
         default: {
             // Should never reach here
-            return ERROR;
+            return exprNode->type = ERROR;
             break;
         }
     }
@@ -981,7 +989,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                         char* name = curr->leaf.tok->lexeme;
                         varRecord = variableExists(symbolTableNode, name, hash(name));
                         if (varRecord == NULL) {
-                            printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s" RESET, curr->leaf.tok->linenum, name);
+                            printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s.\n" RESET, curr->leaf.tok->linenum, name);
                             if (isMinus) {
                                 curr = curr->parent;
                             }
@@ -1230,8 +1238,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, idNode->leaf.tok->linenum, name);
                 }
 
-                int scopeStart = statement->scopeStart;
-                int scopeEnd = statement->scopeEnd;
+                int scopeStart = statement->scope.scopeStart;
+                int scopeEnd = statement->scope.scopeEnd;
                 switch (switchType) {
                     case INT: {
                         // Checking if default statement exists
@@ -1424,8 +1432,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 lastLineNum = currChild->scopeEnd;
 
                 // Setting the scope fetched earlier from the AST
-                currChild->scopeStart = statement->scopeStart;
-                currChild->scopeEnd = statement->scopeEnd;
+                currChild->scopeStart = statement->scope.scopeStart;
+                currChild->scopeEnd = statement->scope.scopeEnd;
                 break;
             }
             case 'W': { // WHILE
@@ -1469,8 +1477,8 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 lastLineNum = currChild->scopeEnd;
 
                 // Setting the scope fetched earlier from the AST
-                currChild->scopeStart = statement->scopeStart;
-                currChild->scopeEnd = statement->scopeEnd;
+                currChild->scopeStart = statement->scope.scopeStart;
+                currChild->scopeEnd = statement->scope.scopeEnd;
 
                 // Checking whether any of the variables in the expression are changing or not
                 curr = exprIDList->head;
@@ -1483,7 +1491,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                 }
 
                 if (!changed && exprIDList->size > 0) {
-                    printf(RED BOLD "[Semantic Analyser] Line %d: No variable in the conditional expression for while loop from line %d to line %d is changing.\n" RESET, statement->scopeEnd, statement->scopeStart, statement->scopeEnd);
+                    printf(RED BOLD "[Semantic Analyser] Line %d: No variable in the conditional expression for while loop from line %d to line %d is changing.\n" RESET, statement->scope.scopeEnd, statement->scope.scopeStart, statement->scope.scopeEnd);
                 }
                 break;
             }
@@ -1542,12 +1550,12 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     funcRecord->called = false;
 
     // Setting the scope fetched earlier from the AST
-    funcRecord->funcST->scopeStart = moduleNode->rightMostChild->scopeStart;
-    funcRecord->funcST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
-    funcRecord->inputST->scopeStart = moduleNode->rightMostChild->scopeStart;
-    funcRecord->inputST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
-    funcRecord->outputST->scopeStart = moduleNode->rightMostChild->scopeStart;
-    funcRecord->outputST->scopeEnd = moduleNode->rightMostChild->scopeEnd;
+    funcRecord->funcST->scopeStart = moduleNode->rightMostChild->scope.scopeStart;
+    funcRecord->funcST->scopeEnd = moduleNode->rightMostChild->scope.scopeEnd;
+    funcRecord->inputST->scopeStart = moduleNode->rightMostChild->scope.scopeStart;
+    funcRecord->inputST->scopeEnd = moduleNode->rightMostChild->scope.scopeEnd;
+    funcRecord->outputST->scopeStart = moduleNode->rightMostChild->scope.scopeStart;
+    funcRecord->outputST->scopeEnd = moduleNode->rightMostChild->scope.scopeEnd;
 
     // Check if all the output variables have been assigned some value or not
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {

@@ -16,6 +16,7 @@ Group Number : 2
 #include "parser.h"
 #include "ast.h"
 #include "symbolTable.h"
+#include "intermedCodeGen.h"
 
 /**
  * @brief Removes the comments from the input file and outputs the same to console
@@ -221,6 +222,8 @@ int main(int argc, char* argv[])
             ASTCreator(pt);
             generateSymbolTable(tree);
             printSymbolTable("symbolTable.txt");
+            createQuadrupleTable();
+            printQuadrupleTable();
             break;
         }
         default: {

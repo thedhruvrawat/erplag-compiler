@@ -23,6 +23,7 @@ GlobalRecord* findFunction(char* name, unsigned int hashVal);
 Record* variableExists(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal);
 GlobalRecord* moduleExists(char* name, unsigned int hashVal);
 Record* findVariableInsertion(SymbolTableNode* symbolTableNode, char* name, unsigned int hashVal);
+VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode);
 void populateInputOutputList(GlobalRecord* funcRecord, ASTNode* inputList, ASTNode* outputList);
 void populateSymbolTableRec(SymbolTableNode* symbolTableNode, ASTNode* statement);
 void populateSymbolTable(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode, ASTNode* moduleDefNode);

@@ -31,8 +31,13 @@ typedef struct ASTNode {
     struct ASTNode* prev;
     int numChildren;
 
-    int scopeStart;
-    int scopeEnd;
+    union {
+        VAR_TYPE type;
+        struct scope {
+            int scopeStart;
+            int scopeEnd;
+        } scope;
+    };
 } ASTNode;
 
 typedef struct AST {

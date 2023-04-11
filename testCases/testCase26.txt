@@ -1,11 +1,10 @@
 **declare module arraysum;  Arraysum is defined before array1sum **
-declare module array1sum;
 <<<driver program>>>
 start
 	declare A, B:array [1..10] of integer;
 	declare a : integer;
 	a := 5;
-	A := B;
+	a := (5 + 4) * 3;
 
 	for (k in 3..4)
 	start
