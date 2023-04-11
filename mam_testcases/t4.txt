@@ -65,7 +65,7 @@ start
 				 get_value(Q);
 				 u:= k+12 - Q*10;          **ERROR: Type mismatch**
 				 break;
-			default: C[9]:= A[15]+Q;	       **ERROR: C[9] is out of bound**
+			default: C[9]:= A[15]+Q;	       **ERROR: 1. C[9] is out of bound,(Errata 11 April)-> 2. A[15] is out of bounds, 3. Q is not declared**
 				 break;			 	
 		end
 		x:=x+u*v;
