@@ -149,6 +149,120 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 break;
             }
+            case MODULE_USE_OP:{
+                // Format of quadruple is currQuad->inputList : input parameters, currQuad->outputList : output parameters, assume that label is given interm of functions parameter
+                
+                // Push all previous registers in use
+                fprintf(codefile, "\t; Push All registers in use for CALL of function\n");
+                fprintf(codefile, "\tFILL_STACK\n");
+
+                // Push Actual Input Parameters of the Function in Stack                                         /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
+                RecordListNode * currRecordNode = currQuad->inputList->tail;
+                for(int i = 0; i < currQuad->inputList->size; i++){ // Inserting from back to front, Easier to take input for function Call
+                    
+                    Record* record = currRecordNode->record;
+                    VAR_TYPE type = record->type.varType;
+                    switch(type){
+                        case INT:{ // If INT/BOOL directly put in the register
+                        }
+                        case BOOL:{
+                            fprintf(codefile, "\tmov rax,[%d]\n", (record->offset * 16));
+                            fprintf(codefile, "\tpush rax\n");
+                            break;
+                        }
+                        case ARRAY:{ // If Array Store Base Address, Range Low and High
+                            // POP Pattern -> Base, Left Range, Right Range So, in reverse should be the Pushing order
+
+                            // Push Right Range
+                            if(record->type.array.isRightID){
+                                // Find record of Right ID
+                                Record * RightRec = variableExists(currQuad->symbolTableNode, record->type.array.rightID, hash(record->type.array.rightID));
+                                if(RightRec == NULL) {printf("ERROR\n");} // This shouldn't happen
+
+                                if(record->type.array.rightNegative)
+                                    fprintf(codefile, "\tmove rax,-%d\n", (RightRec->offset * 16));
+                                else
+                                    fprintf(codefile, "\tmove rax,-%d\n", (RightRec->offset * 16));
+                            } else {
+                                if(record->type.array.rightNegative)
+                                    fprintf(codefile, "\tmov rax,-%d\n", record->type.array.right);
+                                else
+                                    fprintf(codefile, "\tmov rax,%d\n", record->type.array.right);
+                            }
+                            fprintf(codefile, "\tpush rax\n");
+
+                            // Push Left Range
+                            if(record->type.array.isLeftID){
+                                // Find record of Left ID
+                                Record * LeftRec = variableExists(currQuad->symbolTableNode, record->type.array.leftID, hash(record->type.array.leftID));
+                                if(LeftRec == NULL) {printf("ERROR\n");} // This shouldn't happen
+                                if(record->type.array.leftNegative)
+                                    fprintf(codefile, "\tmove rax, -%d\n", (LeftRec->offset * 16));
+                                else
+                                    fprintf(codefile, "\tmove rax, -%d\n", (LeftRec->offset * 16));
+                            } else {
+                                if(record->type.array.leftNegative)
+                                    fprintf(codefile, "\tmov rax,-%d\n", record->type.array.left);
+                                else
+                                    fprintf(codefile, "\tmov rax,%d\n", record->type.array.left);
+                            }
+                            fprintf(codefile, "\tpush rax\n");
+
+                            // Push Base Address at the end, as first to pop
+                            fprintf(codefile, "\tmove rax,%d\n", (record->offset * 16));
+                            fprintf(codefile, "\tpush rax\n");
+                            break;
+                        }
+                        case DOUBLE:{
+                            // To do 
+                            // Break the boolean into 
+                            break;
+                        }
+                        default:{
+                            printf("Error in Popping of function parameters\n");
+                            break;
+                        }
+                    }
+                    currRecordNode = currRecordNode->prev;
+                } 
+
+                // Call the Procedure for the function
+                // Note Actual Input parameters are present in the rsp passed to it
+                char * label; 
+                // To Do -> Get label of the procedure to be called
+                fprintf(codefile, "\t%s;Calling Function\n", label);
+                // Note Formal Output parameters are provided by the Called procedure by stack in the correct order
+
+                // Pop i.e. get output parameters to their actual locations
+
+                currRecordNode = currQuad->outputList->head;
+                for(int i = 0;i < currQuad->outputList->size; i++){
+                    Record* record = currRecordNode->record;
+                    VAR_TYPE type = record->type.varType;
+                    switch(type){
+                        case INT:{
+                        }
+                        case BOOL:{
+                            fprintf(codefile, "\tmov rax,[rsp-%d]\n", (int)((16*(i + 1)))); // Get value of the formal output parameter
+                            fprintf(codefile, "\tmov [%d], rax\n", record->offset * 16); // Store it in the actual parameter
+                            break;
+                        }
+                        case DOUBLE:{
+                            // To Do 
+                            break;
+                        }
+                        default:{
+                            printf("Error in Popping of function parameters\n");
+                            break;
+                        }
+                    }
+                    currRecordNode = currRecordNode->next;
+                }
+                fprintf(codefile, "\t; Pop back all registers in use\n");
+                fprintf(codefile, "\tEMPTY_STACK\n");
+                // Pop all previous registers in use
+                break;
+            }
             default: {
                 printf("Not handled yet.\n");
                 break;
