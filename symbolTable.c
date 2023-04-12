@@ -1906,6 +1906,85 @@ void printSymbolTable(char* filename) {
     return;
 }
 
+void printSymbolTableArrayRec(char* name, SymbolTableNode* symbolTableNode) {
+    if (symbolTableNode == NULL) {
+        return;
+    }
+
+    for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+        Record* varRecord = symbolTableNode->hashTable[i];
+        while (varRecord != NULL) {
+            if (varRecord->type.varType != ARR) {
+                varRecord = varRecord->next;
+                continue;
+            }
+            printf("%-25s", name);
+            char scope[10];
+            sprintf(scope, "%d-%d", symbolTableNode->scopeStart, symbolTableNode->scopeEnd);
+            printf("%-12s", scope);
+            printf("%-25s", varRecord->name);
+            
+            bool isStatic = !varRecord->type.array.isLeftID && !varRecord->type.array.isRightID;
+            if (isStatic) {
+                printf("%-15s", "Static Array");
+            } else {
+                printf("%-15s", "Dynamic Array");
+            }
+
+            char* typeStrings[] = {
+                "INTEGER",
+                "REAL",
+                "BOOLEAN",
+            };
+            printf("%-10s", typeStrings[varRecord->type.array.arrType]);
+
+            printf("[");
+
+            if (varRecord->type.array.leftNegative) {
+                printf("-");
+            }
+
+            if (varRecord->type.array.isLeftID) {
+                printf("%s", varRecord->type.array.leftID);
+            } else {
+                printf("%d", varRecord->type.array.left);
+            }
+
+            printf("..");
+
+            if (varRecord->type.array.rightNegative) {
+                printf("-");
+            }
+            
+            if (varRecord->type.array.isRightID) {
+                printf("%s", varRecord->type.array.rightID);
+            } else {
+                printf("%d", varRecord->type.array.right);
+            }
+
+            printf("]\n");
+
+            varRecord = varRecord->next;
+        }
+    }
+
+    return;
+}
+
+void printSymbolTableArray(void) {
+    for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
+        GlobalRecord* funcRecord = symbolTable->global[i];
+        while (funcRecord != NULL) {
+            printSymbolTableArrayRec(funcRecord->name, funcRecord->inputST);
+            printSymbolTableArrayRec(funcRecord->name, funcRecord->outputST);
+            printSymbolTableArrayRec(funcRecord->name, funcRecord->funcST);
+            funcRecord = funcRecord->next;
+        }
+    }
+
+    return;
+}
+
 void generateSymbolTable(AST* ast) {
     symbolTable = initSymbolTable();
 

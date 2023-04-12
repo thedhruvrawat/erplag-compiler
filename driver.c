@@ -308,7 +308,33 @@ int main(int argc, char* argv[])
             break;
         }
         case 7: {
-            // TODO: Static and Dynamic Arrays
+            printf("\e[1;1H\e[2J");
+            printf("-------------------------------------------------------------------------------------\n");
+            ParseTree* pt = parserMain(userCode);
+            if (!LEXER_ERROR) {
+                printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
+            }
+            if (!PARSER_ERROR) {
+                printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
+            }
+            if (PARSER_ERROR || LEXER_ERROR) {
+                printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                break;
+            }
+            ASTCreator(pt);
+            printf("-------------------------------------------------------------------------------------\n");
+            printf(UNDERLINE BOLD "Semantic Analysis\n" RESET);
+            generateSymbolTable(tree);
+            if (!SEMANTIC_ERROR) {
+                printf(GREEN BOLD "The code is semantically correct.\n" RESET);
+            }
+            printf("-------------------------------------------------------------------------------------\n");
+            printf("Printing the type expressions of array variables\n");
+            printSymbolTableArray();
+            printf("-------------------------------------------------------------------------------------\n");
+            cleanLexer();
+            cleanParser();
+            break;
         }
         case 8: {
             printf("\e[1;1H\e[2J");
