@@ -22,8 +22,7 @@ extern printf		; the C function to be called
 a:	dq	3.0		; 64-bit variable a initialized to 3.0
 b:	dq	4.0		; 64-bit variable b initializes to 4.0
 i:	dq	8		; a 64 bit integer
-five:	dq	5.0		; constant 5.0
-fmt:    db "%s, a=%e, b=%e, c=%e",10,0	; format string for printf
+
 	
 	section .bss 		; uninitialized space
 c:	resq	1		; reserve a 64-bit word
@@ -61,6 +60,10 @@ diva:				; c=c/a;
 	fdiv	qword [a]	; floating divide by a (to st0)
 	fstp	qword [c]	; store quotient into c (pop flt pt stack)
 	pabc	"c=c/a"		; invoke the print macro
+
+section .data
+five:	dq	5.0		; constant 5.0
+fmt:    db "%s, a=%e, b=%e, c=%e",10,0	; format string for printf
 
 intflt:				; a=i;
 	fild	dword [i]	; load integer as floating point

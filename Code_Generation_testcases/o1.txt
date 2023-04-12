@@ -6,9 +6,11 @@
 start
 	declare x, y, z:integer;
 	declare a, b, c:integer;
-	a:= 5;
+	a:= 15;
 	b:= 9;
-	z:= (b-a)*a;	
+	get_value(c);
+	z:= (b-a)*a;
+	print(c);
 	print(z);
 end
 
