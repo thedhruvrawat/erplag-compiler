@@ -167,24 +167,31 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 // }
                 break;
             }
-            case MODULE_OP:{
+            case MODULE_OP_START:{
                 /* -> <<module compute_expr>> takes input[ a: integer, b:integer, c:boolean];   returns [d:integer, e:boolean];<-
                 Function Call =>[u,v] := use module compute_expr[x, y, z]
                 */
 
                 fprintf(codefile, "\n\t;Function %s\n", currQuad->moduleName);
                 fprintf(codefile, "%s:\n", currQuad->moduleName);
-                // Give Space to Input parameters
-                int N = currQuad->inputList->size + currQuad->outputList->size; // Number of formal params 
-                fprintf(codefile, "\tSUB rsp, %d\t; Allocate memory for formal params\n", N * 16);
 
                 // Getting Actual Input parameters stored in stack and storing them into Formal Parameters
                 fprintf(codefile, "\tPUSH rbp\n");
                 fprintf(codefile, "\tMOV rbp, rsp\n");
-
-                // pop qword [rsp + 16] ; Pop the last value (3) and store it in the first new variable
-                // pop qword [rsp + 8] ; Pop the second value (2) and store it in the second new variable
-                // pop qword [rsp] ; Pop the first value (1) and store it in the third new variable
+                int countNumParams = 0; // total Number of parameters
+                // Iterate through Input, output list to given space to the parameters
+                // RecordListNode* IterNodeInputList = currQuad->arg1ID->head;
+                // RecordListNode* IterNodeOutputList = currQuad->arg2ID->head;
+                // 
+                // while(IterNodeOutputList != NULL && IterNodeInputList != NULL){
+                //     VAR_TYPE type = record->type.varType;
+                //     switch (type){
+                //         case ARRAY: countParam += 3;
+                //         case DOUBLE: countParam += 2;
+                //         default: countParam += 1;
+                //     }
+                // } 
+                fprintf(codefile, "\tSUB rsp, %d\t; Allocate memory for formal params\n", countNumParams * 16);
 
                 // Pop the Actual Input parameters of the function into the Formal Parameters offset, Pop values of x, y, z from into a, b, c
                 fprintf(codefile, "\t; Popping Actual Input Param into Formal Param's Offset\n");
@@ -197,10 +204,10 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         case INT:{
                         }
                         case BOOL:{
-                            fprintf(codefile, "\tPOP rax\n"); // Pop the first actual param
-                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n",record->offset*16); // Store it in the 
+                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", i*16); // Pop the first actual param
+                            fprintf(codefile, "\tMOV QWORD[rsp-%d], rax\n",record->offset*16); // Store it in the offset
                             break;
-                        }
+                        }/*
                         case ARRAY:{
                             // Base Address
                             fprintf(codefile, "\tPOP rax\n");
@@ -223,7 +230,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         default:{
                             printf("Error: Type incorrect in actual param list Pop\n"); // This shouldn't happen as semantic check done
                             break;
-                        }
+                        }*/
                     }
                     currRecordNode = currRecordNode->next;
                 }
@@ -370,7 +377,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         }
                         case BOOL:{
                             fprintf(codefile, "\tMOV rax,[rsp-%d]\n", (16*(i + 1))); // Get value of the formal output parameter
-                            fprintf(codefile, "\tMOV [%d], rax\n", record->offset * 16); // Store it in the actual parameter
+                            fprintf(codefile, "\tMOV [rbp-%d], rax\n", record->offset * 16); // Store it in the actual parameter
                             break;
                         }
                         case DOUBLE:{
@@ -942,7 +949,7 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
 
     // rcx has the index, rax and rbx will store the lower and upper bound respectively
     // Go to label exit if not in bounds
-    char *leftVar, *rightVar;
+    char *leftVar, *rightVar;it 
 
     if(q->arg1ID->type.array.isLeftID){
         strcpy(leftVar,q->arg1ID->type.array.leftID);
