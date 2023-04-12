@@ -6,6 +6,7 @@ Group Number : 2
 4 	Shreyas Sheeranali 	2019B3A70387P 	ShreyasSR
 5 	Vaibhav Prabhu 	    2019B3A70593P 	prabhuvaibhav
 */
+
 typedef struct loopStNode{
     char* label;
     struct loopStNode * next;
@@ -14,5 +15,5 @@ typedef struct loopStNode{
 typedef struct loopSt{
     loopStNode * top;
     int size;
-    char type; // 'S' for switch, 'F' for for loop, 'W' for while, 'N' for None
+    // char type; // 'S' for switch, 'F' for for loop, 'W' for while, 'N' for None
 } loopSt;

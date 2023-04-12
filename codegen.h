@@ -39,9 +39,10 @@ void popLoopStack(loopSt *st);
 void pushLoopStack(loopSt *st, char* label);
 void destroyLoopStack(loopSt* st);
 bool isLoopStackEmpty(loopSt * st);
-void setStackType(loopSt *st, char type);
+// void setStackType(loopSt *st, char type);
 void insertSwitchStatement(FILE* codefile,Quadruple *q);
 void insertSwitchEnd(FILE *codefile, Quadruple* q);
 void insertCaseStatement(FILE *codefile, Quadruple* q);
 void insertDefaultStatement(FILE *codefile, Quadruple* q);
+void insertCaseEnd(FILE *codefile, Quadruple* q);
 #endif

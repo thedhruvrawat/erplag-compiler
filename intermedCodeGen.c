@@ -523,6 +523,9 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case UPLUS_OP: {
+            break;
+        }
     }
 
     appendQuadruple(symbolTableNode, quad);
@@ -761,7 +764,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         newNode->type = INT;
                     } else if (strcmp(curr->label, "RNUM") == 0) {
                         newNode->rnum = curr->leaf.tok->rnum;
-                        newNode->type = REAL;
+                        newNode->type = DOUBLE;
                     } else if (strcmp(curr->label, "TRUE") == 0) {
                         newNode->type = BOOL;
                         newNode->boolean = true;
@@ -811,7 +814,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                         newNode->type = INT;
                     } else if (strcmp(curr->label, "RNUM") == 0) {
                         newNode->rnum = curr->leaf.tok->rnum;
-                        newNode->type = REAL;
+                        newNode->type = DOUBLE;
                     } else if (strcmp(curr->label, "TRUE") == 0) {
                         newNode->type = BOOL;
                         newNode->boolean = true;

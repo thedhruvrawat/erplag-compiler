@@ -152,7 +152,8 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 } else if(currQuad->result->type.array.arrType == BOOLEAN){
                     insertArrayAssignmentOperation(codefile, currQuad, 'B');
                 }
-            } break;
+                break;
+            } 
             case PRINT_ID_OP: {
                 if (currQuad->arg1Type == DOUBLE) {
                     insertPrintStatement(codefile, currQuad, 'F');
@@ -171,7 +172,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
             } break;
             case FOR_OP:{
-                insertForStatement(codefile, currQuad);
+                Statement(codefile, currQuad);
                 break;
             }
             case WHILE_EXPR_OP: {
@@ -187,21 +188,23 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case FOR_END_OP:{
-                if((lStack->size != 0))
-                {
-                    if(lStack->type == 'F'){
-                        insertForEnd(codefile, currQuad);
-                    }
-                    if(lStack->type == 'S'){
-                        insertSwitchEnd(codefile, currQuad);
-                    }
-                }
-                // When it's the end of file
-                else{
-                    // Commented to prevent seg fault for other END_OP
-                    // destroyLoopStack(lStack);
-                }
-                break;
+                insertForEnd(codefile,currQuad);
+                // From END_OP
+                // if((lStack->size != 0))
+                // {
+                //     if(lStack->type == 'F'){
+                //         insertForEnd(codefile, currQuad);
+                //     }
+                //     if(lStack->type == 'S'){
+                //         insertSwitchEnd(codefile, currQuad);
+                //     }
+                // }
+                // // When it's the end of file
+                // else{
+                //     // Commented to prevent seg fault for other END_OP
+                //     // destroyLoopStack(lStack);
+                // }
+                // break;
             }
             case GET_VALUE_OP: {
                 if (currQuad->result->type.varType == DOUBLE) {
@@ -218,9 +221,19 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
             }
             case SWITCH_OP:{
                 insertSwitchStatement(codefile,currQuad);
+                break;
             }
             case CASE_OP:{
-
+                insertCaseStatement(codefile,currQuad);
+                break;
+            }
+            case CASE_END_OP:{
+                insertCaseEnd(codefile,currQuad);
+                break;
+            }
+            case SWITCH_END_OP:{
+                insertSwitchEnd(codefile, currQuad);
+                break;
             }
             case SWITCH_OP:{
                 insertSwitchStatement(codefile,currQuad);
@@ -1010,7 +1023,7 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
             }
             case '=': {
                 fprintf(codefile, "\t; EQUAL TO\n");
-                fprintf(codefile, "\COMISD xmm0, xmm1\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
                 fprintf(codefile, "\tCMOVE rcx, rdx\n");
                 break;
             }
@@ -1247,7 +1260,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     }
     int resultOffset = q->result->offset;
 
-
+    fprintf(codefile, "\t;Array Assignment\n");
     switch (type)
     {
     case 'I':
@@ -1255,6 +1268,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
         if(q->isArg1ID && q->isArg2ID){
             int arrOffset = 0;
             printf("ArrayElementOffset %d\n", arrOffset);
+            fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tMOV rax, 16\n"); 
@@ -1266,9 +1280,10 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tSUB rdx, rax\n");
             fprintf(codefile, "\tMOV QWORD[rdx], rbx\n");
 
-        } else if(q->isArg1ID==false && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
+        } else if(!q->isArg1ID && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
             int arrOffset = 0;
             printf("ArrayElementOffset %d\n", arrOffset);
+            fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tMOV rax, 16\n"); 
@@ -1280,14 +1295,16 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tSUB rdx, rax\n");
             fprintf(codefile, "\tMOV QWORD[rdx], rbx\n");
 
-        } else if(q->isArg1ID && q->isArg2ID==false){
-            resultOffset += q->arg2Num;
-            printf("arg1Offset %d\n", arg1Offset);
+        } else if(q->isArg1ID && !q->isArg2ID){
+            resultOffset += q->arg2Num-range_low;
+            printf("resultOffset %d\n", resultOffset);
+            fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg1Offset*16);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
 
-        } else if(q->isArg1ID==false && q->isArg2ID==false){
+        } else if(!q->isArg1ID && !q->isArg2ID){
             resultOffset += q->arg2Num-range_low;
+            fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             // printf("Array element offset: %d\n", resultOffset);
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Num);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
@@ -1368,7 +1385,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMOV QWORD[rdx], rbx\n");
 
         } else if(q->isArg1ID && q->isArg2ID==false){
-            resultOffset += q->arg2Num;
+            resultOffset += q->arg2Num - range_low;
             printf("arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg1Offset*16);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
@@ -1421,10 +1438,11 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     fprintf(codefile,"%s \t: \n",forBlockInit);
     fprintf(codefile,"\tMOV rcx, qword[%s]\n",lVar1); 
     fprintf(codefile,"\tMOV rdx, qword[%s]\n",lVar2); 
+    fprintf(codefile,"\tMOV [rbp-%d],rcx\n",(q->result->offset)*16);
 
     char *forBlockClose = getNewLabelVariable();
     
-    setStackType(lStack,'F');
+    // setStackType(lStack,'F');
     pushLoopStack(lStack, forBlockClose);
     pushLoopStack(lStack, forBlockInit);
     // pushLoopStack(lStack, lVar2);
@@ -1522,7 +1540,7 @@ loopSt *initLoopStack(void){
     loopSt *st = malloc(sizeof(loopSt));
     st->top = NULL;
     st->size = 0;
-    st->type = 'N';
+    // st->type = 'N';
     return st;
 }
 loopStNode *peekLoopStack(loopSt *st){
@@ -1540,7 +1558,7 @@ void popLoopStack(loopSt *st){
     st->top = st->top->next;
     st->size--;
     if (st->size == 0) {
-        st->type = 'N';
+        // st->type = 'N';
         free(currTop->label);
     }
     free(currTop);
@@ -1554,9 +1572,9 @@ void pushLoopStack(loopSt *st, char* label){
     st->size++;
 }
 
-void setStackType(loopSt *st, char type){
-    st->type = type;
-}
+// void setStackType(loopSt *st, char type){
+//     st->type = type;
+// }
 
 bool isLoopStackEmpty(loopSt * st){
     if(st->size)
@@ -1581,7 +1599,7 @@ void insertSwitchStatement(FILE *codefile, Quadruple* q){
 
     char* switchEndLabel = (char*)malloc(sizeof(char) * 20);
     strcpy(switchEndLabel,getNewLabelVariable());
-    setStackType(lStack,'S');
+    // setStackType(lStack,'S');
     pushLoopStack(lStack,switchEndLabel);
 }
 
@@ -1614,7 +1632,7 @@ void insertCaseEnd(FILE *codefile, Quadruple* q){
     strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
     popLoopStack(lStack);
     char switchEndLabel[20];
-    strcpy(switchEndLabel,peekLoopStack(lStack));
+    strcpy(switchEndLabel,peekLoopStack(lStack)->label);
     fprintf(codefile,"JMP %s\n",switchEndLabel);
     fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
