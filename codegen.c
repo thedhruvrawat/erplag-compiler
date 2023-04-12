@@ -264,14 +264,16 @@ void initASMFile(FILE *codefile) {
 }
 
 void initStrings(FILE *codefile) {
-    fprintf(codefile, "\tinput: db \"%%d\", 0\n");
+    fprintf(codefile, "\tinputInt: db \"%%d\", 0\n");
+    fprintf(codefile, "\tinputReal: db \"%%lf\", 0\n");
+    fprintf(codefile, "\tinputBool: db \"%%d\", 0\n");
     fprintf(codefile, "\toutputInt: db \"Output: %%d\", 10, 0\n");
     fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
     fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
     fprintf(codefile, "\toutputFalse: db \"Output: false\", 10, 0\n");
-    fprintf(codefile, "\tinputInt: db \"Input: Enter an integer value \", 10, 0\n");
-    fprintf(codefile, "\tinputReal: db \"Input: Enter a real value \", 10, 0\n");
-    fprintf(codefile, "\tinputBool: db \"Input: Enter a boolean value \", 10, 0\n");
+    fprintf(codefile, "\tinputIntPrompt: db \"Input: Enter an integer value \", 10, 0\n");
+    fprintf(codefile, "\tinputRealPrompt: db \"Input: Enter a real value \", 10, 0\n");
+    fprintf(codefile, "\tinputBoolPrompt: db \"Input: Enter a boolean value \", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
     fprintf(codefile, "\tOutOfBoundError: db \"RUNTIME ERROR: Array index out of bounds\", 10, 0\n");
     fprintf(codefile, "\tTypeMismatchError: db \"RUNTIME ERROR: Type Mismatch Error\", 10, 0\n");
@@ -289,13 +291,13 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tsection .bss\n");
         fprintf(codefile, "\t\ttemp_integer__%d resq 1\n", integer_count);
         fprintf(codefile, "\tsection .text\n");
-        fprintf(codefile, "\tMOV rdi, inputInt\n");
+        fprintf(codefile, "\tMOV rdi, inputIntPrompt\n");
         fprintf(codefile, "\txor rax, rax\n");
         fprintf(codefile, "\tCALL printf\n");
 
         fprintf(codefile, "\tLEA rsi, [temp_integer__%d]\n", integer_count);    
 
-        fprintf(codefile, "\tMOV rdi, input\n");
+        fprintf(codefile, "\tMOV rdi, inputInt\n");
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
@@ -309,18 +311,18 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tsection .bss\n");
         fprintf(codefile, "\t\ttemp_real__%d resq 1\n", real_count);
         fprintf(codefile, "\tsection .text\n");
-        fprintf(codefile, "\tMOV rdi, inputReal\n");
+        fprintf(codefile, "\tMOV rdi, inputRealPrompt\n");
         fprintf(codefile, "\txor rax, rax\n");
         fprintf(codefile, "\tCALL printf\n");
 
         fprintf(codefile, "\tLEA rsi, [temp_real__%d]\n", real_count);    
 
-        fprintf(codefile, "\tMOV rdi, input\n");
+        fprintf(codefile, "\tMOV rdi, inputReal\n");
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
-        fprintf(codefile, "\tMOV rax, qword [temp_real__%d]\n", real_count);
-        fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
+        fprintf(codefile, "\tMOVSD xmm0, qword [temp_real__%d]\n", real_count);
+        fprintf(codefile, "\tMOVSD qword[rbp-%d], xmm0\n", resultOffset*16);
         real_count++;
     }
     else if (type == 'B')
@@ -329,13 +331,13 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tsection .bss\n");
         fprintf(codefile, "\t\ttemp_boolean__%d resq 1\n", bool_count);
         fprintf(codefile, "\tsection .text\n");
-        fprintf(codefile, "\tMOV rdi, inputBool\n");
+        fprintf(codefile, "\tMOV rdi, inputBoolPrompt\n");
         fprintf(codefile, "\txor rax, rax\n");
         fprintf(codefile, "\tCALL printf\n");
 
         fprintf(codefile, "\tLEA rsi, [temp_boolean__%d]\n", bool_count);    
 
-        fprintf(codefile, "\tMOV rdi, input\n");
+        fprintf(codefile, "\tMOV rdi, inputBool\n");
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
@@ -825,37 +827,41 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
         switch(op) {
             case '<': {
                 fprintf(codefile, "\t; LESS THAN\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
-                fprintf(codefile, "\tCMOVL rcx, rdx\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
+                fprintf(codefile, "\tSETB CL\n");
+                fprintf(codefile, "\tMOVZX RCX, CL\n");
                 break;
             }
             case 'L': {
                 fprintf(codefile, "\t; LESS THAN OR EQUAL TO\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
-                fprintf(codefile, "\tCMOVLE rcx, rdx\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
+                fprintf(codefile, "\tSETNA CL\n");
+                fprintf(codefile, "\tMOVZX RCX, CL\n");
                 break;
             }
             case '>': {
                 fprintf(codefile, "\t; GREATER THAN\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
-                fprintf(codefile, "\tCMOVG rcx, rdx\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
+                fprintf(codefile, "\tSETA CL\n");
+                fprintf(codefile, "\tMOVZX RCX, CL\n");
                 break;
             }
             case 'G': {
                 fprintf(codefile, "\t; GREATER THAN OR EQUAL TO\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
-                fprintf(codefile, "\tCMOVGE rcx, rdx\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
+                fprintf(codefile, "\tSETNB CL\n");
+                fprintf(codefile, "\tMOVZX RCX, CL\n");
                 break;
             }
             case '=': {
                 fprintf(codefile, "\t; EQUAL TO\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
+                fprintf(codefile, "\COMISD xmm0, xmm1\n");
                 fprintf(codefile, "\tCMOVE rcx, rdx\n");
                 break;
             }
             case 'N': {
                 fprintf(codefile, "\t; NOT EQUAL TO\n");
-                fprintf(codefile, "\tCMP xmm0, xmm1\n");
+                fprintf(codefile, "\tCOMISD xmm0, xmm1\n");
                 fprintf(codefile, "\tCMOVNE rcx, rdx\n");
                 break;
             }
