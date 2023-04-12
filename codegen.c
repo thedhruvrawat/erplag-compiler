@@ -32,9 +32,6 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
     lStack = initLoopStack();
 
     initASMFile(codefile);    
-    // //fprintf(codefile, "\tFILL_STACK\n");
-    fprintf(codefile, "\tmov rbp, rsp\n");
-    fprintf(codefile, "\tsub rsp, %d\n", stackEnd * 32);
     Quadruple* currQuad = qt->head;
 
     while(currQuad!=NULL) {
@@ -172,7 +169,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
             } break;
             case FOR_OP:{
-                Statement(codefile, currQuad);
+                insertForStatement(codefile, currQuad);
                 break;
             }
             case WHILE_EXPR_OP: {
@@ -235,37 +232,20 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 insertSwitchEnd(codefile, currQuad);
                 break;
             }
-            case SWITCH_OP:{
-                insertSwitchStatement(codefile,currQuad);
-            }
-            case CASE_OP:{
-
-            }
-            case MODULE_OP_START:{
+            case MODULE_OP:{
                 /* -> <<module compute_expr>> takes input[ a: integer, b:integer, c:boolean];   returns [d:integer, e:boolean];<-
                 Function Call =>[u,v] := use module compute_expr[x, y, z]
                 */
-
-                fprintf(codefile, "\n\t;Function %s\n", currQuad->moduleName);
-                fprintf(codefile, "%s:\n", currQuad->moduleName);
+                char* name = currQuad->moduleName;
+                fprintf(codefile, "%s:\t\t;FUNCTION DEF\n", name);
 
                 // Getting Actual Input parameters stored in stack and storing them into Formal Parameters
                 fprintf(codefile, "\tPUSH rbp\n");
                 fprintf(codefile, "\tMOV rbp, rsp\n");
-                int countNumParams = 0; // total Number of parameters
-                // Iterate through Input, output list to given space to the parameters
-                // RecordListNode* IterNodeInputList = currQuad->arg1ID->head;
-                // RecordListNode* IterNodeOutputList = currQuad->arg2ID->head;
-                // 
-                // while(IterNodeOutputList != NULL && IterNodeInputList != NULL){
-                //     VAR_TYPE type = record->type.varType;
-                //     switch (type){
-                //         case ARRAY: countParam += 3;
-                //         case DOUBLE: countParam += 2;
-                //         default: countParam += 1;
-                //     }
-                // } 
-                fprintf(codefile, "\tSUB rsp, %d\t; Allocate memory for formal params\n", countNumParams * 16);
+ 
+                GlobalRecord* moduleRecord = moduleExists(name, hash(name));
+
+                fprintf(codefile, "\tSUB rsp, %d\t; Allocate memory for all func params\n", moduleRecord->activationRecordSize);
 
                 // Pop the Actual Input parameters of the function into the Formal Parameters offset, Pop values of x, y, z from into a, b, c
                 fprintf(codefile, "\t; Popping Actual Input Param into Formal Param's Offset\n");
@@ -278,8 +258,8 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         case INT:{
                         }
                         case BOOL:{
-                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", i*16); // Pop the first actual param
-                            fprintf(codefile, "\tMOV QWORD[rsp-%d], rax\n",record->offset*16); // Store it in the offset
+                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d-8]\n", (i*16)); // Pop the first actual param
+                            fprintf(codefile, "\tMOV QWORD[rsp+%d], rax\n",record->offset*16); // Store it in the offset
                             break;
                         }/*
                         case ARRAY:{
@@ -308,12 +288,15 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     }
                     currRecordNode = currRecordNode->next;
                 }
+                fprintf(codefile, "\tMOV rbp, rsp\n");
+                break;
                 // TODO - Actual Function Procedure to be written
                 // We need to FSEEK back, and call the other parts to be written. After writing the other parts
-
+            }
+            case MODULE_END_OP:{ // MODULE_OP_END
                 // Push the Formal Output parameters of the function into the Stack in reverse order
-                fprintf(codefile, "\t\t; Pushing Formal Output Param into Stack\n");
-                currRecordNode = currQuad->outputList->tail;
+                fprintf(codefile, "\t; Pushing Formal Output Param into Stack\n");
+                RecordListNode* currRecordNode = currQuad->outputList->tail;
                 for(int i = 0;i < currQuad->outputList->size; i++){
                     Record* record = currRecordNode->record;
                     VAR_TYPE type = record->type.varType;
@@ -352,7 +335,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 
                 // Push all previous registers in use
                 fprintf(codefile, "\n\t; Function Call\n");
-                fprintf(codefile, "\tFILL_STACK\t\t;Push All registers in use for CALL of function\n");
+                // fprintf(codefile, "\tFILL_STACK\t\t;Push All registers in use for CALL of function\n");
 
                 // Push Actual Input Parameters of the Function in Stack  
                 fprintf(codefile, "\t;Pushing Actual Input Param into stack\n");                                      /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
@@ -468,8 +451,27 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     currRecordNode = currRecordNode->next;
                 }
                 fprintf(codefile, "\t; Pop back all registers in use\n");
-                fprintf(codefile, "\tEMPTY_STACK\n");
+                // fprintf(codefile, "\tEMPTY_STACK\n");
                 // Pop all previous registers in use
+                break;
+            }
+            case DRIVER_OP:{
+                    fprintf(codefile, "main:\n");
+                    fprintf(codefile, "\tpush rbp\n");
+                    fprintf(codefile, "\tmov rbp, rsp\n");
+                        // //fprintf(codefile, "\tFILL_STACK\n");
+                    fprintf(codefile, "\tmov rbp, rsp\n");
+                    fprintf(codefile, "\tsub rsp, %d\n", stackEnd * 32);
+                    break;
+                
+            }
+            case DRIVER_END_OP:{
+                fprintf(codefile, "exit:\n");
+                fprintf(codefile, "\tmov rsp, rbp\n");
+                fprintf(codefile, "\tpop rbp\n");
+                fprintf(codefile, "\tMOV rax, 0\n");
+                // //fprintf(codefile, "\tEMPTY_STACK\n");
+                fprintf(codefile, "\tret\n");
                 break;
             }
             default: {
@@ -480,12 +482,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
         
         currQuad = currQuad->next;
     }
-    fprintf(codefile, "exit:\n");
-    fprintf(codefile, "\tmov rsp, rbp\n");
-    fprintf(codefile, "\tpop rbp\n");
-    fprintf(codefile, "\tMOV rax, 0\n");
-    // //fprintf(codefile, "\tEMPTY_STACK\n");
-    fprintf(codefile, "\tret\n");
+    
     fclose(codefile);
 }
 
@@ -517,12 +514,8 @@ void initASMFile(FILE *codefile) {
 
     fprintf(codefile, "section .data\n");
     initStrings(codefile);
-    
-
     fprintf(codefile, "section .text\n");
     fprintf(codefile, "\tglobal main\n");
-    fprintf(codefile, "main:\n");
-    fprintf(codefile, "\tpush rbp\n");
 }
 
 void initStrings(FILE *codefile) {
@@ -1177,7 +1170,7 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
 
     // rcx has the index, rax and rbx will store the lower and upper bound respectively
     // Go to label exit if not in bounds
-    char *leftVar, *rightVar;it 
+    char *leftVar, *rightVar;
 
     if(q->arg1ID->type.array.isLeftID){
         strcpy(leftVar,q->arg1ID->type.array.leftID);
