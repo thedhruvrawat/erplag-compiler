@@ -14,4 +14,5 @@ typedef struct loopStNode{
 typedef struct loopSt{
     loopStNode * top;
     int size;
+    char type; // 'S' for switch, 'F' for for loop, 'W' for while, 'N' for None
 } loopSt;
