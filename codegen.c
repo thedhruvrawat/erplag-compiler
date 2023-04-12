@@ -187,8 +187,14 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case FOR_END_OP:{
-                if(lStack->size != 0){
-                    insertForEnd(codefile, currQuad);
+                if((lStack->size != 0))
+                {
+                    if(lStack->type == 'F'){
+                        insertForEnd(codefile, currQuad);
+                    }
+                    if(lStack->type == 'S'){
+                        insertSwitchEnd(codefile, currQuad);
+                    }
                 }
                 // When it's the end of file
                 else{
@@ -209,6 +215,12 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 //     insertGetValueInArray(codefile, currQuad);
                 // }
                 break;
+            }
+            case SWITCH_OP:{
+                insertSwitchStatement(codefile,currQuad);
+            }
+            case CASE_OP:{
+
             }
             default: {
                 printf("Not handled yet.\n");
@@ -1269,6 +1281,7 @@ void insertForStatement(FILE *codefile, Quadruple* q){
 
     char *forBlockClose = getNewLabelVariable();
     
+    setStackType(lStack,'F');
     pushLoopStack(lStack, forBlockClose);
     pushLoopStack(lStack, forBlockInit);
     // pushLoopStack(lStack, lVar2);
@@ -1366,6 +1379,7 @@ loopSt *initLoopStack(void){
     loopSt *st = malloc(sizeof(loopSt));
     st->top = NULL;
     st->size = 0;
+    st->type = 'N';
     return st;
 }
 loopStNode *peekLoopStack(loopSt *st){
@@ -1383,6 +1397,7 @@ void popLoopStack(loopSt *st){
     st->top = st->top->next;
     st->size--;
     if (st->size == 0) {
+        st->type = 'N';
         free(currTop->label);
     }
     free(currTop);
@@ -1394,6 +1409,10 @@ void pushLoopStack(loopSt *st, char* label){
     newTop->label = label;
     st->top = newTop;
     st->size++;
+}
+
+void setStackType(loopSt *st, char type){
+    st->type = type;
 }
 
 bool isLoopStackEmpty(loopSt * st){
@@ -1410,3 +1429,56 @@ void destroyLoopStack(loopSt* st){
     free(st);
 }
 
+void insertSwitchStatement(FILE *codefile, Quadruple* q){
+    char* switchVar = malloc(sizeof(char)*21);
+    switchVar = q->arg1ID->name;
+    int switchVarOff = variableExists(q->symbolTableNode,switchVar,hash(switchVar))->offset;
+    fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", switchVarOff*16); 
+    //INT value is stored in case of INT switch, else 0/1 (false/true)
+
+    char* switchEndLabel = (char*)malloc(sizeof(char) * 20);
+    strcpy(switchEndLabel,getNewLabelVariable());
+    setStackType(lStack,'S');
+    pushLoopStack(lStack,switchEndLabel);
+}
+
+void insertSwitchEnd(FILE *codefile, Quadruple* q){
+    char *switchEndLabel = peekLoopStack(lStack)->label;
+    fprintf(codefile,"%s: \n",switchEndLabel);
+    popLoopStack(lStack);
+}
+
+void insertCaseStatement(FILE *codefile, Quadruple* q){
+    char* nextCaseStartLabel = getNewLabelVariable();
+    pushLoopStack(lStack,nextCaseStartLabel);
+    if(q->arg1Type == INT){
+        fprintf(codefile,"\tMOV rbx, %d\n",q->arg1Num);
+    }
+    else{ //BOOL
+        if(q->arg1Bool == true){
+            fprintf(codefile,"\tMOV rbx, %d\n",1);
+        }
+        else{
+            fprintf(codefile,"\tMOV rbx, %d\n",0);
+        }
+    }
+    fprintf(codefile,"\tCMP rax,rbx\n");
+    fprintf(codefile,"\tJNZ %s\n",nextCaseStartLabel);
+}
+
+void insertCaseEnd(FILE *codefile, Quadruple* q){
+    char nextCaseStartLabel[20];
+    strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
+    popLoopStack(lStack);
+    char switchEndLabel[20];
+    strcpy(switchEndLabel,peekLoopStack(lStack));
+    fprintf(codefile,"JMP %s\n",switchEndLabel);
+    fprintf(codefile,"%s: \n",nextCaseStartLabel);
+}
+
+void insertDefaultStatement(FILE *codefile, Quadruple* q){
+    char nextCaseStartLabel[20];
+    strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
+    popLoopStack(lStack);
+    fprintf(codefile,"%s: \n",nextCaseStartLabel);
+}
