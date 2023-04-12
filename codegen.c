@@ -466,6 +466,23 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 
             }
             case DRIVER_END_OP:{
+                fprintf(codefile, "\tjmp exit\n");
+                
+                fprintf(codefile, "InputIsNotIntegerError:\n");
+                fprintf(codefile, "\tmov rdi, InputNotInteger\n");
+                fprintf(codefile, "\tcall printf\n");
+                fprintf(codefile, "\tjmp exit\n");
+
+                fprintf(codefile, "InputIsNotRealError:\n");
+                fprintf(codefile, "\tmov rdi, InputNotReal\n");
+                fprintf(codefile, "\tcall printf\n");
+                fprintf(codefile, "\tjmp exit\n");
+
+                fprintf(codefile, "InputIsNotBooleanError:\n");
+                fprintf(codefile, "\tmov rdi, InputNotBoolean\n");
+                fprintf(codefile, "\tcall printf\n");
+                fprintf(codefile, "\tjmp exit\n");
+
                 fprintf(codefile, "exit:\n");
                 fprintf(codefile, "\tmov rsp, rbp\n");
                 fprintf(codefile, "\tpop rbp\n");
@@ -530,9 +547,12 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinputRealPrompt: db \"Input: Enter a real value \", 10, 0\n");
     fprintf(codefile, "\tinputBoolPrompt: db \"Input: Enter a boolean value \", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
-    fprintf(codefile, "\tOutOfBoundError: db \"RUNTIME ERROR: Array index out of bounds\", 10, 0\n");
-    fprintf(codefile, "\tTypeMismatchError: db \"RUNTIME ERROR: Type Mismatch Error\", 10, 0\n");
-    fprintf(codefile, "\tDivBy0Exception: db \"EXCEPTION: Division by 0\", 10, 0\n\n");
+    fprintf(codefile, "\tOutOfBoundError: db \"\033[1;31mRUNTIME ERROR: Array index out of bounds\033[0m\", 10, 0\n");
+    fprintf(codefile, "\tTypeMismatchError: db \"\033[1;31mRUNTIME ERROR: Type Mismatch Error\033[0m\", 10, 0\n");
+    fprintf(codefile, "\tDivBy0Exception: db \"\033[1;31mEXCEPTION: Division by 0\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotInteger: db \"\033[1;31mRUNTIME ERROR: Expected INTEGER: Given input is not an integer\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotReal: db \"\033[1;31mRUNTIME ERROR: Expected REAL: Given input is not a real value\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotBoolean: db \"\033[1;31mRUNTIME ERROR: Expected BOOLEAN: Given input is not boolean\033[0m\", 10, 0\n\n");
     fprintf(codefile, "\ttypeInteger: db \"integer\", 0\n");
     fprintf(codefile, "\ttypeReal: db \"real\", 0\n");
     fprintf(codefile, "\ttypeBoolean: db \"boolean\", 0\n");
@@ -556,6 +576,9 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
+        // cmp eax, 1 jne notinterror
+        fprintf(codefile, "\tCMP EAX, 1\n");
+        fprintf(codefile, "\tJNE InputIsNotIntegerError\n");
         fprintf(codefile, "\tMOV rax, qword [temp_integer__%d]\n", integer_count);
         fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
         integer_count++;
@@ -576,6 +599,8 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
+        fprintf(codefile, "\tCMP EAX, 1\n");
+        fprintf(codefile, "\tJNE InputIsNotRealError\n");
         fprintf(codefile, "\tMOVSD xmm0, qword [temp_real__%d]\n", real_count);
         fprintf(codefile, "\tMOVSD qword[rbp-%d], xmm0\n", resultOffset*16);
         real_count++;
@@ -596,6 +621,8 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
+        fprintf(codefile, "\tCMP EAX, 1\n");
+        fprintf(codefile, "\tJNE InputIsNotBooleanError\n");
         fprintf(codefile, "\tMOV rax, qword [temp_boolean__%d]\n", bool_count);
         fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
         bool_count++;
