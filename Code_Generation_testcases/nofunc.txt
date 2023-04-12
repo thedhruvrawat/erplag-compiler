@@ -1,0 +1,8 @@
+** Takes input value, prints the input value, followed by two times the input value **
+<<<driver program>>>
+start
+	declare x:integer;
+	get_value(x);
+	print(x);			
+	print(x);
+end
