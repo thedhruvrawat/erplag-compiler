@@ -201,7 +201,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 //     // Commented to prevent seg fault for other END_OP
                 //     // destroyLoopStack(lStack);
                 // }
-                // break;
+                break;
             }
             case GET_VALUE_OP: {
                 if (currQuad->result->type.varType == DOUBLE) {
@@ -490,6 +490,9 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 // //fprintf(codefile, "\tEMPTY_STACK\n");
                 fprintf(codefile, "\tret\n");
                 break;
+            }
+            case DEFAULT_OP:{
+                insertDefaultStatement(codefile,currQuad);
             }
             default: {
                 printf("Not handled yet.\n");
@@ -1615,6 +1618,7 @@ void insertSwitchStatement(FILE *codefile, Quadruple* q){
     char* switchVar = malloc(sizeof(char)*21);
     switchVar = q->arg1ID->name;
     int switchVarOff = variableExists(q->symbolTableNode,switchVar,hash(switchVar))->offset;
+    fprintf(codefile,"; SWITCH STATEMENT\n");
     fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", switchVarOff*16); 
     //INT value is stored in case of INT switch, else 0/1 (false/true)
 
@@ -1659,8 +1663,11 @@ void insertCaseEnd(FILE *codefile, Quadruple* q){
 }
 
 void insertDefaultStatement(FILE *codefile, Quadruple* q){
-    char nextCaseStartLabel[20];
-    strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
-    popLoopStack(lStack);
-    fprintf(codefile,"%s: \n",nextCaseStartLabel);
+    
+    char* nextCaseStartLabel = getNewLabelVariable();
+    // // char nextCaseStartLabel[20];
+    pushLoopStack(lStack,nextCaseStartLabel);
+    // strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
+    // popLoopStack(lStack);
+    // fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
