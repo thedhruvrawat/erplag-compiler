@@ -1107,6 +1107,11 @@ void createQuadrupleTable(void) {
         populateQuadrupleTable(module->rightMostChild->leftMostChild, moduleRecord->funcST);
         generateEndQuadruple();
 
+        // Calculate activation record size
+        calculateActivationRecordSize(moduleRecord, moduleRecord->funcST);
+        calculateActivationRecordSize(moduleRecord, moduleRecord->inputST);
+        calculateActivationRecordSize(moduleRecord, moduleRecord->outputST);
+
         module = module->next;
     }
 }

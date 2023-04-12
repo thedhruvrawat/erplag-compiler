@@ -12,6 +12,8 @@ Group Number : 2
 #include "lexerDef.h"
 #include "colorCodes.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 SymbolTable* symbolTable;
 bool SEMANTIC_ERROR = false;
 
@@ -1598,6 +1600,22 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
     return;
 }
 
+void calculateActivationRecordSize(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode) {
+    if (symbolTableNode == NULL) {
+        return;
+    }
+
+    funcRecord->activationRecordSize = max(funcRecord->activationRecordSize, symbolTableNode->nextOffset);
+
+    SymbolTableNode* currChild = symbolTableNode->children;
+    while (currChild != NULL) {
+        calculateActivationRecordSize(funcRecord, currChild);
+        currChild = currChild->next;
+    }
+
+    return;
+}
+
 void addModuleDeclarationToSymbolTable(ASTNode* moduleDeclarationNode) {
     char* name = moduleDeclarationNode->leaf.tok->lexeme;
     GlobalRecord* funcRecord = moduleExists(name, hash(name));
@@ -1643,6 +1661,10 @@ void addFunctionToSymbolTable(ASTNode* moduleNode) {
     funcRecord->called = true;
     populateSymbolTable(funcRecord->funcST, statementsNode, 2);
     funcRecord->called = false;
+
+    calculateActivationRecordSize(funcRecord, funcRecord->funcST);
+    calculateActivationRecordSize(funcRecord, funcRecord->inputST);
+    calculateActivationRecordSize(funcRecord, funcRecord->outputST);
 
     // Setting the scope fetched earlier from the AST
     funcRecord->funcST->scopeStart = moduleNode->rightMostChild->scope.scopeStart;
@@ -1701,6 +1723,7 @@ void addModuleSignatureToSymbolTable(ASTNode* moduleSignatureNode) {
     funcRecord->defined = false;
     funcRecord->driver = driver;
     funcRecord->error = false;
+    funcRecord->activationRecordSize = 0;
     funcRecord->funcST = initSymbolTableNode();
     funcRecord->funcST->nestingLevel = 1;
     funcRecord->inputST = initSymbolTableNode();

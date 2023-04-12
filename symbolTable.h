@@ -32,6 +32,7 @@ void addFunctionToSymbolTable(ASTNode* moduleNode);
 void printSymbolTableRec(SymbolTableNode* symbolTableNode);
 void printSymbolTable(char* filename);
 void printQuadrupleTable(void);
+void calculateActivationRecordSize(GlobalRecord* funcRecord, SymbolTableNode* symbolTableNode);
 void generateSymbolTable(AST* ast);
 
 #endif
