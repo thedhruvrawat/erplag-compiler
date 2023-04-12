@@ -11,7 +11,7 @@ Group Number : 2
 #include <string.h>
 #include "astDef.h"
 
-AST* tree;
+AST* tree = NULL;
 ASTStack* st;
 ParseTree* pt;
 
@@ -969,37 +969,6 @@ void createAST(void) {
 }
 
 /**
- * @brief Prints the AST using an inorder traversal
- * 
- * @param node 
- * @param firstChild 
- */
-void printAST(ASTNode* node, bool firstChild) {
-    if (node == NULL) {
-        return;
-    }
-
-    printAST(node->leftMostChild, true);
-
-    printf("%p\t", node);
-    if (node->leaf.tok != NULL) {
-        printf("ASTNode: %s\t%s\n", node->label, node->leaf.tok->lexeme);
-    } else {
-        printf("ASTNode: %s\n", node->label);
-    }
-
-    if (node->leftMostChild != NULL) {
-        printAST(node->leftMostChild->next, false);
-    }    
-
-    if (!firstChild) {
-        printAST(node->next, false);
-    }
-
-    return;
-}
-
-/**
  * @brief Initialised the queue used for printing of the AST
  * 
  * @return ASTQueue* 
@@ -1064,6 +1033,7 @@ void appendQueue(ASTQueue* q, ASTNode* node) {
  * 
  */
 void prettyPrintAST(void) {
+    printf("AST printed using Level-Order Traversal:\n");
     ASTQueue* q = initQueue();
 
     appendQueue(q, tree->root);
@@ -1075,6 +1045,11 @@ void prettyPrintAST(void) {
         for (int i = 0; i < sz; ++i) {
             ASTQueueNode* qNode = peekQueue(q);
             ASTNode* node = qNode->node;
+            if (node == NULL) {
+                printf("\n");
+                popQueue(q);
+                continue;
+            }
             if (node->isLeaf) {
                 printf("(%s %s %s)\n", node->parent->label, node->label, node->leaf.tok->lexeme);
             } else {
@@ -1083,17 +1058,19 @@ void prettyPrintAST(void) {
             popQueue(q);
 
             ASTNode* curr = node->leftMostChild;
+            bool atLeastOne = false;
             while (curr != NULL) {
+                atLeastOne = true;
                 appendQueue(q, curr);
                 curr = curr->next;
+            }
+            if (atLeastOne) {
+                appendQueue(q, curr);
             }
         }
 
         printf("\n");
     }
-
-    printf("Number of nodes in AST: %d\n", tree->size);
-    printf("Memory Allocated for AST: %ld bytes\n", tree->size * sizeof(ASTNode));
 
     return;
 }
@@ -1106,13 +1083,5 @@ void prettyPrintAST(void) {
 void ASTCreator(ParseTree* parseTree) {
     pt = parseTree;
     createAST();
-    // printAST(tree->root, false);
-    prettyPrintAST();
-    printf("Number of nodes in Parse Tree: %d\n", pt->sz);
-    int ASTMemSize = tree->size * sizeof(ASTNode);
-    int ParseTreeMemSize = pt->sz * sizeof(ParseTreeNode);
-    printf("Memory Allocated for Parse Tree: %d bytes\n", ParseTreeMemSize);
-    printf("Compression Ratio (Count): %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);
-    printf("Compression Ratio (Memory): %.2lf%%\n", (1 - ((double) ASTMemSize) / ParseTreeMemSize) * 100);
     return;
 }

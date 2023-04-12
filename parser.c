@@ -544,75 +544,65 @@ void insertRuleInParseTree(ParseTreeNode* parent, int productionID, TOKEN* tok, 
  * @param fp
  * @param firstChild
  */
-void printParseTreeRec(ParseTreeNode* node, FILE* fp, bool firstChild)
+void printParseTreeRec(ParseTreeNode* node, bool firstChild)
 {
     if (node == NULL) {
         return;
     }
 
-    printParseTreeRec(node->child, fp, true);
+    printParseTreeRec(node->child, true);
 
     if (node->isLeaf && node->leaf.tok != NULL) {
-        fprintf(fp, "%-25s%-10d%-15s", node->leaf.tok->lexeme, node->leaf.tok->linenum, elements[node->tokenID]);
+        printf("%-25s%-10d%-15s", node->leaf.tok->lexeme, node->leaf.tok->linenum, elements[node->tokenID]);
     } else if (node->isLeaf) {
-        fprintf(fp, "%-25s%-10s%-15s", "(null)", "(null)", "(null)");
+        printf("%-25s%-10s%-15s", "(null)", "(null)", "(null)");
     } else {
-        fprintf(fp, "%-25s%-10s%-15s", "--------------------", "---", "----------");
+        printf("%-25s%-10s%-15s", "--------------------", "---", "----------");
     }
 
     if (node->isLeaf && node->leaf.tok == NULL) {
-        fprintf(fp, "%-20s", "(null)");
+        printf("%-20s", "(null)");
     } else if (node->isLeaf && node->leaf.tok->tok == NUM) {
-        fprintf(fp, "%-20d", node->leaf.tok->num);
+        printf("%-20d", node->leaf.tok->num);
     } else if (node->isLeaf && node->leaf.tok->tok == RNUM) {
-        fprintf(fp, "%-20lf", node->leaf.tok->rnum);
+        printf("%-20lf", node->leaf.tok->rnum);
     } else {
-        fprintf(fp, "%-20s", "---------------");
+        printf("%-20s", "---------------");
     }
 
     if (node->tokenDerivedFrom >= 0) {
-        fprintf(fp, "%-40s", elements[node->tokenDerivedFrom]);
+        printf("%-40s", elements[node->tokenDerivedFrom]);
     } else {
-        fprintf(fp, "%-40s", "ROOT");
+        printf("%-40s", "ROOT");
     }
-    fprintf(fp, "%-5s", (node->isLeaf ? "Yes" : "No"));
+    printf("%-5s", (node->isLeaf ? "Yes" : "No"));
 
     if (!node->isLeaf) {
-        fprintf(fp, "%-20s", elements[node->tokenID]);
+        printf("%-20s", elements[node->tokenID]);
     }
 
-    fprintf(fp, "\n");
+    printf("\n");
 
     if (node->child != NULL) {
-        printParseTreeRec(node->child->next, fp, false);
+        printParseTreeRec(node->child->next, false);
     }
 
     if (!firstChild) {
-        printParseTreeRec(node->next, fp, false);
+        printParseTreeRec(node->next, false);
     }
 
     return;
 }
 
 /**
- * @brief Prints the Parse Tree to an output file in an inorder traversal.
+ * @brief Prints the Parse Tree to console in an inorder traversal.
  *
  * @param parseTree
  * @param outFile
  */
-void printParseTree(ParseTree* parseTree, char* outFile)
+void printParseTree(ParseTree* parseTree)
 {
-    FILE* fp = fopen(outFile, "w");
-
-    if (fp == NULL) {
-        printf(RED BOLD "Unable to open the file to write parseTree.\n" RESET);
-        exit(1);
-    }
-
-    printParseTreeRec(parseTree->root, fp, false);
-    fclose(fp);
-
-    printf(GREEN BOLD "Parse Tree printed to %s\n" RESET, outFile);
+    printParseTreeRec(parseTree->root, false);
     return;
 }
 
@@ -705,10 +695,6 @@ void parse()
 
         free(curTok);
         destroyStack(st);
-        if (synCorrPrint) {
-            printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
-            synCorrPrint = true;
-        }
         return;
     }
 
@@ -803,7 +789,6 @@ void parse()
                         destroyStack(st);
                         destroySet(synchronizingSet);
                         if (synCorrPrint) {
-                            printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
                             synCorrPrint = true;
                         }
                         free(curTok);
@@ -841,7 +826,6 @@ void parse()
     free(curTok);
     destroyStack(st);
     if (synCorrPrint) {
-        printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
         synCorrPrint = true;
     }
     return;
@@ -996,7 +980,7 @@ void cleanParser()
     LHSLoc = NULL;
     RHSLoc = NULL;
 
-    // freeParseTree(parseTree);
+    freeParseTree(parseTree);
     base = 0;
     return;
 }
@@ -1005,10 +989,9 @@ void cleanParser()
  * @brief Driver function of the parser; invoked by the parser to parse the user code
  * 
  * @param userSourceCode 
- * @param parseTreeOutput 
  * @return ParseTree* 
  */
-ParseTree* parserMain(char* userSourceCode, char* parseTreeOutput)
+ParseTree* parserMain(char* userSourceCode)
 {
     // Setup
     // if (argc != 2) {
@@ -1121,7 +1104,6 @@ ParseTree* parserMain(char* userSourceCode, char* parseTreeOutput)
 
     initParseTree();
     parse();
-    printParseTree(parseTree, parseTreeOutput);
 
     fclose(f);
     fclose(fp);

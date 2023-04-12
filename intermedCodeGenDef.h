@@ -23,6 +23,7 @@ typedef enum {
     OR_OP,
     UPLUS_OP,
     UMINUS_OP,
+    DECLARE_DYNAMIC_ARRAY_OP,
     ASSIGN_VAR_OP,
     ASSIGN_ARRAY_OP,
     ASSIGN_ARRAY_ACCESS_OP,
