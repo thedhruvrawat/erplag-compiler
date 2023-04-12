@@ -22,7 +22,7 @@ bool findFollow(int tokenID);
 
 void printParseTree(ParseTree* parseTree);
 
-ParseTree* parserMain(char *userSourceCode, char *parseTreeOutput);
+ParseTree* parserMain(char *userSourceCode);
 void cleanParser();
 
 #endif

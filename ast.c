@@ -1033,6 +1033,7 @@ void appendQueue(ASTQueue* q, ASTNode* node) {
  * 
  */
 void prettyPrintAST(void) {
+    printf("AST printed using Level-Order Traversal:\n");
     ASTQueue* q = initQueue();
 
     appendQueue(q, tree->root);
@@ -1057,11 +1058,15 @@ void prettyPrintAST(void) {
             popQueue(q);
 
             ASTNode* curr = node->leftMostChild;
+            bool atLeastOne = false;
             while (curr != NULL) {
+                atLeastOne = true;
                 appendQueue(q, curr);
                 curr = curr->next;
             }
-            appendQueue(q, curr);
+            if (atLeastOne) {
+                appendQueue(q, curr);
+            }
         }
 
         printf("\n");

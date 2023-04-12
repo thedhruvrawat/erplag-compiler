@@ -304,7 +304,6 @@ TOKEN* getNextToken()
                 state = 43;
             } else if (curr == EOF) {
                 if (errno == 0 && (LexCorrPrint)) {
-                    printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
                     LexCorrPrint = false;
                 }
                 token = createToken();

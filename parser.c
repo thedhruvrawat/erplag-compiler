@@ -695,10 +695,6 @@ void parse()
 
         free(curTok);
         destroyStack(st);
-        if (synCorrPrint) {
-            printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
-            synCorrPrint = true;
-        }
         return;
     }
 
@@ -793,7 +789,6 @@ void parse()
                         destroyStack(st);
                         destroySet(synchronizingSet);
                         if (synCorrPrint) {
-                            printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
                             synCorrPrint = true;
                         }
                         free(curTok);
@@ -831,7 +826,6 @@ void parse()
     free(curTok);
     destroyStack(st);
     if (synCorrPrint) {
-        printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
         synCorrPrint = true;
     }
     return;
@@ -995,10 +989,9 @@ void cleanParser()
  * @brief Driver function of the parser; invoked by the parser to parse the user code
  * 
  * @param userSourceCode 
- * @param parseTreeOutput 
  * @return ParseTree* 
  */
-ParseTree* parserMain(char* userSourceCode, char* parseTreeOutput)
+ParseTree* parserMain(char* userSourceCode)
 {
     // Setup
     // if (argc != 2) {
