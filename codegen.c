@@ -681,7 +681,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
             }
         }
         fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
-    } else { //Floating point arithmetic
+    } else { // Floating point arithmetic
         if(q->isArg1ID) {
             fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16);            
         } else {
@@ -1265,22 +1265,41 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     pushLoopStack(lStack, lVar1);
 
     fprintf(codefile,"\tCMP rcx, rdx \n");
-    fprintf(codefile,"\tJG %s \n",forBlockClose);
+    fprintf(codefile,"\tJG %s \n", forBlockClose);
 }
 
 void insertWhileLabelStatement(FILE* codefile, Quadruple* q) {
     char *whileBlockInit = getNewLabelVariable();
     char *whileBlockClose = getNewLabelVariable();
     fprintf(codefile, "%s: \n", whileBlockInit);
-    pushLoopStack(lStack, whileBlockClose);
     pushLoopStack(lStack, whileBlockInit);
+    pushLoopStack(lStack, whileBlockClose);
+
+    return;
 }
 
 void insertWhileStatement(FILE* codefile, Quadruple* q) {
-    /* fprintf(codefile,"\tMOV rcx, 0\n"); 
-    fprintf(codefile,"\tMOV rdx, \n"); */
+    int offset = q->result->offset;
+    fprintf(codefile,"\tMOV rcx, [rbp - %d]\n", offset * 16);
+
+    char* whileBlockClose = peekLoopStack(lStack)->label;
+    fprintf(codefile,"\tCMP rcx, 0 \n");
+    fprintf(codefile,"\tJE %s \n", whileBlockClose);
+
+    return;
 }
 
+void insertWhileEndStatement(FILE* codefile, Quadruple* q) {
+    char* whileBlockClose = peekLoopStack(lStack)->label;
+    popLoopStack(lStack);
+    char* whileBlockInit = peekLoopStack(lStack)->label;
+    popLoopStack(lStack);
+
+    fprintf(codefile,"\tJMP %s \n", whileBlockInit);
+    fprintf(codefile,"%s: \n", whileBlockClose);
+
+    return;
+}
 
 void insertForEnd(FILE *codefile, Quadruple* q){
     /* Working code for non-nested loop
