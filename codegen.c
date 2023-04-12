@@ -126,7 +126,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case UMINUS_OP: {
-                if(currQuad->arg1Type == DOUBLE && currQuad->arg2Type == DOUBLE) {
+                if(currQuad->arg1Type == DOUBLE) {
                     insertUnaryMinusOperation(codefile, currQuad, 'F');
                 } else {
                     insertUnaryMinusOperation(codefile, currQuad, 'I');
@@ -1123,8 +1123,9 @@ void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only
             fprintf(codefile,"\tMOVSD xmm0, [%s]\n", arg1Label);
         }
         fprintf(codefile, "\t; UNARY MINUS\n");
-        fprintf(codefile, "\tNEG xmm0\n");
-        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tPXOR xmm1, xmm1\n");
+        fprintf(codefile, "\tSUBPS xmm1, xmm0\n");
+        fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm1\n", resultOffset*16);        
     }    
 }
 
@@ -1343,7 +1344,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
         } else if(q->isArg1ID==false && q->isArg2ID==false){
             resultOffset += q->arg2Num;
             // printf("Array element offset: %d\n", resultOffset);
-            fprintf(codefile, "\tMOV rax, %d\n", q->arg1Real);
+            fprintf(codefile, "\tMOV rax, %f\n", q->arg1Real);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
 
         }

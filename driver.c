@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     printf("Team Members: Dhruv, Vaibhav, Shreyas, Swastik, Chirag\n");
     printf("----------------------------------------------------------------------\n");
 
-    printf(RED BOLD "TODODODODODO\n" RESET);
+    printf(GREEN BOLD "Level 4: Symbol table/AST/Type Checking/Semantic rules modules work/Handled static and dynamic arrays in Type Checking and Code Generation\n" RESET);
 
     int choice = 0;
     char userInput[80];
