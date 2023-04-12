@@ -4,7 +4,13 @@ start
 	declare a, b : integer;
 	a := 0;
 	b := 0;
-
+	declare A:array [12..17] of boolean;
+	A[12] := false;
+	A[13] := false;
+	A[14] := true;
+	A[15] := false;
+	A[16] := false;
+	A[17] := false OR true;
 	while (a < 5)
 	start
 		a := a + 1;
@@ -16,7 +22,13 @@ start
 			c := c + 1;
 		end
 	end
-
+	declare k:integer;
+	k :=12;
+	while(k <=17)
+	start
+		print(A[k]);
+		k:=k+1;
+	end
 	print(a);
 	print(b);
 end
