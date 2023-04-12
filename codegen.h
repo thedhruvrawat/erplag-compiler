@@ -17,6 +17,8 @@ void codeGenerator(QuadrupleTable *qt, char *output);
 void initASMFile(FILE *fp);
 void initStrings(FILE *fp);
 void insertPrintStatement(FILE *codefile, Quadruple *q, char type);
+void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type);
+void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type);
 void insertGetValueStatement(FILE *codefile, Quadruple *q, char type);
 void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type);
 void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type);
