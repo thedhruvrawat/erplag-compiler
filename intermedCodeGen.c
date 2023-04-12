@@ -1097,6 +1097,9 @@ void createQuadrupleTable(void) {
         } else {
             name = module->leftMostChild->leaf.tok->lexeme;
             quad = generateQuadruple(NULL, MODULE_OP, NULL, NULL, NULL, 0);
+            GlobalRecord* moduleRecord = moduleExists(name, hash(name));
+            quad->arg1ID = moduleRecord->inputList;
+            quad->arg2ID = moduleRecord->outputList;
             strcpy(quad->moduleName, name);
         }
         GlobalRecord* moduleRecord = moduleExists(name, hash(name));
