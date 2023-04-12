@@ -5,10 +5,16 @@ start
 	a := 0;
 	b := 0;
 
-	while (a > 5)
+	while (a < 5)
 	start
 		a := a + 1;
-		b := b + 1;
+		declare c: integer;
+		c := 0;
+		while (c < 10) 
+		start
+			b := b + 1;
+			c := c + 1;
+		end
 	end
 
 	print(a);

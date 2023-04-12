@@ -395,6 +395,7 @@ int main(int argc, char* argv[])
 
             if (SEMANTIC_ERROR) {
                 printf(RED BOLD "Cannot generate code due to semantic errors.\n" RESET);
+                break;
             }
 
             createQuadrupleTable();

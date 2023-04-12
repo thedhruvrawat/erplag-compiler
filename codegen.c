@@ -182,6 +182,10 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 insertWhileStatement(codefile, currQuad);
                 break;
             }
+            case WHILE_END_OP: {
+                insertWhileEndStatement(codefile, currQuad);
+                break;
+            }
             case FOR_END_OP:{
                 if(lStack->size != 0){
                     insertForEnd(codefile, currQuad);
@@ -1279,8 +1283,13 @@ void insertWhileLabelStatement(FILE* codefile, Quadruple* q) {
 }
 
 void insertWhileStatement(FILE* codefile, Quadruple* q) {
-    int offset = q->result->offset;
-    fprintf(codefile,"\tMOV rcx, [rbp - %d]\n", offset * 16);
+    if (q->isArg1ID) {
+        fprintf(codefile,"\tMOV rcx, [rbp - %d]\n", q->arg1ID->offset * 16);
+    } else if (q->arg1Bool) {
+        fprintf(codefile,"\tMOV rcx, 1\n");
+    } else {
+        fprintf(codefile,"\tMOV rcx, 0\n");
+    }
 
     char* whileBlockClose = peekLoopStack(lStack)->label;
     fprintf(codefile,"\tCMP rcx, 0 \n");
@@ -1290,11 +1299,14 @@ void insertWhileStatement(FILE* codefile, Quadruple* q) {
 }
 
 void insertWhileEndStatement(FILE* codefile, Quadruple* q) {
-    char* whileBlockClose = peekLoopStack(lStack)->label;
+    char whileBlockClose[10];
+    strcpy(whileBlockClose, peekLoopStack(lStack)->label);
     popLoopStack(lStack);
-    char* whileBlockInit = peekLoopStack(lStack)->label;
+    char whileBlockInit[10];
+    strcpy(whileBlockInit, peekLoopStack(lStack)->label);
     popLoopStack(lStack);
 
+    printf("whileBlockInit: %p\n", whileBlockInit);
     fprintf(codefile,"\tJMP %s \n", whileBlockInit);
     fprintf(codefile,"%s: \n", whileBlockClose);
 
