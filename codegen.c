@@ -32,7 +32,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
     initASMFile(codefile);    
     // //fprintf(codefile, "\tFILL_STACK\n");
     fprintf(codefile, "\tmov rbp, rsp\n");
-    fprintf(codefile, "\tsub rsp, 16\n");
+    fprintf(codefile, "\tsub rsp, 800\n");
     Quadruple* currQuad = qt->head;
 
     while(currQuad!=NULL) {
@@ -225,9 +225,9 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
     fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
     fprintf(codefile, "\toutputFalse: db \"Output: false\", 10, 0\n");
-    fprintf(codefile, "\tinputInt: db \"Input: Enter an integer value \", 0\n");
-    fprintf(codefile, "\tinputReal: db \"Input: Enter a real value \", 0\n");
-    fprintf(codefile, "\tinputBool: db \"Input: Enter a boolean value \", 0\n");
+    fprintf(codefile, "\tinputInt: db \"Input: Enter an integer value \", 10, 0\n");
+    fprintf(codefile, "\tinputReal: db \"Input: Enter a real value \", 10, 0\n");
+    fprintf(codefile, "\tinputBool: db \"Input: Enter a boolean value \", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
     fprintf(codefile, "\tOutOfBoundError: db \"RUNTIME ERROR: Array index out of bounds\", 10, 0\n");
     fprintf(codefile, "\tTypeMismatchError: db \"RUNTIME ERROR: Type Mismatch Error\", 10, 0\n");
