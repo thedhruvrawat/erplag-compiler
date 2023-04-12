@@ -2,28 +2,21 @@
 <<<driver program>>>
 start
 	declare a, b : integer;
-	declare A, B:array [a..10] of integer;
-	a := 5;
-	A[5 * a + 6 * b] := a * b + 6 * a + B[a * b + 7];
-	print(A[a]);
+	a := 0;
+	b := 0;
 
-	declare c: boolean;
-
-	switch(c)
+	while (a < 5)
 	start
-		case true:
-			a := b;
-			break;
-		case false:
-			b := a * b + 5;
-			break;
-	end
-
-	while (a > 5)
-	start
-		declare k: integer;
-
 		a := a + 1;
-		b := b + 1;
+		declare c: integer;
+		c := 0;
+		while (c < 10) 
+		start
+			b := b + 1;
+			c := c + 1;
+		end
 	end
+
+	print(a);
+	print(b);
 end

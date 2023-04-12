@@ -182,6 +182,10 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 insertWhileStatement(codefile, currQuad);
                 break;
             }
+            case WHILE_END_OP: {
+                insertWhileEndStatement(codefile, currQuad);
+                break;
+            }
             case FOR_END_OP:{
                 if(lStack->size != 0){
                     insertForEnd(codefile, currQuad);
@@ -582,7 +586,7 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
     if(type == 'I') {
         if(q->isArg1ID) {
             fprintf(codefile, "\t; Printing an integer\n");
-            fprintf(codefile, "\tMOV rdi, output\n");
+            fprintf(codefile, "\tMOV rdi, outputInt\n");
             fprintf(codefile, "\tmov rsi, qword[rbp-%d]\n", arg1Offset*16);
         } else {
             fprintf(codefile, "\t; Printing an integer\n");
@@ -631,11 +635,11 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         boolPrints++;
     }
     fprintf(codefile, "\tcall printf\n");
-    fprintf(codefile, "\tMOV rdi, newline\n");
-    fprintf(codefile, "\tcall printf\n");
+    // fprintf(codefile, "\tMOV rdi, newline\n");
+    // fprintf(codefile, "\tcall printf\n");
 }
 
-void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type){
+void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     /*
         Arg1 -> Array Record
         Arg2 ->
@@ -862,8 +866,8 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type){
     }
 
     fprintf(codefile, "\tCALL printf\n");
-    fprintf(codefile, "\tMOV rdi, newline\n");
-    fprintf(codefile, "\tCALL printf\n");
+    // fprintf(codefile, "\tMOV rdi, newline\n");
+    // fprintf(codefile, "\tCALL printf\n");
     // fprintf(codefile, "\tPOP rbp\n");
 }
 
@@ -912,7 +916,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
             }
         }
         fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
-    } else { //Floating point arithmetic
+    } else { // Floating point arithmetic
         if(q->isArg1ID) {
             fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16);            
         } else {
@@ -1264,7 +1268,7 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
 
 
 
-void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type){
+void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     // Check for static array
     // int lower_bound_offset = 0;
     // int upper_bound_offset = 0;
@@ -1496,22 +1500,49 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     pushLoopStack(lStack, lVar1);
 
     fprintf(codefile,"\tCMP rcx, rdx \n");
-    fprintf(codefile,"\tJG %s \n",forBlockClose);
+    fprintf(codefile,"\tJG %s \n", forBlockClose);
 }
 
 void insertWhileLabelStatement(FILE* codefile, Quadruple* q) {
     char *whileBlockInit = getNewLabelVariable();
     char *whileBlockClose = getNewLabelVariable();
     fprintf(codefile, "%s: \n", whileBlockInit);
-    pushLoopStack(lStack, whileBlockClose);
     pushLoopStack(lStack, whileBlockInit);
+    pushLoopStack(lStack, whileBlockClose);
+
+    return;
 }
 
 void insertWhileStatement(FILE* codefile, Quadruple* q) {
-    /* fprintf(codefile,"\tMOV rcx, 0\n"); 
-    fprintf(codefile,"\tMOV rdx, \n"); */
+    if (q->isArg1ID) {
+        fprintf(codefile,"\tMOV rcx, [rbp - %d]\n", q->arg1ID->offset * 16);
+    } else if (q->arg1Bool) {
+        fprintf(codefile,"\tMOV rcx, 1\n");
+    } else {
+        fprintf(codefile,"\tMOV rcx, 0\n");
+    }
+
+    char* whileBlockClose = peekLoopStack(lStack)->label;
+    fprintf(codefile,"\tCMP rcx, 0 \n");
+    fprintf(codefile,"\tJE %s \n", whileBlockClose);
+
+    return;
 }
 
+void insertWhileEndStatement(FILE* codefile, Quadruple* q) {
+    char whileBlockClose[10];
+    strcpy(whileBlockClose, peekLoopStack(lStack)->label);
+    popLoopStack(lStack);
+    char whileBlockInit[10];
+    strcpy(whileBlockInit, peekLoopStack(lStack)->label);
+    popLoopStack(lStack);
+
+    printf("whileBlockInit: %p\n", whileBlockInit);
+    fprintf(codefile,"\tJMP %s \n", whileBlockInit);
+    fprintf(codefile,"%s: \n", whileBlockClose);
+
+    return;
+}
 
 void insertForEnd(FILE *codefile, Quadruple* q){
     /* Working code for non-nested loop
