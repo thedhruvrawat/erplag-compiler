@@ -10,6 +10,7 @@ Group Number : 2
 #define CODEGEN_H
 
 #include "intermedCodeGen.h"
+#include "codegenDef.h"
 
 char *getNewLabelVariable();
 void codeGenerator(QuadrupleTable *qt, char *output);
@@ -22,5 +23,18 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
 void insertLogicalOperation(FILE *codefile, Quadruple *q, char op);
 void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type);
 void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type);
+void insertForStatement(FILE *codefile, Quadruple* q);
+void insertForEnd(FILE *codefile, Quadruple* q);
+void insertWhileLabelStatement(FILE* codefile, Quadruple* q);
+void insertWhileStatement(FILE* codefile, Quadruple* q);
+
+loopStNode *getLoopStackNode(char *label);
+loopSt *initLoopStack(void);
+loopStNode *peekLoopStack(loopSt *st);
+void popLoopStack(loopSt *st);
+void pushLoopStack(loopSt *st, char* label);
+void destroyLoopStack(loopSt* st);
+bool isLoopStackEmpty(loopSt * st);
+
 
 #endif

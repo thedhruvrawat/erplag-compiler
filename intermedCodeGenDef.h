@@ -38,9 +38,14 @@ typedef enum {
     CASE_OP,
     DEFAULT_OP,
     FOR_OP,
+    WHILE_EXPR_OP,
     WHILE_OP,
-    START_OP,
-    END_OP
+    MODULE_END_OP,
+    DRIVER_END_OP,
+    FOR_END_OP,
+    WHILE_END_OP,
+    SWITCH_END_OP,
+    CASE_END_OP
 } OPERATOR;
 
 
@@ -82,3 +87,4 @@ typedef struct QuadrupleTable {
 } QuadrupleTable;
 
 extern QuadrupleTable* quadTable;
+extern int stackEnd;

@@ -11,7 +11,10 @@ Group Number : 2
 #include "symbolTable.h"
 #include "intermedCodeGenDef.h"
 
+#define max(a, b) ((a) > (b) ? (a) : (b))
+
 QuadrupleTable* quadTable;
+int stackEnd;
 
 QuadrupleTable* initQuadrupleTable(void) {
     QuadrupleTable* quadTable = malloc(sizeof(QuadrupleTable));
@@ -469,6 +472,17 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
             quad->result = variableExists(symbolTableNode, name, hash(name));
             break;
         }
+        case WHILE_EXPR_OP: {
+            quad->isArg1ID = true;
+            quad->arg1ID = NULL;
+
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+
+            quad->result = NULL;
+
+            break;
+        }
         case WHILE_OP: {
             if (arg1->isLeaf && arg1->leaf.tok->tok == TRUE) {
                 quad->isArg1ID = false;
@@ -492,8 +506,12 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
-        case START_OP: 
-        case END_OP: {
+        case MODULE_END_OP: 
+        case DRIVER_END_OP:
+        case FOR_END_OP:
+        case WHILE_END_OP:
+        case SWITCH_END_OP:
+        case CASE_END_OP: {
             // Just the operator itself is sufficient
             quad->isArg1ID = true;
             quad->arg1ID = NULL;
@@ -509,14 +527,6 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
     appendQuadruple(symbolTableNode, quad);
     return quad;
-}
-
-Quadruple* generateStartQuadruple(void) {
-    return generateQuadruple(NULL, START_OP, NULL, NULL, NULL, 0);
-}
-
-Quadruple* generateEndQuadruple(void) {
-    return generateQuadruple(NULL, END_OP, NULL, NULL, NULL, 0);
 }
 
 void populateQuadrupleForExpressions(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
@@ -855,13 +865,14 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                     } else {
                         generateQuadruple(symbolTableNode, CASE_OP, caseNode->leftMostChild, NULL, NULL, 0);
                     }
-                    generateStartQuadruple();
                     populateQuadrupleTable(caseNode->leftMostChild->next, currChild);
                     currChild = currChild->next;
-                    generateEndQuadruple();
+                    generateQuadruple(symbolTableNode, CASE_END_OP, NULL, NULL, NULL, 0);
 
                     caseNode = caseNode->next;
                 }
+                
+                generateQuadruple(symbolTableNode, SWITCH_END_OP, NULL, NULL, NULL, 0);
                 break;
             }
             case 'F': { // FOR
@@ -887,21 +898,20 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 quad->arg1Num = left;
                 quad->arg2Num = right;
 
-                generateStartQuadruple();
                 populateQuadrupleTable(statement->leftMostChild->next->next, currChild);
                 currChild = currChild->next;
-                generateEndQuadruple();
+                generateQuadruple(symbolTableNode, FOR_END_OP, NULL, NULL, NULL, 0);
 
                 break;
             }
             case 'W': { // WHILE
+                generateQuadruple(symbolTableNode, WHILE_EXPR_OP, NULL, NULL, NULL, 0);
                 populateQuadrupleForExpressions(statement->leftMostChild, symbolTableNode);
                 generateQuadruple(symbolTableNode, WHILE_OP, statement->leftMostChild, NULL, NULL, 0);
 
-                generateStartQuadruple();
                 populateQuadrupleTable(statement->leftMostChild->next, currChild);
                 currChild = currChild->next;
-                generateEndQuadruple();
+                generateQuadruple(symbolTableNode, WHILE_END_OP, NULL, NULL, NULL, 0);
                 break;
             }
 
@@ -969,9 +979,14 @@ void printQuadrupleTable(void) {
         "CASE_OP",
         "DEFAULT_OP",
         "FOR_OP",
+        "WHILE_EXPR_OP",
         "WHILE_OP",
-        "START_OP",
-        "END_OP"
+        "MODULE_END_OP",
+        "DRIVER_END_OP",
+        "FOR_END_OP",
+        "WHILE_END_OP",
+        "SWITCH_END_OP",
+        "CASE_END_OP"
     };
 
     char* typeStrings[] = {
@@ -986,7 +1001,7 @@ void printQuadrupleTable(void) {
 
         printf("%s\n", opStrings[quad->op]);
 
-        if (quad->op == MODULE_USE_OP) {
+        if (quad->op == MODULE_USE_OP || quad->op == MODULE_OP || quad->op == MODULE_END_OP) {
             fprintf(fp, "%-10s%-10s%-20s%-10s%-10s\n", "**", "**", quad->moduleName, "**", "**");
             fprintf(fp, "Input List: ");
             printRecordList(quad->inputList, fp);
@@ -1050,7 +1065,7 @@ void printQuadrupleTable(void) {
             }
         }
 
-        if (quad->result == NULL || quad->op == MODULE_OP) {
+        if (quad->result == NULL) {
             fprintf(fp, "%-20s", "**");
             if (quad->op == PRINT_ID_OP) {
                 if (quad->isArg1ID) {
@@ -1063,14 +1078,12 @@ void printQuadrupleTable(void) {
             } else {
                 fprintf(fp, "%-10s", "**");
             }
-        } else if (quad->op == MODULE_USE_OP) {
-            fprintf(fp, "%-20s", quad->moduleName);
         } else {
             fprintf(fp, "%-20s", quad->result->name);
             fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
         }
 
-        if (quad->result == NULL || quad->op == MODULE_OP || quad->op == MODULE_USE_OP) {
+        if (quad->result == NULL) {
             fprintf(fp, "%-10s\n", "**");
         } else {
             fprintf(fp, "%-10d\n", quad->result->offset);
@@ -1082,8 +1095,36 @@ void printQuadrupleTable(void) {
     fclose(fp);
 }
 
+RecordList* convertToRecordList(Record* listNode) {
+    RecordList* newList = malloc(sizeof(RecordList));
+    newList->head = newList->tail = NULL;
+    newList->size = 0;
+
+    while (listNode != NULL) {
+        RecordListNode* node = malloc(sizeof(RecordListNode));
+        node->record = listNode;
+        node->isMinus = false;
+        node->isID = true;
+        node->next = NULL;
+        node->prev = NULL;
+
+        if (newList->head == NULL) {
+            newList->head = newList->tail = node;
+        } else {
+            newList->tail->next = node;
+            node->prev = newList->tail;
+            newList->tail = node;
+        }
+        newList->size++;
+        listNode = listNode->next;
+    }
+
+    return newList;
+}
+
 void createQuadrupleTable(void) {
     quadTable = initQuadrupleTable();
+    stackEnd = 0;
 
     // Iterate through the modules
     ASTNode* module = tree->root->leftMostChild->next;
@@ -1091,21 +1132,34 @@ void createQuadrupleTable(void) {
         // make quadruple for module
         char* name;
         Quadruple* quad;
+        GlobalRecord* moduleRecord = NULL;
         if (strcmp(module->label, "DRIVER") == 0) {
             name = "DRIVER";
             quad = generateQuadruple(NULL, DRIVER_OP, NULL, NULL, NULL, 0);
+            moduleRecord = moduleExists(name, hash(name));
         } else {
             name = module->leftMostChild->leaf.tok->lexeme;
             quad = generateQuadruple(NULL, MODULE_OP, NULL, NULL, NULL, 0);
-            GlobalRecord* moduleRecord = moduleExists(name, hash(name));
-            quad->arg1ID = moduleRecord->inputList;
-            quad->arg2ID = moduleRecord->outputList;
+            moduleRecord = moduleExists(name, hash(name));
+            quad->inputList = convertToRecordList(moduleRecord->inputList);
+            quad->outputList = convertToRecordList(moduleRecord->outputList);
             strcpy(quad->moduleName, name);
         }
-        GlobalRecord* moduleRecord = moduleExists(name, hash(name));
-        generateStartQuadruple();
         populateQuadrupleTable(module->rightMostChild->leftMostChild, moduleRecord->funcST);
-        generateEndQuadruple();
+        if (moduleRecord->driver) {
+            generateQuadruple(moduleRecord->funcST, DRIVER_END_OP, NULL, NULL, NULL, 0);
+        } else {
+            Quadruple* endQuad = generateQuadruple(moduleRecord->funcST, MODULE_END_OP, NULL, NULL, NULL, 0);
+            endQuad->inputList = quad->inputList;
+            endQuad->outputList = quad->outputList;
+        }
+
+        // Calculate activation record size
+        calculateActivationRecordSize(moduleRecord, moduleRecord->funcST);
+        calculateActivationRecordSize(moduleRecord, moduleRecord->inputST);
+        calculateActivationRecordSize(moduleRecord, moduleRecord->outputST);
+
+        stackEnd = max(stackEnd, moduleRecord->activationRecordSize);
 
         module = module->next;
     }
