@@ -240,7 +240,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 fprintf(codefile, "%s:\t\t;FUNCTION DEF\n", name);
 
                 // Getting Actual Input parameters stored in stack and storing them into Formal Parameters
-                fprintf(codefile, "\tPUSH rbp\n");
+                // fprintf(codefile, "\tPUSH rbp\n");
                 fprintf(codefile, "\tMOV rbp, rsp\n");
  
                 GlobalRecord* moduleRecord = moduleExists(name, hash(name));
@@ -249,173 +249,211 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
 
                 // Pop the Actual Input parameters of the function into the Formal Parameters offset, Pop values of x, y, z from into a, b, c
                 fprintf(codefile, "\t; Popping Actual Input Param into Formal Param's Offset\n");
-                RecordListNode* currRecordNode = currQuad->inputList->head;
-                for(int i = 0;i < currQuad->inputList->size; i++){
+                // RecordListNode* currRecordNode = currQuad->inputList->head;
+                // for(int i = 0;i < currQuad->inputList->size; i++){
 
-                    Record* record = currRecordNode->record;
-                    VAR_TYPE type = record->type.varType;
-                    switch(type){
-                        case INT:{
-                        }
-                        case BOOL:{
-                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d-8]\n", (i*16)); // Pop the first actual param
-                            fprintf(codefile, "\tMOV QWORD[rsp+%d], rax\n",record->offset*16); // Store it in the offset
-                            break;
-                        }/*
-                        case ARRAY:{
-                            // Base Address
-                            fprintf(codefile, "\tPOP rax\n");
-                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n",record->offset*16);
+                //     Record* record = currRecordNode->record;
+                //     VAR_TYPE type = record->type.varType;
+                //     switch(type){
+                //         case INT:
+                //         case BOOL: {
+                //             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d-8]\n", (i*16)); // Pop the first actual param
+                //             fprintf(codefile, "\tMOV QWORD[rsp+%d], rax\n",record->offset*16); // Store it in the offset
+                //             break;
+                //         }/*
+                //         case ARRAY:{
+                //             // Base Address
+                //             fprintf(codefile, "\tPOP rax\n");
+                //             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n",record->offset*16);
 
-                            // Left Range
-                            fprintf(codefile, "\tPOP rax\n");
-                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+16); // Do I need to subtract -> NO, as offsets keep on increasing
+                //             // Left Range
+                //             fprintf(codefile, "\tPOP rax\n");
+                //             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+16); // Do I need to subtract -> NO, as offsets keep on increasing
 
-                            // Right Range
-                            fprintf(codefile, "\tPOP rax\n");
-                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+32);
-                            break;
-                        }
-                        case DOUBLE:{
-                            fprintf(codefile, "\tPOP xmm0\n");
-                            fprintf(codefile, "\tMOVUPS QWORD[rbp-%d], xmm0\n", record->offset*16);
-                            break;
-                        }
-                        default:{
-                            printf("Error: Type incorrect in actual param list Pop\n"); // This shouldn't happen as semantic check done
-                            break;
-                        }*/
+                //             // Right Range
+                //             fprintf(codefile, "\tPOP rax\n");
+                //             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+32);
+                //             break;
+                //         }
+                //         case DOUBLE:{
+                //             fprintf(codefile, "\tPOP xmm0\n");
+                //             fprintf(codefile, "\tMOVUPS QWORD[rbp-%d], xmm0\n", record->offset*16);
+                //             break;
+                //         }
+                //         default:{
+                //             printf("Error: Type incorrect in actual param list Pop\n"); // This shouldn't happen as semantic check done
+                //             break;
+                //         }*/
+                //     }
+                //     currRecordNode = currRecordNode->next;
+                // }
+
+                RecordListNode* inputNode = currQuad->inputList->head;
+                while (inputNode != NULL) {
+                    if (inputNode->type == ARR) {
+                        // TODO
+                    } else {
+                        fprintf(codefile, "\tPOP rax\n");
+                        fprintf(codefile, "\tMOV QWORD[rbp - %d], rax\n", inputNode->record->offset * 16);
                     }
-                    currRecordNode = currRecordNode->next;
+                    inputNode = inputNode->next;
                 }
-                fprintf(codefile, "\tMOV rbp, rsp\n");
+
                 break;
                 // TODO - Actual Function Procedure to be written
                 // We need to FSEEK back, and call the other parts to be written. After writing the other parts
             }
             case MODULE_END_OP:{ // MODULE_OP_END
                 // Push the Formal Output parameters of the function into the Stack in reverse order
-                fprintf(codefile, "\t; Pushing Formal Output Param into Stack\n");
-                RecordListNode* currRecordNode = currQuad->outputList->tail;
-                for(int i = 0;i < currQuad->outputList->size; i++){
-                    Record* record = currRecordNode->record;
-                    VAR_TYPE type = record->type.varType;
+                // fprintf(codefile, "\t; Pushing Formal Output Param into Stack\n");
+                // RecordListNode* currRecordNode = currQuad->outputList->tail;
+                // for(int i = 0;i < currQuad->outputList->size; i++){
+                //     Record* record = currRecordNode->record;
+                //     VAR_TYPE type = record->type.varType;
 
-                    switch(type){
-                        case INT:{
-                        }
-                        case BOOL:{
-                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", record->offset * 16);
-                            fprintf(codefile, "\tPUSH rax\n");
-                            break;
-                        }
-                        case DOUBLE:{
-                            fprintf(codefile, "\tMOV xmm0, QWORD[rbp-%d]\n", record->offset * 16);
-                            fprintf(codefile, "\tPUSH xmm0\n");
-                            break;
-                        }
-                        default:{
-                            printf("Error: Type incorrect in formal param list Push\n"); // This shouldn't happen as semantic check done
-                            break;
-                        }
+                //     switch(type){
+                //         case INT:{
+                //         }
+                //         case BOOL:{
+                //             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", record->offset * 16);
+                //             fprintf(codefile, "\tPUSH rax\n");
+                //             break;
+                //         }
+                //         case DOUBLE:{
+                //             fprintf(codefile, "\tMOV xmm0, QWORD[rbp-%d]\n", record->offset * 16);
+                //             fprintf(codefile, "\tPUSH xmm0\n");
+                //             break;
+                //         }
+                //         default:{
+                //             printf("Error: Type incorrect in formal param list Push\n"); // This shouldn't happen as semantic check done
+                //             break;
+                //         }
+                //     }
+                //     currRecordNode = currRecordNode->prev;
+                // }
+
+                RecordListNode* outputNode = currQuad->outputList->tail;
+                while (outputNode != NULL) {
+                    if (outputNode->type == ARR) {
+                        // todo
+                    } else {
+                        fprintf(codefile, "\tMOV rax, QWORD[rbp - %d]\n", outputNode->record->offset * 16);
+                        fprintf(codefile, "\tPUSH rax\n");
                     }
-                    currRecordNode = currRecordNode->prev;
+                    outputNode = outputNode->prev;
                 }
 
-
-                // To RETURN, we need back the rbp value prior to function call
-                fprintf(codefile, "\tMOV rsp, rbp\n");
-                fprintf(codefile, "\tPOP rbp\n");
                 fprintf(codefile, "\tRET\n");
-                
                 break;
             }
             case MODULE_USE_OP:{
-                // Format of quadruple is currQuad->inputList : input parameters, currQuad->outputList : output parameters, assume that label is given interm of functions parameter
+                // // Format of quadruple is currQuad->inputList : input parameters, currQuad->outputList : output parameters, assume that label is given interm of functions parameter
                 
-                // Push all previous registers in use
-                fprintf(codefile, "\n\t; Function Call\n");
-                // fprintf(codefile, "\tFILL_STACK\t\t;Push All registers in use for CALL of function\n");
+                // // Push all previous registers in use
+                // fprintf(codefile, "\n\t; Function Call\n");
+                // // fprintf(codefile, "\tFILL_STACK\t\t;Push All registers in use for CALL of function\n");
 
-                // Push Actual Input Parameters of the Function in Stack  
-                fprintf(codefile, "\t;Pushing Actual Input Param into stack\n");                                      /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
-                RecordListNode * currRecordNode = currQuad->inputList->tail;
-                for(int i = 0; i < currQuad->inputList->size; i++){ // Inserting from back to front, Easier to take input for function Call
+                // // Push Actual Input Parameters of the Function in Stack  
+                // fprintf(codefile, "\t;Pushing Actual Input Param into stack\n");                                      /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
+                // RecordListNode * currRecordNode = currQuad->inputList->tail;
+                // for(int i = 0; i < currQuad->inputList->size; i++){ // Inserting from back to front, Easier to take input for function Call
                     
-                    Record* record = currRecordNode->record;
-                    VAR_TYPE type = record->type.varType;
-                    switch(type){
-                        case INT:{ // If INT/BOOL directly put in the register
-                        }
-                        case BOOL:{
-                            // How do I know rbp is correct symbol table base pointer for our offset variable
-                            fprintf(codefile, "\tMOV rax, QWORD [rbp-%d]\n", (record->offset * 16));
-                            fprintf(codefile, "\tPUSH rax\n");
-                            break;
-                        }
-                        case ARRAY:{ // If Array Store Base Address, Range Low and High
-                            // POP Pattern -> Base, Left Range, Right Range So, in reverse should be the Pushing order
-                            fprintf(codefile, "\t\t;Pushing Array param\n");
-                            // Push Right Range
-                            if(record->type.array.isRightID){
-                                // Find record of Right ID
-                                Record * RightRec = variableExists(currQuad->symbolTableNode, record->type.array.rightID, hash(record->type.array.rightID));
-                                if(RightRec == NULL) {printf("ERROR\n");} // This shouldn't happen
+                //     Record* record = currRecordNode->record;
+                //     VAR_TYPE type = record->type.varType;
+                //     switch(type){
+                //         case INT:
+                //         case BOOL: {
+                //             // How do I know rbp is correct symbol table base pointer for our offset variable
+                //             fprintf(codefile, "\tMOV rax, QWORD [rbp-%d]\n", (record->offset * 16));
+                //             fprintf(codefile, "\tPUSH rax\n");
+                //             break;
+                //         }
+                //         case ARRAY:{ // If Array Store Base Address, Range Low and High
+                //             // POP Pattern -> Base, Left Range, Right Range So, in reverse should be the Pushing order
+                //             fprintf(codefile, "\t\t;Pushing Array param\n");
+                //             // Push Right Range
+                //             if(record->type.array.isRightID){
+                //                 // Find record of Right ID
+                //                 Record * RightRec = variableExists(currQuad->symbolTableNode, record->type.array.rightID, hash(record->type.array.rightID));
+                //                 if(RightRec == NULL) {printf("ERROR\n");} // This shouldn't happen
 
-                                fprintf(codefile, "\tMOV rax, QWORD [ebp-%d]\n", (RightRec->offset * 16)); // Move the value of the Identifier to rax
-                                if(record->type.array.rightNegative){
-                                    fprintf(codefile,"\tMOV rcx, -1\n");
-                                    fprintf(codefile, "\tIMUL rax, rcx\n");
-                                } 
-                            } else {
-                                if(record->type.array.rightNegative) // Put the value of the identifier to rax
-                                    fprintf(codefile, "\tMOV rax,-%d\n", record->type.array.right);
-                                else
-                                    fprintf(codefile, "\tMOV rax,%d\n", record->type.array.right);
+                //                 fprintf(codefile, "\tMOV rax, QWORD [ebp-%d]\n", (RightRec->offset * 16)); // Move the value of the Identifier to rax
+                //                 if(record->type.array.rightNegative){
+                //                     fprintf(codefile,"\tMOV rcx, -1\n");
+                //                     fprintf(codefile, "\tIMUL rax, rcx\n");
+                //                 } 
+                //             } else {
+                //                 if(record->type.array.rightNegative) // Put the value of the identifier to rax
+                //                     fprintf(codefile, "\tMOV rax,-%d\n", record->type.array.right);
+                //                 else
+                //                     fprintf(codefile, "\tMOV rax,%d\n", record->type.array.right);
+                //             }
+                //             fprintf(codefile, "\tPUSH rax\n");
+
+                //             // Push Left Range
+                //             if(record->type.array.isLeftID){
+                //                 // Find record of Left ID
+                //                 Record * LeftRec = variableExists(currQuad->symbolTableNode, record->type.array.leftID, hash(record->type.array.leftID));
+                //                 if(LeftRec == NULL) {printf("ERROR\n");} // This shouldn't happen
+
+                //                 fprintf(codefile, "\tMOV rax, qword[ebp-%d]\n", (LeftRec->offset * 16)); // Move the value of the Identifier to rax
+                //                 if(record->type.array.leftNegative){
+                //                     fprintf(codefile,"\tMOV rcx, -1\n");
+                //                     fprintf(codefile, "\tIMUL rax, rcx\n");
+                //                 }
+                //             } else {
+                //                 if(record->type.array.leftNegative)
+                //                     fprintf(codefile, "\tMOV rax, -%d\n", record->type.array.left);
+                //                 else
+                //                     fprintf(codefile, "\tMOV rax,%d\n", record->type.array.left);
+                //             }
+                //             fprintf(codefile, "\tPUSH rax\n");
+
+                //             // Push Base Address at the end, as first to pop
+                //             fprintf(codefile, "\tMOV rax,%d\n", (record->offset * 16));
+                //             fprintf(codefile, "\tPUSH rax\n");
+                //             break;
+                //         }
+                //         case DOUBLE:{
+                //             // To do 
+                //             fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", record->offset);
+                //             fprintf(codefile, "\tPUSH xmm0\n");
+                //             // Below is same just more explicit
+                //             // fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", record->offset * 16);
+                //             // fprintf(codefile, "\tsub rsp, 16;\n"); //Allocate space on stack
+                //             // fprintf(codefile, "\tMOVUPS [rsp], xmm0\n"); // Push the value into stack
+                //             break;
+                //         }
+                //         default:{
+                //             printf("Error in Popping of function parameters\n");
+                //             break;
+                //         }
+                //     }
+                //     currRecordNode = currRecordNode->prev;
+                // } 
+
+                fprintf(codefile, "\tFILL STACK\n");
+                RecordListNode* inputNode = currQuad->inputList->tail;
+                while (inputNode != NULL) {
+                    if (inputNode->type == ARR) {
+                        // TODO
+                    } else {
+                        if (inputNode->isID) {
+                            fprintf(codefile, "\tMOV rax, QWORD [rbp-%d]\n", (inputNode->record->offset * 16));
+                        } else if (inputNode->type == INT) {
+                            fprintf(codefile, "\tMOV rax, %d\n", inputNode->num);
+                        } else if (inputNode->type == BOOL) {
+                            fprintf(codefile, "\tMOV rax, %d\n", inputNode->boolean);
+                        } else if (inputNode->type == DOUBLE) {
+                            fprintf(codefile, "\tMOVSD xmm0, %lf\n", inputNode->rnum);
+                            if (inputNode->isMinus) {
+                                
                             }
-                            fprintf(codefile, "\tPUSH rax\n");
-
-                            // Push Left Range
-                            if(record->type.array.isLeftID){
-                                // Find record of Left ID
-                                Record * LeftRec = variableExists(currQuad->symbolTableNode, record->type.array.leftID, hash(record->type.array.leftID));
-                                if(LeftRec == NULL) {printf("ERROR\n");} // This shouldn't happen
-
-                                fprintf(codefile, "\tMOV rax, qword[ebp-%d]\n", (LeftRec->offset * 16)); // Move the value of the Identifier to rax
-                                if(record->type.array.leftNegative){
-                                    fprintf(codefile,"\tMOV rcx, -1\n");
-                                    fprintf(codefile, "\tIMUL rax, rcx\n");
-                                }
-                            } else {
-                                if(record->type.array.leftNegative)
-                                    fprintf(codefile, "\tMOV rax, -%d\n", record->type.array.left);
-                                else
-                                    fprintf(codefile, "\tMOV rax,%d\n", record->type.array.left);
-                            }
-                            fprintf(codefile, "\tPUSH rax\n");
-
-                            // Push Base Address at the end, as first to pop
-                            fprintf(codefile, "\tMOV rax,%d\n", (record->offset * 16));
-                            fprintf(codefile, "\tPUSH rax\n");
-                            break;
+                            fprintf(codefile, "\tMOV rax, xmm0\n");
                         }
-                        case DOUBLE:{
-                            // To do 
-                            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", record->offset);
-                            fprintf(codefile, "\tPUSH xmm0\n");
-                            // Below is same just more explicit
-                            // fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", record->offset * 16);
-                            // fprintf(codefile, "\tsub rsp, 16;\n"); //Allocate space on stack
-                            // fprintf(codefile, "\tMOVUPS [rsp], xmm0\n"); // Push the value into stack
-                            break;
-                        }
-                        default:{
-                            printf("Error in Popping of function parameters\n");
-                            break;
-                        }
+
                     }
-                    currRecordNode = currRecordNode->prev;
-                } 
+                }
 
                 // Call the Procedure for the function
                 // Note Actual Input parameters are present in the rsp passed to it

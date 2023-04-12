@@ -679,8 +679,6 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
         6. SWITCH
         7. FOR
         8. WHILE
-        9. MODULE_OP_START
-        10. MODULE_OP_END
     */
 
     SymbolTableNode* currChild = symbolTableNode->children;
