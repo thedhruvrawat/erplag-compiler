@@ -293,7 +293,7 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tCALL scanf\n");
         fprintf(codefile, "\tMOV rax, qword [temp_real__%d]\n", real_count);
         fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
-        integer_count++;
+        real_count++;
     }
     else if (type == 'B')
     {
@@ -467,7 +467,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);        
     }    
     //fprintf(codefile, "\tEMPTY_STACK\n");
 }
