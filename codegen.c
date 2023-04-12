@@ -431,10 +431,8 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
         2. index is ID
     */
 
-   int range_low = 0, range_high = 0;
-   int lower_bound_offset = -1, upper_bound_offset = -1;
-
-    
+    int range_low = 0, range_high = 0;
+    int lower_bound_offset = -1, upper_bound_offset = -1;
 
     int arg1Offset = -1, arg2Offset = -1;
     int arg2IDOffset = -1;
@@ -442,6 +440,10 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
         arg1Offset = q->arg1ID->offset; // Base Offset of the Array        
     } else {
         printf("Array Record not found\n");
+    }
+
+    if(q->isArg2ID && q->arg2ID->type.varType != INT){
+        
     }
 
     char* newLabel = NULL;
@@ -477,10 +479,10 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
     newLabel = getNewLabelVariable();
     fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
-    fprintf(codefile, "\tMOV rax, 60\n");
-    fprintf(codefile, "\tXOR rdi, rdi\n");
-    fprintf(codefile, "\tsyscall\n");
-    fprintf(codefile, "%s:\tXOR rdx, rdx\n", newLabel); // Lower bound limit satisfied
+    fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+    fprintf(codefile, "\tcall printf\n");
+    fprintf(codefile, "\t jmp exit\n");
+    fprintf(codefile, "%s:\t\n", newLabel); // Lower bound limit satisfied
 
     if(q->arg1ID->type.array.isRightID){ // Right Dynamic Array
         char upper_bound_var[20];
@@ -499,152 +501,56 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     }
 
     fprintf(codefile, "\tMOV rbx, rax\n"); // rbx contains index value
-    fprintf(codefile, "\tSUB rbx, rdx\n"); // Relative index value stored in rbx
-    fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+    fprintf(codefile, "\tSUB rdx, rbx\n"); // Relative index value stored in rbx
+    fprintf(codefile, "\tCMP rdx, 0\n"); // Relative offset should be greater than zero
     newLabel = getNewLabelVariable();
     fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
-    fprintf(codefile, "\tMOV rax, 60\n");
-    fprintf(codefile, "\tXOR rdi, rdi\n");
-    fprintf(codefile, "\tsyscall\n");
-    fprintf(codefile, "%s:\tXOR rdx, rdx\n", newLabel); // Lower bound limit satisfied
+    fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+    fprintf(codefile, "\tcall printf\n");
+    fprintf(codefile, "\t jmp exit\n");
+    fprintf(codefile, "%s:\t\n", newLabel); // Lower bound limit satisfied
 
-    /*
-    if(q->isArg2ID){ // Dynamic reference
-        arg2IDOffset = q->arg2ID->offset;
-        fprintf(codefile, "\t;Accessing variable offset array element\n");
-        fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg2IDOffset*16); // rax contains index value
-
-        char* newLabel = NULL;
-
-        // Check the index bounds
-
-        if(q->arg1ID->type.array.isRightID){ // Dynamic array with variable upper bound
-            char upper_bound_var[20];
-            strcpy(upper_bound_var, q->arg1ID->type.array.rightID);
-            Record* upper_bound = variableExists(q->symbolTableNode, upper_bound_var, hash(upper_bound_var));
-            if(upper_bound != NULL){
-                upper_bound = upper_bound->offset;
-                fprintf(codefile, "\tMOV rdx, QWORD[rbp-%d]\n", upper_bound_offset); // upper bound value stored in rdx    
-            } else {
-                printf("Upper bound variable not found");
-            }
-        } else { // Dynamic array with static upper bound
-            range_high = q->arg1ID->type.array.right;
-            fprintf(codefile, "\tMOV rdx, %d\n", range_high); // Upperbound value stored in rdx
-        }
-
-        fprintf(codefile, "\tMOV rbx, rax\n"); // rbx contains index value
-        fprintf(codefile, "\tSUB rdx, rbx\n"); // Relative index value stored in rdx
-        fprintf(codefile, "\tCMP rdx, 0\n"); // Relative offset should be greater than zero
-        newLabel = getNewLabelVariable();
-        fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
-        fprintf(codefile, "\tMOV rax, 60\n");
-        fprintf(codefile, "\tXOR rdi, rdi\n");
-        fprintf(codefile, "\tsyscall\n");
-        fprintf(codefile, "%s:\tXOR rdx, rdx\n", newLabel); // Upper bound limit statisfied
-
-        if(q->arg1ID->type.array.isLeftID){ // Dynamic array with variable lower bound
-            char lower_bound_var[20];
-            strcpy(lower_bound_var, q->arg1ID->type.array.leftID);
-            Record* lower_bound = variableExists(q->symbolTableNode, lower_bound_var, hash(lower_bound_var));
-            if(lower_bound != NULL){
-                lower_bound_offset = lower_bound->offset;
-                fprintf(codefile, "\tMOV rdx, QWORD[rbp-%d]\n", lower_bound_offset); // lower bound value stored in rdx
-                
-            } else {
-                printf("Lower bound variable not found\n");
-            }
-        } else { // Dynamic array with static lower bound
-            range_low = q->arg1ID->type.array.left;
-            fprintf(codefile, "\tMOV rdx, %d\n", range_low); // lowerbound value stored in rdx
-        }
-
-        fprintf(codefile, "\tMOV rbx, rax\n"); // rbx contains index value
-        fprintf(codefile, "\tSUB rbx, rdx\n"); // Relative index value stored in rbx
-        fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
-        newLabel = getNewLabelVariable();
-        fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
-        fprintf(codefile, "\tMOV rax, 60\n");
-        fprintf(codefile, "\tXOR rdi, rdi\n");
-        fprintf(codefile, "\tsyscall\n");
-        fprintf(codefile, "%s:\tXOR rdx, rdx\n", newLabel); // Lower bound limit satisfied
-
-        
-    } else { // static reference
-        arg2Offset = q->arg2Num; // index value of array element
-        fprintf(codefile, "\t;Accessing variable offset array element\n");
-        fprintf(codefile, "\tMOV rax, %d\n", arg2Offset); // rax contains index value
-        // Check the index bounds
-        if(q->arg1ID->type.array.isRightID){ // Dynamic array with variable upper bound
-            char upper_bound_var[20];
-            strcpy(upper_bound_var, q->arg1ID->type.array.rightID);
-            Record* upper_bound = variableExists(q->symbolTableNode, upper_bound_var, hash(upper_bound_var));
-            if(upper_bound != NULL){
-                upper_bound = upper_bound->offset;
-                fprintf(codefile, "\tMOV rdx, QWORD[rbp-%d]\n", upper_bound_offset); // upper bound value stored in rdx    
-            } else {
-                printf("Upper bound variable not found");
-            }
-        } else { // Dynamic array with static upper bound
-            range_high = q->arg1ID->type.array.right;
-            fprintf(codefile, "\tMOV rdx, %d\n", range_high); // Upperbound value stored in rdx
-        }
-
-        
-
-        if(q->arg1ID->type.array.isLeftID){ // Dynamic array with variable lower bound
-
-        } else { // Dynamic array with static lower bound
-
-        }
+    if(q->arg1ID->type.array.isLeftID){
+        fprintf(codefile, "\tMOV rdx, QWORD[rbp-%d]\n", lower_bound_offset); // lower bound value stored in rdx
+        fprintf(codefile, "\tSUB rax, rdx\n"); // rax contains relative offset
+    } else {
+        fprintf(codefile, "\tMOV rdx, %d\n", range_low); // lowerbound value stored in rdx
+        fprintf(codefile, "\tSUB rax, rdx\n"); // rax contains relative offset
     }
 
-    */
+    fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
+    fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
+    fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
+    fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
 
     switch (type) {
         case 'I': {
-            if(q->isArg2ID){ // Index is ID
-                arg2IDOffset = q->arg2ID->offset; // Offset of variable which contains index value of array
+            
+                // arg2IDOffset = q->arg2ID->offset; // Offset of variable which contains index value of array
                 // fprintf(codefile, "\t;Accessing variable offset array element\n");
                 // fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg2IDOffset*16); // rax contains index value
-                fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
-                fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
-                fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
-                fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
-                fprintf(codefile, "\tMOV rdi, output\n");
+                // fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
+                // fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
+                // fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
+                // fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
+                fprintf(codefile, "\tMOV rdi, outputInt\n");
                 fprintf(codefile, "\tMOV rbx, rbp\n");
                 fprintf(codefile, "\tSUB rbx, rax\n");
                 fprintf(codefile, "\tMOV rsi, QWORD[rbx]\n");
 
-            } else {
-                arg2Offset = q->arg2Num - range_low; // Index value of array
-                fprintf(codefile, "\t;Accessing array element\n");
-                fprintf(codefile, "\tMOV rdi, output\n");
-                fprintf(codefile, "\tMOV rsi, QWORD[rbp-%d]\n", (arg2Offset+arg1Offset)*16);
-                // fprintf(codefile, "\tPUSH rbp\n");
-            }
+            
         } break;
 
         case 'B': {
-            if(q->isArg2ID){ // Index is ID
-                arg2IDOffset = q->arg2ID->offset; // Offset of variable which contains index value of array
-                fprintf(codefile, "\t;Accessing variable offset array element\n");
-                fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg2IDOffset*16); // rax contains index value
-                fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
-                fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
-                fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
-                fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
-                fprintf(codefile, "\tMOV rdi, output\n");
-                fprintf(codefile, "\tMOV rbx, rbp\n");
-                fprintf(codefile, "\tSUB rbx, rax\n");
-                fprintf(codefile, "\tMOV rsi, QWORD[rbx]\n");
-
-            } else {
-                arg2Offset = q->arg2Num; // Index value of array
-                fprintf(codefile, "\tMOV rdi, output\n");
-                fprintf(codefile, "\tMOV rsi, QWORD[rbp-%d]\n", (arg2Offset+arg1Offset)*16);
-                // fprintf(codefile, "\tPUSH rbp\n");
-            }
+            fprintf(codefile, "\tMOV rdi, outputFalse\n");
+            fprintf(codefile, "\tMOV rbx, rbp\n");
+            fprintf(codefile, "\tSUB rbx, rax\n");
+            fprintf(codefile, "\tMOV rsi, QWORD[rbx]\n");
+            fprintf(codefile, "\tCMP rsi, 0\n");
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tje %s\n", newLabel);
+            fprintf(codefile, "\tmov rdi, outputTrue\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
         }break;
     }
 
@@ -1231,7 +1137,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
 
         } else if(q->isArg1ID==false && q->isArg2ID==false){
-            resultOffset += q->arg2Num;
+            resultOffset += q->arg2Num - range_low;
             // printf("Array element offset: %d\n", resultOffset);
             fprintf(codefile, "\tMOV rax, %d\n", q->arg1Bool);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
