@@ -164,14 +164,105 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 // }
                 break;
             }
+            case MODULE_OP:{
+                /* <<module compute_expr>> takes input[ a: integer, b:integer, c:boolean];
+                returns [d:integer, e:boolean];
+                Function Call =>[u,v] := use module compute_expr[x, y, z]
+                */
+
+                fprintf("\n\t;Function %s\n", currQuad->moduleName);
+                fprintf("%s:\n", currQuad->moduleName);
+
+                // Getting Actual Input parameters stored in stack and storing them into Formal Parameters
+                fprintf(codefile, "\tPUSH rbp\n");
+                fprintf(codefile, "\tMOV rbp, rsp\n");
+
+                // Pop the Actual Input parameters of the function into the Formal Parameters offset
+                RecordListNode* currRecordNode = currQuad->inputList->head;
+                for(int i = 0;i < currQuad->inputList->size; i++){
+
+                    Record* record = currRecordNode->record;
+                    VAR_TYPE type = record->type.varType;
+
+                    switch(type){
+                        case INT:{
+                        }
+                        case BOOL:{
+                            fprintf(codefile, "\tPOP rax\n");
+                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n",record->offset*16);
+                            break;
+                        }
+                        case ARRAY:{
+                            // Base Address
+                            fprintf(codefile, "\tPOP rax\n");
+                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n",record->offset*16);
+
+                            // Left Range
+                            fprintf(codefile, "\tPOP rax\n");
+                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+16); // Do I need to subtract -> NO, as offsets keep on increasing
+
+                            // Right Range
+                            fprintf(codefile, "\tPOP rax\n");
+                            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", record->offset*16+32);
+                            break;
+                        }
+                        case DOUBLE:{
+                            fprintf(codefile, "\tPOP xmm0\n");
+                            fprintf(codefile, "\tMOVUPS QWORD[rbp-%d], xmm0\n", record->offset);
+                            break;
+                        }
+                        default:{
+                            printf("Error: Type incorrect in actual param list Pop\n"); // This shouldn't happen as semantic check done
+                            break;
+                        }
+                    }
+                    currRecordNode = currRecordNode->next;
+                }
+                // TODO - Actual Function Procedure to be written
+
+                // Push the Formal Output parameters of the function into the Stack in reverse order
+                currRecordNode = currQuad->outputList->tail;
+                for(int i = 0;i < currQuad->outputList->size; i++){
+                    Record* record = currRecordNode->record;
+                    VAR_TYPE type = record->type.varType;
+
+                    switch(type){
+                        case INT:{
+                        }
+                        case BOOL:{
+                            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", record->offset);
+                            fprintf(codefile, "\tPUSH rax\n");
+                            break;
+                        }
+                        case DOUBLE:{
+                            fprintf(codefile, "\tMOV xmm0, QWORD[rbp-%d]\n", record->offset);
+                            fprintf(codefile, "\tPUSH xmm0\n");
+                            break;
+                        }
+                        default:{
+                            printf("Error: Type incorrect in formal param list Push\n"); // This shouldn't happen as semantic check done
+                            break;
+                        }
+                    }
+                    currRecordNode = currRecordNode->prev;
+                }
+
+                // Should I mess with the rsp. 
+                fprintf(codefile, "\tMOV rsp, rbp\n");
+                fprintf(codefile, "\tPOP rbp\n");
+                fprintf(codefile, "\tRET\n");
+                
+                break;
+            }
             case MODULE_USE_OP:{
                 // Format of quadruple is currQuad->inputList : input parameters, currQuad->outputList : output parameters, assume that label is given interm of functions parameter
                 
                 // Push all previous registers in use
-                fprintf(codefile, "\t; Push All registers in use for CALL of function\n");
-                fprintf(codefile, "\tFILL_STACK\n");
+                fprintf(codefile, "\n\t; Function Call\n");
+                fprintf(codefile, "\tFILL_STACK\t\tPush All registers in use for CALL of function\n");
 
-                // Push Actual Input Parameters of the Function in Stack                                         /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
+                // Push Actual Input Parameters of the Function in Stack   
+                fprintf(codefile, "\t;Pushing Actual Input Parameters\n");                                      /* This code needs to be written at function call making sprintf("\tpush ebp ;Base Pointer must be preserved across calls\n"); sprintf("\tmov ebp, rsp; Base Pointer currently points to the stack\n"); */
                 RecordListNode * currRecordNode = currQuad->inputList->tail;
                 for(int i = 0; i < currQuad->inputList->size; i++){ // Inserting from back to front, Easier to take input for function Call
                     
@@ -181,8 +272,9 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         case INT:{ // If INT/BOOL directly put in the register
                         }
                         case BOOL:{
-                            fprintf(codefile, "\tmov rax,[%d]\n", (record->offset * 16));
-                            fprintf(codefile, "\tpush rax\n");
+                            // How do I know rbp is correct symbol table base pointer for our offset variable
+                            fprintf(codefile, "\tMOV rax, QWORD [rbp-%d]\n", (record->offset * 16));
+                            fprintf(codefile, "\tPUSH rax\n");
                             break;
                         }
                         case ARRAY:{ // If Array Store Base Address, Range Low and High
@@ -194,43 +286,51 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                                 Record * RightRec = variableExists(currQuad->symbolTableNode, record->type.array.rightID, hash(record->type.array.rightID));
                                 if(RightRec == NULL) {printf("ERROR\n");} // This shouldn't happen
 
-                                if(record->type.array.rightNegative)
-                                    fprintf(codefile, "\tmove rax,-%d\n", (RightRec->offset * 16));
-                                else
-                                    fprintf(codefile, "\tmove rax,-%d\n", (RightRec->offset * 16));
+                                fprintf(codefile, "\tMOV rax, QWORD [ebp-%d]\n", (RightRec->offset * 16)); // Move the value of the Identifier to rax
+                                if(record->type.array.rightNegative){
+                                    fprintf(codefile,"\tMOV rcx, -1\n");
+                                    fprintf(codefile, "\tIMUL rax, rcx\n");
+                                } 
                             } else {
-                                if(record->type.array.rightNegative)
-                                    fprintf(codefile, "\tmov rax,-%d\n", record->type.array.right);
+                                if(record->type.array.rightNegative) // Put the value of the identifier to rax
+                                    fprintf(codefile, "\tMOV rax,-%d\n", record->type.array.right);
                                 else
-                                    fprintf(codefile, "\tmov rax,%d\n", record->type.array.right);
+                                    fprintf(codefile, "\tMOV rax,%d\n", record->type.array.right);
                             }
-                            fprintf(codefile, "\tpush rax\n");
+                            fprintf(codefile, "\tPUSH rax\n");
 
                             // Push Left Range
                             if(record->type.array.isLeftID){
                                 // Find record of Left ID
                                 Record * LeftRec = variableExists(currQuad->symbolTableNode, record->type.array.leftID, hash(record->type.array.leftID));
                                 if(LeftRec == NULL) {printf("ERROR\n");} // This shouldn't happen
-                                if(record->type.array.leftNegative)
-                                    fprintf(codefile, "\tmove rax, -%d\n", (LeftRec->offset * 16));
-                                else
-                                    fprintf(codefile, "\tmove rax, -%d\n", (LeftRec->offset * 16));
+
+                                fprintf(codefile, "\tMOV rax, qword[ebp-%d]\n", (LeftRec->offset * 16)); // Move the value of the Identifier to rax
+                                if(record->type.array.leftNegative){
+                                    fprintf(codefile,"\tMOV rcx, -1\n");
+                                    fprintf(codefile, "\tIMUL rax, rcx\n");
+                                }
                             } else {
                                 if(record->type.array.leftNegative)
-                                    fprintf(codefile, "\tmov rax,-%d\n", record->type.array.left);
+                                    fprintf(codefile, "\tMOV rax, -%d\n", record->type.array.left);
                                 else
-                                    fprintf(codefile, "\tmov rax,%d\n", record->type.array.left);
+                                    fprintf(codefile, "\tMOV rax,%d\n", record->type.array.left);
                             }
-                            fprintf(codefile, "\tpush rax\n");
+                            fprintf(codefile, "\tPUSH rax\n");
 
                             // Push Base Address at the end, as first to pop
-                            fprintf(codefile, "\tmove rax,%d\n", (record->offset * 16));
-                            fprintf(codefile, "\tpush rax\n");
+                            fprintf(codefile, "\tMOV rax,%d\n", (record->offset * 16));
+                            fprintf(codefile, "\tPUSH rax\n");
                             break;
                         }
                         case DOUBLE:{
                             // To do 
-                            // Break the boolean into 
+                            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n");
+                            fprintf(codefile, "\tPUSH xmm0\n");
+                            // Below is same just more explicit
+                            // fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", record->offset * 16);
+                            // fprintf(codefile, "\tsub rsp, 16;\n"); //Allocate space on stack
+                            // fprintf(codefile, "\tMOVUPS [rsp], xmm0\n"); // Push the value into stack
                             break;
                         }
                         default:{
@@ -243,13 +343,13 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
 
                 // Call the Procedure for the function
                 // Note Actual Input parameters are present in the rsp passed to it
-                char * label; 
+                char * label = currQuad->moduleName; 
                 // To Do -> Get label of the procedure to be called
-                fprintf(codefile, "\t%s;Calling Function\n", label);
+                fprintf(codefile, "\tCALL\t%s\t\t;Calling Function\n", label);
                 // Note Formal Output parameters are provided by the Called procedure by stack in the correct order
 
                 // Pop i.e. get output parameters to their actual locations
-
+                fprintf(codefile, ";Popping Formal Input Parameters\n");  
                 currRecordNode = currQuad->outputList->head;
                 for(int i = 0;i < currQuad->outputList->size; i++){
                     Record* record = currRecordNode->record;
@@ -258,12 +358,14 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                         case INT:{
                         }
                         case BOOL:{
-                            fprintf(codefile, "\tmov rax,[rsp-%d]\n", (int)((16*(i + 1)))); // Get value of the formal output parameter
-                            fprintf(codefile, "\tmov [%d], rax\n", record->offset * 16); // Store it in the actual parameter
+                            fprintf(codefile, "\tMOV rax,[rsp-%d]\n", (16*(i + 1))); // Get value of the formal output parameter
+                            fprintf(codefile, "\tMOV [%d], rax\n", record->offset * 16); // Store it in the actual parameter
                             break;
                         }
                         case DOUBLE:{
-                            // To Do 
+                            fprintf(codefile, "\tMOVUPS xmm0, [rsp-%d]\n", (16*(i + 1)));
+                            // Do I need to free stack ?
+                            fprintf(codefile, "\tMOVUPS [rbp-%d], xmm0\n", record->offset * 16);
                             break;
                         }
                         default:{
@@ -288,7 +390,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
     }
 
     fprintf(codefile, "\tpop rbp\n");
-    fprintf(codefile, "\tmov rax, 0\n");
+    fprintf(codefile, "\tMOV rax, 0\n");
     // fprintf(codefile, "\tEMPTY_STACK\n");
     fprintf(codefile, "\tret\n");
     fclose(codefile);
