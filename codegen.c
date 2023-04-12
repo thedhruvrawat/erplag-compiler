@@ -34,7 +34,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
     initASMFile(codefile);    
     // //fprintf(codefile, "\tFILL_STACK\n");
     fprintf(codefile, "\tmov rbp, rsp\n");
-    fprintf(codefile, "\tsub rsp, 800\n");
+    fprintf(codefile, "\tsub rsp, %d\n", stackEnd * 32);
     Quadruple* currQuad = qt->head;
 
     while(currQuad!=NULL) {
@@ -160,7 +160,15 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 insertForStatement(codefile, currQuad);
                 break;
             }
-            case END_OP:{
+            case WHILE_EXPR_OP: {
+                insertWhileLabelStatement(codefile, currQuad);
+                break;
+            }
+            case WHILE_OP: {
+                insertWhileStatement(codefile, currQuad);
+                break;
+            }
+            case FOR_END_OP:{
                 if(lStack->size != 0){
                     insertForEnd(codefile, currQuad);
                 }
@@ -825,6 +833,20 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     fprintf(codefile,"\tCMP rcx, rdx \n");
     fprintf(codefile,"\tJG %s \n",forBlockClose);
 }
+
+void insertWhileLabelStatement(FILE* codefile, Quadruple* q) {
+    char *whileBlockInit = getNewLabelVariable();
+    char *whileBlockClose = getNewLabelVariable();
+    fprintf(codefile, "%s: \n", whileBlockInit);
+    pushLoopStack(lStack, whileBlockClose);
+    pushLoopStack(lStack, whileBlockInit);
+}
+
+void insertWhileStatement(FILE* codefile, Quadruple* q) {
+    /* fprintf(codefile,"\tMOV rcx, 0\n"); 
+    fprintf(codefile,"\tMOV rdx, \n"); */
+}
+
 
 void insertForEnd(FILE *codefile, Quadruple* q){
     /* Working code for non-nested loop

@@ -28,9 +28,9 @@ section .data
 	outputReal: db "Output: %lf", 10, 0
 	outputTrue: db "Output: true", 10, 0
 	outputFalse: db "Output: false", 10, 0
-	inputInt: db "Input: Enter an integer value ", 0
-	inputReal: db "Input: Enter a real value ", 0
-	inputBool: db "Input: Enter a boolean value ", 0
+	inputInt: db "Input: Enter an integer value ", 10, 0
+	inputReal: db "Input: Enter a real value ", 10, 0
+	inputBool: db "Input: Enter a boolean value ", 10, 0
 	newline: db "", 10, 0
 	OutOfBoundError: db "RUNTIME ERROR: Array index out of bounds", 10, 0
 	TypeMismatchError: db "RUNTIME ERROR: Type Mismatch Error", 10, 0
@@ -44,26 +44,7 @@ section .text
 main:
 	push rbp
 	mov rbp, rsp
-	sub rsp, 16
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, 1
-	MOV qword[rbp-192], rax
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, 5
-	MOV QWORD[rbp-96], rax
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, 9
-	MOV QWORD[rbp-128], rax
-
-
-	MOV rax, qword[rbp-192]
-	MOV rsi, rax
-	MOV rdi, outputInt
-	mov rax, 0
-	call printf
-
-
-
+	sub rsp, 928
 	; Getting an integer
 	section .bss
 		temp_integer__0 resq 1
@@ -76,7 +57,7 @@ main:
 	MOV rax, 0
 	CALL scanf
 	MOV rax, qword [temp_integer__0]
-	MOV qword[rbp-0], rax
+	MOV qword[rbp-192], rax
 	; Getting an integer
 	section .bss
 		temp_integer__1 resq 1
@@ -89,124 +70,88 @@ main:
 	MOV rax, 0
 	CALL scanf
 	MOV rax, qword [temp_integer__1]
-	MOV qword[rbp-32], rax
-
-	MOV rax, qword[rbp-192]
-	MOV rsi, rax
-	MOV rdi, outputInt
-	mov rax, 0
-	call printf
-
-
-	MOV rax, qword[rbp-32]
-	MOV rbx, qword[rbp-128]
-	; MULTIPLICATION
-	IMUL rax, rbx
-	MOV QWORD[rbp-320], rax
-
-
-
+	MOV qword[rbp-160], rax
 	MOV rax, qword[rbp-0]
-	MOV rbx, qword[rbp-320]
-	; ADDITION
-	ADD rax, rbx
-	MOV QWORD[rbp-352], rax
-	MOV rax, qword[rbp-96]
-	MOV rbx, qword[rbp-128]
-	; SUBTRACTION
-	SUB rax, rbx
-	MOV QWORD[rbp-384], rax
-	MOV rax, qword[rbp-384]
 	MOV rbx, qword[rbp-32]
 	; MULTIPLICATION
 	IMUL rax, rbx
-	MOV QWORD[rbp-416], rax
-	MOV rax, qword[rbp-352]
-	MOV rbx, qword[rbp-416]
-	; ADDITION
-	ADD rax, rbx
-	MOV QWORD[rbp-448], rax
-	MOV rax, qword[rbp-96]
+	MOV QWORD[rbp-240], rax
+	MOV rax, qword[rbp-192]
 	MOV rbx, 2
 	; MULTIPLICATION
 	IMUL rax, rbx
-	MOV QWORD[rbp-480], rax
-	MOV rax, qword[rbp-448]
-	MOV rbx, qword[rbp-480]
+	MOV QWORD[rbp-272], rax
+	MOV rax, qword[rbp-240]
+	MOV rbx, qword[rbp-272]
 	; ADDITION
 	ADD rax, rbx
-	MOV QWORD[rbp-512], rax
-	MOV rax, qword[rbp-128]
-	MOV rbx, qword[rbp-0]
-	; MULTIPLICATION
-	IMUL rax, rbx
-	MOV QWORD[rbp-544], rax
-	MOV rax, qword[rbp-512]
-	MOV rbx, qword[rbp-544]
+	MOV QWORD[rbp-304], rax
+	MOV rax, qword[rbp-304]
+	MOV rbx, 3
 	; SUBTRACTION
 	SUB rax, rbx
-	MOV QWORD[rbp-576], rax
-
+	MOV QWORD[rbp-336], rax
 	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-576]
-	MOV qword[rbp-64], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-64]
-	MOV rbx, 10
-	; GREATER THAN
-	CMP rax, rbx
-	CMOVG rcx, rdx
-	MOV qword[rbp-608], rcx
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-96]
-	MOV rbx, qword[rbp-128]
-	; LESS THAN OR EQUAL TO
-	CMP rax, rbx
-	CMOVLE rcx, rdx
-	MOV qword[rbp-624], rcx
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-608]
-	MOV rbx, qword[rbp-624]
-	; LOGICAL OR
-	OR rax, rbx
-	MOV qword[rbp-640], rax
+	MOV rax, qword[rbp-336]
+	MOV QWORD[rbp-128], rax
 	MOV rcx, 0
 	MOV rdx, 1
 	MOV rax, qword[rbp-0]
 	MOV rbx, qword[rbp-32]
-	; LESS THAN
+	; LESS THAN OR EQUAL TO
 	CMP rax, rbx
-	CMOVL rcx, rdx
-	MOV qword[rbp-656], rcx
+	CMOVLE rcx, rdx
+	MOV qword[rbp-368], rcx
 	MOV rcx, 0
 	MOV rdx, 1
-	MOV rax, qword[rbp-640]
-	MOV rbx, qword[rbp-656]
+	MOV rax, qword[rbp-64]
+	MOV rbx, qword[rbp-368]
 	; LOGICAL AND
 	AND rax, rbx
-	MOV qword[rbp-672], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-672]
-	MOV rbx, qword[rbp-192]
-	; LOGICAL AND
-	AND rax, rbx
-	MOV qword[rbp-688], rax
+	MOV qword[rbp-384], rax
 	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-688]
-	MOV qword[rbp-208], rax
-
-	MOV rax, qword[rbp-192]
+	MOV rax, qword[rbp-384]
+	MOV qword[rbp-224], rax
+	MOV rax, qword[rbp-128]
+	MOV rbx, qword[rbp-160]
+	; ADDITION
+	ADD rax, rbx
+	MOV QWORD[rbp-400], rax
+	; ASSIGNMENT OPERATION (NON-ARRAY)
+	MOV rax, qword[rbp-400]
+	MOV QWORD[rbp-80], rax
+	MOV rcx, 0
+	MOV rdx, 1
+	MOV rax, qword[rbp-128]
+	MOV rbx, qword[rbp-160]
+	; LESS THAN OR EQUAL TO
+	CMP rax, rbx
+	CMOVLE rcx, rdx
+	MOV qword[rbp-432], rcx
+	MOV rcx, 0
+	MOV rdx, 1
+	MOV rax, qword[rbp-224]
+	MOV rbx, qword[rbp-432]
+	; LOGICAL OR
+	OR rax, rbx
+	MOV qword[rbp-448], rax
+	; ASSIGNMENT OPERATION (NON-ARRAY)
+	MOV rax, qword[rbp-448]
+	MOV qword[rbp-112], rax
+	; Printing an integer ID
+	MOV rax, qword[rbp-0]
 	MOV rsi, rax
 	MOV rdi, outputInt
 	mov rax, 0
 	call printf
-
+	; Printing an integer ID
+	MOV rax, qword[rbp-32]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
 	; Printing a boolean ID
-	MOV rax, qword[rbp-208]
+	MOV rax, qword[rbp-64]
 	CMP rax, 0
 	JE boolVarIsFalse__0
 	MOV rdi, outputTrue
@@ -216,76 +161,31 @@ boolVarIsFalse__0:
 continue_post_bool__0:
 	call printf
 	; Printing an integer ID
-	MOV rax, qword[rbp-64]
+	MOV rax, qword[rbp-192]
 	MOV rsi, rax
 	MOV rdi, outputInt
 	mov rax, 0
 	call printf
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-64]
-	MOV rbx, 10
-	; GREATER THAN
-	CMP rax, rbx
-	CMOVG rcx, rdx
-	MOV qword[rbp-704], rcx
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-704]
-	MOV qword[rbp-224], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-96]
-	MOV rbx, qword[rbp-128]
-	; LESS THAN OR EQUAL TO
-	CMP rax, rbx
-	CMOVLE rcx, rdx
-	MOV qword[rbp-720], rcx
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-720]
-	MOV qword[rbp-240], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-0]
-	MOV rbx, qword[rbp-32]
-	; LESS THAN
-	CMP rax, rbx
-	CMOVL rcx, rdx
-	MOV qword[rbp-736], rcx
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-736]
-	MOV qword[rbp-256], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-224]
-	MOV rbx, qword[rbp-240]
-	; LOGICAL OR
-	OR rax, rbx
-	MOV qword[rbp-752], rax
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-752]
-	MOV qword[rbp-272], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-272]
-	MOV rbx, qword[rbp-256]
-	; LOGICAL AND
-	AND rax, rbx
-	MOV qword[rbp-768], rax
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-768]
-	MOV qword[rbp-288], rax
-	MOV rcx, 0
-	MOV rdx, 1
-	MOV rax, qword[rbp-288]
-	MOV rbx, qword[rbp-192]
-	; LOGICAL AND
-	AND rax, rbx
-	MOV qword[rbp-784], rax
-	; ASSIGNMENT OPERATION (NON-ARRAY)
-	MOV rax, qword[rbp-784]
-	MOV qword[rbp-304], rax
+	; Printing an integer ID
+	MOV rax, qword[rbp-128]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
+	; Printing an integer ID
+	MOV rax, qword[rbp-160]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
+	; Printing an integer ID
+	MOV rax, qword[rbp-80]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
 	; Printing a boolean ID
-	MOV rax, qword[rbp-208]
+	MOV rax, qword[rbp-112]
 	CMP rax, 0
 	JE boolVarIsFalse__1
 	MOV rdi, outputTrue
@@ -294,6 +194,64 @@ boolVarIsFalse__1:
 	MOV rdi, outputFalse
 continue_post_bool__1:
 	call printf
+	; Getting an integer
+	section .bss
+		temp_integer__2 resq 1
+	section .text
+	MOV rdi, inputInt
+	xor rax, rax
+	CALL printf
+	LEA rsi, [temp_integer__2]
+	MOV rdi, input
+	MOV rax, 0
+	CALL scanf
+	MOV rax, qword [temp_integer__2]
+	MOV qword[rbp-0], rax
+	; Getting an integer
+	section .bss
+		temp_integer__3 resq 1
+	section .text
+	MOV rdi, inputInt
+	xor rax, rax
+	CALL printf
+	LEA rsi, [temp_integer__3]
+	MOV rdi, input
+	MOV rax, 0
+	CALL scanf
+	MOV rax, qword [temp_integer__3]
+	MOV qword[rbp-32], rax
+	; ASSIGNMENT OPERATION (NON-ARRAY)
+	MOV rax, 0
+	MOV qword[rbp-112], rax
+	; Printing an integer ID
+	MOV rax, qword[rbp-0]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
+	; Printing an integer ID
+	MOV rax, qword[rbp-32]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
+	; Printing an integer ID
+	MOV rax, qword[rbp-64]
+	MOV rsi, rax
+	MOV rdi, outputInt
+	mov rax, 0
+	call printf
+	; Printing a boolean ID
+	MOV rax, qword[rbp-96]
+	CMP rax, 0
+	JE boolVarIsFalse__2
+	MOV rdi, outputTrue
+	jmp continue_post_bool__2
+boolVarIsFalse__2:
+	MOV rdi, outputFalse
+continue_post_bool__2:
+	call printf
+exit:
 	mov rsp, rbp
 	pop rbp
 	mov rax, 0
