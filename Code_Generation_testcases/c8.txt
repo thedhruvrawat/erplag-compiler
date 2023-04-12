@@ -15,12 +15,12 @@ start
 	z:= 56;
 	switch(x)
 	start
-		case true: declare z:integer;
+		case 1: declare z:integer;
                         z:= -10;
 			y:= x*2-y+z*3;
 			print(y);
                         break;
-		case false: declare x: integer;
+		case 2: declare x: integer;
 			x:=6;
 			z:= x*3-z;
 			print(z);

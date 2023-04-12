@@ -172,7 +172,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
             } break;
             case FOR_OP:{
-                insertForStatement(codefile, currQuad);
+                Statement(codefile, currQuad);
                 break;
             }
             case WHILE_EXPR_OP: {
@@ -188,21 +188,23 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case FOR_END_OP:{
-                if((lStack->size != 0))
-                {
-                    if(lStack->type == 'F'){
-                        insertForEnd(codefile, currQuad);
-                    }
-                    if(lStack->type == 'S'){
-                        insertSwitchEnd(codefile, currQuad);
-                    }
-                }
-                // When it's the end of file
-                else{
-                    // Commented to prevent seg fault for other END_OP
-                    // destroyLoopStack(lStack);
-                }
-                break;
+                insertForEnd(codefile,currQuad);
+                // From END_OP
+                // if((lStack->size != 0))
+                // {
+                //     if(lStack->type == 'F'){
+                //         insertForEnd(codefile, currQuad);
+                //     }
+                //     if(lStack->type == 'S'){
+                //         insertSwitchEnd(codefile, currQuad);
+                //     }
+                // }
+                // // When it's the end of file
+                // else{
+                //     // Commented to prevent seg fault for other END_OP
+                //     // destroyLoopStack(lStack);
+                // }
+                // break;
             }
             case GET_VALUE_OP: {
                 if (currQuad->result->type.varType == DOUBLE) {
@@ -219,9 +221,19 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
             }
             case SWITCH_OP:{
                 insertSwitchStatement(codefile,currQuad);
+                break;
             }
             case CASE_OP:{
-
+                insertCaseStatement(codefile,currQuad);
+                break;
+            }
+            case CASE_END_OP:{
+                insertCaseEnd(codefile,currQuad);
+                break;
+            }
+            case SWITCH_END_OP:{
+                insertSwitchEnd(codefile, currQuad);
+                break;
             }
             default: {
                 printf("Not handled yet.\n");
@@ -1189,10 +1201,11 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     fprintf(codefile,"%s \t: \n",forBlockInit);
     fprintf(codefile,"\tMOV rcx, qword[%s]\n",lVar1); 
     fprintf(codefile,"\tMOV rdx, qword[%s]\n",lVar2); 
+    fprintf(codefile,"\tMOV [rbp-%d],rcx\n",(q->result->offset)*16);
 
     char *forBlockClose = getNewLabelVariable();
     
-    setStackType(lStack,'F');
+    // setStackType(lStack,'F');
     pushLoopStack(lStack, forBlockClose);
     pushLoopStack(lStack, forBlockInit);
     // pushLoopStack(lStack, lVar2);
@@ -1290,7 +1303,7 @@ loopSt *initLoopStack(void){
     loopSt *st = malloc(sizeof(loopSt));
     st->top = NULL;
     st->size = 0;
-    st->type = 'N';
+    // st->type = 'N';
     return st;
 }
 loopStNode *peekLoopStack(loopSt *st){
@@ -1308,7 +1321,7 @@ void popLoopStack(loopSt *st){
     st->top = st->top->next;
     st->size--;
     if (st->size == 0) {
-        st->type = 'N';
+        // st->type = 'N';
         free(currTop->label);
     }
     free(currTop);
@@ -1322,9 +1335,9 @@ void pushLoopStack(loopSt *st, char* label){
     st->size++;
 }
 
-void setStackType(loopSt *st, char type){
-    st->type = type;
-}
+// void setStackType(loopSt *st, char type){
+//     st->type = type;
+// }
 
 bool isLoopStackEmpty(loopSt * st){
     if(st->size)
@@ -1349,7 +1362,7 @@ void insertSwitchStatement(FILE *codefile, Quadruple* q){
 
     char* switchEndLabel = (char*)malloc(sizeof(char) * 20);
     strcpy(switchEndLabel,getNewLabelVariable());
-    setStackType(lStack,'S');
+    // setStackType(lStack,'S');
     pushLoopStack(lStack,switchEndLabel);
 }
 
