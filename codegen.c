@@ -166,7 +166,8 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 // When it's the end of file
                 else{
-                    destroyLoopStack(lStack);
+                    // Commented to prevent seg fault for other END_OP
+                    // destroyLoopStack(lStack);
                 }
                 break;
             }
