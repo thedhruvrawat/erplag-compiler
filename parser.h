@@ -20,6 +20,8 @@ bool findFirst(int tokenID);
 void computeFollowSet(int nonTerminalLen, int terminalLen);
 bool findFollow(int tokenID);
 
+void printParseTree(ParseTree* parseTree);
+
 ParseTree* parserMain(char *userSourceCode, char *parseTreeOutput);
 void cleanParser();
 

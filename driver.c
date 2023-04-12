@@ -182,33 +182,61 @@ int main(int argc, char* argv[])
         case 1: {
             printf("\e[1;1H\e[2J");
             printf("-------------------------------------------------------------------------------------\n");
-            removeComments(userCode);
+            printTokenList(userCode);
+            printf(GREEN BOLD "Token Stream Over\n" RESET);
             printf("-------------------------------------------------------------------------------------\n");
             break;
         }
         case 2: {
             printf("\e[1;1H\e[2J");
             printf("-------------------------------------------------------------------------------------\n");
-            printTokenList(userCode);
-            printf(GREEN BOLD "Token Stream Over\n" RESET);
+            ParseTree* pt = parseInput(userCode, treeOutput);
+            printParseTree(pt);
             printf("-------------------------------------------------------------------------------------\n");
             break;
         }
         case 3: {
             printf("\e[1;1H\e[2J");
             printf("-------------------------------------------------------------------------------------\n");
-            parseInput(userCode, treeOutput);
-            printf(GREEN BOLD "Parsing Over\n" RESET);
+            ParseTree* pt = parserMain(userCode, treeOutput);
+            if (PARSER_ERROR || LEXER_ERROR) {
+                printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                break;
+            }
+            ASTCreator(pt);
+            prettyPrintAST();
+            cleanLexer();
+            cleanParser();
             printf("-------------------------------------------------------------------------------------\n");
             break;
         }
         case 4: {
             printf("\e[1;1H\e[2J");
+            printf("-------------------------------------------------------------------------------------\n");
+            ParseTree* pt = parserMain(userCode, treeOutput);
+            if (PARSER_ERROR || LEXER_ERROR) {
+                printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                break;
+            }
+            ASTCreator(pt);
+            int ASTMemSize = tree->size * sizeof(ASTNode);
+            int ParseTreeMemSize = pt->sz * sizeof(ParseTreeNode);
+            printf("%-15s Number of Nodes - %d\t", "Parse Tree:", pt->sz);
+            printf("Allocated Memory - %d bytes\n", ParseTreeMemSize);
+            printf("%-15s Number of Nodes - %d\t", "AST:", tree->size);
+            printf("Allocated Memory - %ld bytes\n", ASTMemSize);
+            printf("Compression Ratio (Count): %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);
+            printf("Compression Ratio (Memory): %.2lf%%\n", (1 - ((double) ASTMemSize) / ParseTreeMemSize) * 100);
+            printf("-------------------------------------------------------------------------------------\n");
+            break;
+        }
+        case 8: {
+            /* printf("\e[1;1H\e[2J");
             clock_t start_time, end_time;
             double total_CPU_time, total_CPU_time_in_seconds;
             printf("-------------------------------------------------------------------------------------\n");
             start_time = clock();
-            ParseTree* pt = parseInput(userCode, treeOutput);
+            ParseTree* pt = parserMain(userCode, treeOutput);
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
@@ -227,7 +255,7 @@ int main(int argc, char* argv[])
                 printQuadrupleTable();
                 codeGenerator(quadTable, "code.asm");
             }
-            break;
+            break; */
         }
         default: {
             printf(RED BOLD "Invalid choice! Try again... \n" RESET);

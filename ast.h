@@ -25,7 +25,7 @@ void pushASTStack(ASTStack* st, ParseTreeNode* parseTreeNode, ASTNode* par);
 void pushChildrenToASTStack(ASTStack* st, ASTNode* par, ParseTreeNode* curr);
 bool isUsefulTerminal(ASTStackNode* node);
 void createAST(void);
-void printAST(ASTNode* node, bool firstChild);
+void prettyPrintAST(void);
 void ASTCreator(ParseTree* parseTree);
 
 #endif
