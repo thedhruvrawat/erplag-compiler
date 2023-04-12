@@ -14,6 +14,7 @@ Group Number : 2
 
 
 int labelCount = 0;
+loopSt* lStack;
 int boolPrints = 0;
 int integer_count = 0;
 int real_count = 0;
@@ -28,6 +29,7 @@ char *getNewLabelVariable() {
 
 void codeGenerator(QuadrupleTable *qt, char *output) {
     FILE *codefile = fopen(output, "w");
+    lStack = initLoopStack();
 
     initASMFile(codefile);    
     // //fprintf(codefile, "\tFILL_STACK\n");
@@ -151,6 +153,20 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     insertPrintStatement(codefile, currQuad, 'I');
                 } else {
                     insertPrintStatement(codefile, currQuad, 'B');
+                }
+                break;
+            }
+            case FOR_OP:{
+                insertForStatement(codefile, currQuad);
+                break;
+            }
+            case END_OP:{
+                if(lStack->size != 0){
+                    insertForEnd(codefile, currQuad);
+                }
+                // When it's the end of file
+                else{
+                    destroyLoopStack(lStack);
                 }
                 break;
             }
@@ -744,8 +760,146 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
         // Load upper bound into RBX
         fprintf(codefile,"\tMOV rbx, %d \n", rightBound);
     }
-    fprintf(codefile,"\t CMP rcx, rax \n");
-    fprintf(codefile,"\t JL exit \n");
-    fprintf(codefile,"\t CMP rcx, rbx \n");
-    fprintf(codefile,"\t JG exit \n");
+    fprintf(codefile,"\tCMP rcx, rax \n");
+    fprintf(codefile,"\tJL exit \n");
+    fprintf(codefile,"\tCMP rcx, rbx \n");
+    fprintf(codefile,"\tJG exit \n");
 }
+
+void insertForStatement(FILE *codefile, Quadruple* q){
+
+    /* Working code for non-nested loop
+        fprintf(codefile,"\tMOV rcx, %d\n",q->arg1Num); //Loop start num
+        fprintf(codefile,"\tMOV rdx, %d\n",q->arg2Num); //Loop end num
+
+        char *forBlockInit = getNewLabelVariable();
+        fprintf(codefile,"%s \t: \n",forBlockInit);
+
+        char *forBlockClose = getNewLabelVariable();
+        
+        pushLoopStack(lStack, forBlockClose);
+        pushLoopStack(lStack, forBlockInit);
+
+        fprintf(codefile,"\tCMP rcx, rdx \n");
+        fprintf(codefile,"\tJG %s \n",forBlockClose);
+    */
+
+    char *forBlockInit = getNewLabelVariable();
+    
+    fprintf(codefile, "section .bss\n");
+    char *lVar1 = (char*)malloc(sizeof(char) * 16);
+    char *lVar2 = (char*)malloc(sizeof(char) * 16);
+    snprintf(lVar1, 16, "var_%s_1", forBlockInit);
+    snprintf(lVar2, 16, "var_%s_2", forBlockInit);
+    fprintf(codefile,"%s resq 1\n",lVar1);
+    fprintf(codefile,"%s resq 1\n",lVar2);
+    fprintf(codefile, "section .text\n");
+    fprintf(codefile,"\tMOV qword [%s], %d\n",lVar1,q->arg1Num); //Loop start num
+    fprintf(codefile,"\tMOV qword [%s], %d\n",lVar2,q->arg2Num); //Loop end num
+
+    fprintf(codefile,"%s \t: \n",forBlockInit);
+    fprintf(codefile,"\tMOV rcx, qword[%s]\n",lVar1); 
+    fprintf(codefile,"\tMOV rdx, qword[%s]\n",lVar2); 
+
+    char *forBlockClose = getNewLabelVariable();
+    
+    pushLoopStack(lStack, forBlockClose);
+    pushLoopStack(lStack, forBlockInit);
+    // pushLoopStack(lStack, lVar2);
+    pushLoopStack(lStack, lVar1);
+
+    fprintf(codefile,"\tCMP rcx, rdx \n");
+    fprintf(codefile,"\tJG %s \n",forBlockClose);
+}
+
+void insertForEnd(FILE *codefile, Quadruple* q){
+    /* Working code for non-nested loop
+    loopStNode* temp = peekLoopStack(lStack);
+    char* loopStartLabel = temp->label;
+
+    fprintf(codefile, "\tINC rcx \n");
+    fprintf(codefile,"\tJMP %s \n",loopStartLabel);
+    popLoopStack(lStack); // popped the start
+
+    loopStNode* temp2 = peekLoopStack(lStack);
+    char* loopEndLabel = temp2->label;
+    fprintf(codefile,"%s: \n",loopEndLabel);
+    popLoopStack(lStack);
+    */
+    char* lVar1 = peekLoopStack(lStack)->label;
+    popLoopStack(lStack);
+
+    // char* lVar2 = peekLoopStack(lStack)->label;
+    // fprintf(codefile, "\tMOV qword[%s], rdx",lVar2);
+    // popLoopStack(lStack);
+
+    char* loopStartLabel = peekLoopStack(lStack)->label;
+
+    fprintf(codefile,"\tMOV rcx, qword[%s]\n",lVar1); 
+    fprintf(codefile, "\tINC rcx \n");
+    fprintf(codefile, "\tMOV qword[%s], rcx\n",lVar1);
+    fprintf(codefile,"\tJMP %s \n",loopStartLabel);
+    popLoopStack(lStack); // popped the start
+
+    char* loopEndLabel = peekLoopStack(lStack)->label;
+    fprintf(codefile,"%s: \n",loopEndLabel);
+    popLoopStack(lStack);
+}
+
+// Stack functions to store labels for loops (nested)
+
+loopStNode *getLoopStackNode(char *label){
+    loopStNode* node = malloc(sizeof(loopStNode));
+    node->label = label;
+    node->next = NULL;
+    return node;
+}
+
+loopSt *initLoopStack(void){
+    loopSt *st = malloc(sizeof(loopSt));
+    st->top = NULL;
+    st->size = 0;
+    return st;
+}
+loopStNode *peekLoopStack(loopSt *st){
+    return st->top;
+}
+void popLoopStack(loopSt *st){
+    if (st->size == 0)
+    {
+        printf("Loop Stack is empty\n"); // fatal error as lexical should have checked
+        return;
+    }
+
+    loopStNode *currTop = st->top;
+
+    st->top = st->top->next;
+    st->size--;
+    if (st->size == 0) {
+        free(currTop->label);
+    }
+    free(currTop);
+    
+}
+void pushLoopStack(loopSt *st, char* label){
+    loopStNode *newTop = getLoopStackNode(label);
+    newTop->next = st->top;
+    newTop->label = label;
+    st->top = newTop;
+    st->size++;
+}
+
+bool isLoopStackEmpty(loopSt * st){
+    if(st->size)
+        return false;
+    else
+        return true;
+}
+
+void destroyLoopStack(loopSt* st){
+    while(!isLoopStackEmpty(st)){
+        popLoopStack(st);
+    }
+    free(st);
+}
+

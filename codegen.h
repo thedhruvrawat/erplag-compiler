@@ -22,5 +22,26 @@ void insertRelationalOperation(FILE *codefile, Quadruple *q, char op, char type)
 void insertLogicalOperation(FILE *codefile, Quadruple *q, char op);
 void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type);
 void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type);
+void insertForStatement(FILE *codefile, Quadruple* q);
+void insertForEnd(FILE *codefile, Quadruple* q);
+
+typedef struct loopStNode{
+    char* label;
+    struct loopStNode * next;
+} loopStNode;
+
+typedef struct loopSt{
+    loopStNode * top;
+    int size;
+} loopSt;
+
+loopStNode *getLoopStackNode(char *label);
+loopSt *initLoopStack(void);
+loopStNode *peekLoopStack(loopSt *st);
+void popLoopStack(loopSt *st);
+void pushLoopStack(loopSt *st, char* label);
+void destroyLoopStack(loopSt* st);
+bool isLoopStackEmpty(loopSt * st);
+
 
 #endif
