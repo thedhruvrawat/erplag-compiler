@@ -32,7 +32,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
     initASMFile(codefile);    
     // //fprintf(codefile, "\tFILL_STACK\n");
     fprintf(codefile, "\tmov rbp, rsp\n");
-    fprintf(codefile, "\tsub rsp, 16\n");
+    fprintf(codefile, "\tsub rsp, 800\n");
     Quadruple* currQuad = qt->head;
 
     while(currQuad!=NULL) {
@@ -222,12 +222,12 @@ void initASMFile(FILE *codefile) {
 void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinput: db \"%%d\", 0\n");
     fprintf(codefile, "\toutputInt: db \"Output: %%d\", 10, 0\n");
-    fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 0\n");
-    fprintf(codefile, "\toutputTrue: db \"Output: true\", 0\n");
-    fprintf(codefile, "\toutputFalse: db \"Output: false\", 0\n");
-    fprintf(codefile, "\tinputInt: db \"Input: Enter an integer value \", 0\n");
-    fprintf(codefile, "\tinputReal: db \"Input: Enter a real value \", 0\n");
-    fprintf(codefile, "\tinputBool: db \"Input: Enter a boolean value \", 0\n");
+    fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
+    fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
+    fprintf(codefile, "\toutputFalse: db \"Output: false\", 10, 0\n");
+    fprintf(codefile, "\tinputInt: db \"Input: Enter an integer value \", 10, 0\n");
+    fprintf(codefile, "\tinputReal: db \"Input: Enter a real value \", 10, 0\n");
+    fprintf(codefile, "\tinputBool: db \"Input: Enter a boolean value \", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
     fprintf(codefile, "\tOutOfBoundError: db \"RUNTIME ERROR: Array index out of bounds\", 10, 0\n");
     fprintf(codefile, "\tTypeMismatchError: db \"RUNTIME ERROR: Type Mismatch Error\", 10, 0\n");
@@ -262,16 +262,42 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
     else if (type == 'F')
     {
         fprintf(codefile, "\t; Getting a real\n");
+        fprintf(codefile, "\tsection .bss\n");
+        fprintf(codefile, "\t\ttemp_real__%d resq 1\n", real_count);
+        fprintf(codefile, "\tsection .text\n");
+        fprintf(codefile, "\tMOV rdi, inputReal\n");
+        fprintf(codefile, "\txor rax, rax\n");
+        fprintf(codefile, "\tCALL printf\n");
+
+        fprintf(codefile, "\tLEA rsi, [temp_real__%d]\n", real_count);    
+
         fprintf(codefile, "\tMOV rdi, input\n");
-        fprintf(codefile, "\tMOV rsi, qword[rbp-%d]\n", resultOffset*16);
+        fprintf(codefile, "\tMOV rax, 0\n");    
+        
         fprintf(codefile, "\tCALL scanf\n");
+        fprintf(codefile, "\tMOV rax, qword [temp_real__%d]\n", real_count);
+        fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
+        integer_count++;
     }
     else if (type == 'B')
     {
         fprintf(codefile, "\t; Getting a boolean\n");
+        fprintf(codefile, "\tsection .bss\n");
+        fprintf(codefile, "\t\ttemp_boolean__%d resq 1\n", bool_count);
+        fprintf(codefile, "\tsection .text\n");
+        fprintf(codefile, "\tMOV rdi, inputBool\n");
+        fprintf(codefile, "\txor rax, rax\n");
+        fprintf(codefile, "\tCALL printf\n");
+
+        fprintf(codefile, "\tLEA rsi, [temp_boolean__%d]\n", bool_count);    
+
         fprintf(codefile, "\tMOV rdi, input\n");
-        fprintf(codefile, "\tMOV rsi, qword[rbp-%d]\n", resultOffset*16);
+        fprintf(codefile, "\tMOV rax, 0\n");    
+        
         fprintf(codefile, "\tCALL scanf\n");
+        fprintf(codefile, "\tMOV rax, qword [temp_boolean__%d]\n", bool_count);
+        fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
+        bool_count++;
     }
     //fprintf(codefile, "\tEMPTY_STACK\n");
 }
@@ -603,20 +629,20 @@ void insertLogicalOperation(FILE *codefile, Quadruple *q, char op) { //only Bool
     switch(op) {
         case '&': {
             fprintf(codefile, "\t; LOGICAL AND\n");
-            fprintf(codefile, "\tADD rax, rbx\n");
-            fprintf(codefile, "\tCMP rax, 2\n");
-            fprintf(codefile, "\tCMOVE rcx, rdx\n");
+            fprintf(codefile, "\tAND rax, rbx\n");
+            // fprintf(codefile, "\tCMP rax, 2\n");
+            // fprintf(codefile, "\tCMOVE rcx, rdx\n");
             break;
         }
         case '|': {
             fprintf(codefile, "\t; LOGICAL OR\n");
-            fprintf(codefile, "\tSUB rax, rbx\n");
-            fprintf(codefile, "\tCMP rax, 0\n");
-            fprintf(codefile, "\tCMOVNE rcx, rdx\n");
+            fprintf(codefile, "\tOR rax, rbx\n");
+            // fprintf(codefile, "\tCMP rax, 0\n");
+            // fprintf(codefile, "\tCMOVNE rcx, rdx\n");
             break;
         }
     }
-    fprintf(codefile, "\tMOV qword[rbp-%d], rcx\n", resultOffset*16);
+    fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
 }
 
 void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only Boolean operations
