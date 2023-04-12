@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
         case 2: {
             printf("\e[1;1H\e[2J");
             printf("-------------------------------------------------------------------------------------\n");
-            ParseTree* pt = parseInput(userCode);
+            ParseTree* pt = parserMain(userCode);
             if (!LEXER_ERROR) {
                 printf(GREEN BOLD "Input source code is lexically correct\n" RESET);
             }
@@ -191,6 +191,8 @@ int main(int argc, char* argv[])
                 printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
             }
             printParseTree(pt);
+            cleanLexer();
+            cleanParser();
             printf("-------------------------------------------------------------------------------------\n");
             break;
         }
@@ -236,7 +238,7 @@ int main(int argc, char* argv[])
             printf("%-15s Number of Nodes - %d\t", "Parse Tree:", pt->sz);
             printf("Allocated Memory - %d bytes\n", ParseTreeMemSize);
             printf("%-15s Number of Nodes - %d\t", "AST:", tree->size);
-            printf("Allocated Memory - %ld bytes\n", ASTMemSize);
+            printf("Allocated Memory - %d bytes\n", ASTMemSize);
             printf("Compression Ratio (Count): %.2lf%%\n", (1 - ((double) tree->size) / pt->sz) * 100);
             printf("Compression Ratio (Memory): %.2lf%%\n", (1 - ((double) ASTMemSize) / ParseTreeMemSize) * 100);
             printf("-------------------------------------------------------------------------------------\n");
