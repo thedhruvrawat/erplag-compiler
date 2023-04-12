@@ -351,7 +351,7 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
     if(type == 'I') {
         if(q->isArg1ID) {
             fprintf(codefile, "\t; Printing an integer\n");
-            fprintf(codefile, "\tMOV rdi, output\n");
+            fprintf(codefile, "\tMOV rdi, outputInt\n");
             fprintf(codefile, "\tmov rsi, qword[rbp-%d]\n", arg1Offset*16);
         } else {
             fprintf(codefile, "\t; Printing an integer\n");
@@ -400,11 +400,11 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         boolPrints++;
     }
     fprintf(codefile, "\tcall printf\n");
-    fprintf(codefile, "\tMOV rdi, newline\n");
-    fprintf(codefile, "\tcall printf\n");
+    // fprintf(codefile, "\tMOV rdi, newline\n");
+    // fprintf(codefile, "\tcall printf\n");
 }
 
-void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type){
+void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     /*
         Arg1 -> Array Record
         Arg2 ->
@@ -631,8 +631,8 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type){
     }
 
     fprintf(codefile, "\tCALL printf\n");
-    fprintf(codefile, "\tMOV rdi, newline\n");
-    fprintf(codefile, "\tCALL printf\n");
+    // fprintf(codefile, "\tMOV rdi, newline\n");
+    // fprintf(codefile, "\tCALL printf\n");
     // fprintf(codefile, "\tPOP rbp\n");
 }
 
@@ -1033,7 +1033,7 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
 
 
 
-void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type){
+void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     // Check for static array
     // int lower_bound_offset = 0;
     // int upper_bound_offset = 0;
