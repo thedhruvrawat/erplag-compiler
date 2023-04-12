@@ -31,4 +31,5 @@ start
 	end
 	print(a);
 	print(b);
+	print(c);
 end
