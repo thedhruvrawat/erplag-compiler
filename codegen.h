@@ -27,11 +27,9 @@ void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type);
 void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type);
 void insertForStatement(FILE *codefile, Quadruple* q);
 void insertForEnd(FILE *codefile, Quadruple* q);
-<<<<<<< HEAD
 void insertWhileLabelStatement(FILE* codefile, Quadruple* q);
 void insertWhileStatement(FILE* codefile, Quadruple* q);
 void insertWhileEndStatement(FILE* codefile, Quadruple* q);
-=======
 void insertSwitchStatement(FILE *codefile, Quadruple* q);
 
 typedef struct loopStNode{
@@ -44,7 +42,6 @@ typedef struct loopSt{
     int size;
     char type; // 'S' for switch, 'F' for for loop, 'W' for while, 'N' for None
 } loopSt;
->>>>>>> 36939e9 (Switch statements)
 
 loopStNode *getLoopStackNode(char *label);
 loopSt *initLoopStack(void);
