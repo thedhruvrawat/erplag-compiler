@@ -137,9 +137,9 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case ASSIGN_VAR_OP: {
-                if(currQuad->arg1Type == DOUBLE && currQuad->arg2Type == DOUBLE) {
+                if(currQuad->arg1Type == DOUBLE) {
                     insertAssignmentOperation(codefile, currQuad, 'F');
-                } else if(currQuad->arg1Type == INT && currQuad->arg2Type == INT){
+                } else if(currQuad->arg1Type == INT){
                     insertAssignmentOperation(codefile, currQuad, 'I');
                 } else {
                     insertAssignmentOperation(codefile, currQuad, 'B');
@@ -192,6 +192,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
         
         currQuad = currQuad->next;
     }
+    fprintf(codefile, "exit:\n");
     fprintf(codefile, "\tmov rsp, rbp\n");
     fprintf(codefile, "\tpop rbp\n");
     fprintf(codefile, "\tmov rax, 0\n");
@@ -342,7 +343,8 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         if(q->isArg1ID) {
             fprintf(codefile, "\t; Printing a real ID\n");
             fprintf(codefile, "\tMOV rdi, outputReal\n");
-            fprintf(codefile, "\tMOV rsi, QWORD[rbp-%d]\n", arg1Offset*16);            
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16);   
+            fprintf(codefile, "\tMOVQ rsi, xmm0\n");            
         } else {
             fprintf(codefile, "\t; Printing a real number\n");
             char *arg1Label = getNewLabelVariable();
@@ -421,6 +423,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
             case '/': {
+                //Never Reached
                 fprintf(codefile, "\t; DIVISION\n");
                 fprintf(codefile, "\tIDIV rax, rbx\n");
                 break;
@@ -463,13 +466,23 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
                 break;
             }
             case '/': {
+                fprintf(codefile, "\t; Check if denominator is 0\n");
+                fprintf(codefile, "\tXORPS xmm3, xmm3\n");
+                fprintf(codefile, "\tUCOMISS xmm1, xmm3\n");
+                fprintf(codefile, "\tJE DivBy0\n");
                 fprintf(codefile, "\t; DIVISION\n");
                 fprintf(codefile, "\tDIVSD xmm0, xmm1\n");
                 break;
             }
         }
-        fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);        
-    }    
+        fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);
+        fprintf(codefile, "\tJMP NoException\n");
+        fprintf(codefile, "DivBy0:\n");
+        fprintf(codefile, "\tMOV rdi, DivBy0Exception\n");
+        fprintf(codefile, "\tcall printf\n");
+        fprintf(codefile, "\tJMP exit\n");
+        fprintf(codefile, "NoException:\n");
+    }
     //fprintf(codefile, "\tEMPTY_STACK\n");
 }
 
@@ -719,7 +732,7 @@ void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile,"\tsection .text\n");
             fprintf(codefile,"\tMOVSD xmm0, [%s]\n", arg1Label);
         }
-        fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset*16);        
+        fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);        
     } else { //Boolean
         if(q->isArg1ID) {
             fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset*16);
