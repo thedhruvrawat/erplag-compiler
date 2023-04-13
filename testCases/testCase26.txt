@@ -1,13 +1,13 @@
 <<module compute_expr>>
-takes input[ a: real, b:real, c:boolean];
+takes input[ a: boolean, b:real, c:boolean];
 returns [u:real, v:boolean];
 start
 	declare p, q, d: real;
 	declare m: boolean;
 	get_value(d);
 	get_value(q);
-	p:= a*b+ d*2.0-3.0;
-	m:= c AND a<=b;
+	p:= b+ d*2.0 - 3.0;
+	m:= a OR c AND b<=b;
 	u:= p+q;
 	v:= m OR p<=q;
 	print(a);
@@ -26,9 +26,8 @@ start
 	get_value(x);
 	get_value(y);
 	declare k, h:boolean;
-	print(x);
 	h:= false;
-	[z, k]:= use module compute_expr with parameters x, y, h;				
+	[z, k]:= use module compute_expr with parameters true, y, h;				
 	print(x);
 	print(y);
 	print(z);
