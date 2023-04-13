@@ -1645,6 +1645,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
             fprintf(codefile, "\tADD rax, rbx\n"); // final calue of offset stored in rax
+            fprintf(codefile, "\tsection .data\n");
             fprintf(codefile, "\treal_buffer_%d dq %f\n", real_count, q->arg1Real);
             fprintf(codefile, "\tsection .text\n");
             fprintf(codefile, "\tMOVSD xmm0, QWORD[real_buffer_%d]\n", real_count);
