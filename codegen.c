@@ -478,12 +478,13 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinputBool: db \"%%d\", 0\n");
     fprintf(codefile, "\toutputPrompt: db \"Output:\", 0\n");
     fprintf(codefile, "\toutputArrayInt: db \" %%d\", 0\n");
-    fprintf(codefile, "\toutputArrayReal: db \" %%d\", 0\n");
+    fprintf(codefile, "\toutputArrayReal: db \" %%lf\", 0\n");
     fprintf(codefile, "\toutputArrayTrue: db \" true\", 0\n");
     fprintf(codefile, "\toutputArrayFalse: db \" false\", 0\n");
     fprintf(codefile, "\toutputInt: db \"Output: %%d\", 10, 0\n");
     fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
     fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
+    
     fprintf(codefile, "\toutputFalse: db \"Output: false\", 10, 0\n");
     fprintf(codefile, "\tinputIntPrompt: db \"Input: Enter an integer value \", 10, 0\n");
     fprintf(codefile, "\tinputRealPrompt: db \"Input: Enter a real value \", 10, 0\n");
@@ -892,9 +893,23 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
                     break;
                 }
                 case DOUBLE: {
+                    fprintf(codefile, "\tMOV rdi, outputArrayReal\n");
+                    fprintf(codefile, "\tMOVSD xmm0, qword[rbp-%d]\n", offset);
+                    fprintf(codefile, "\tmovq rsi, xmm0\n");
+                    fprintf(codefile, "\tmov rax, 1\n");
                     break;
                 }
                 case BOOL: {
+                    // fprintf(codefile, "\t; Printing a boolean ID\n");
+                    fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", offset);
+                    fprintf(codefile, "\tCMP rax, 0\n");
+                    fprintf(codefile, "\tJE boolVarIsFalse__%d\n", boolPrints);
+                    fprintf(codefile, "\tMOV rdi, outputArrayTrue\n");
+                    fprintf(codefile, "\tjmp continue_post_bool__%d\n", boolPrints);
+                    fprintf(codefile, "boolVarIsFalse__%d:\n", boolPrints);
+                    fprintf(codefile, "\tMOV rdi, outputArrayFalse\n");
+                    fprintf(codefile, "continue_post_bool__%d:\n", boolPrints);
+                    boolPrints++;
                     break;
                 }
             }
