@@ -496,7 +496,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
                 }
 
                 if (index < left || index > right) {
-                    printf(RED BOLD "[Semantic Analyser] Line %d: Array index out of bounds.\n" RESET, indexNode->rightMostChild->leaf.tok->linenum);
+                    printf(RED BOLD "[Semantic Analyser] Line %d: Index %d is out of bounds for array %s.\n" RESET, indexNode->rightMostChild->leaf.tok->linenum, index, name);
                     SEMANTIC_ERROR = true;
                 }
             }
@@ -521,7 +521,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return exprNode->type = ERROR;
             } else {
-                printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                printf(RED BOLD "[Semantic Analyser] Line %d: Type Mismatch. Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
                 SEMANTIC_ERROR = true;
                 return exprNode->type = ERROR;
             }
@@ -536,7 +536,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return exprNode->type = ERROR;
             } else {
-                printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for DIV.\n" RESET, exprNode->leaf.tok->linenum);
+                printf(RED BOLD "[Semantic Analyser] Line %d: Type Mismatch. Invalid types for DIV.\n" RESET, exprNode->leaf.tok->linenum);
                 SEMANTIC_ERROR = true;
                 return exprNode->type = ERROR;
             }
@@ -553,7 +553,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return exprNode->type = ERROR;
             } else {
-                printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                printf(RED BOLD "[Semantic Analyser] Line %d: Type Mismatch. Invalid types for %s.\n" RESET, exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
                 SEMANTIC_ERROR = true;
                 return exprNode->type = ERROR;
             }
@@ -576,7 +576,7 @@ VAR_TYPE typeExtractor(ASTNode* exprNode, SymbolTableNode* symbolTableNode) {
             } else if (leftType == ERROR || rightType == ERROR) {
                 return exprNode->type = ERROR;
             } else {
-                printf(RED BOLD "[Semantic Analyser] Line %d: Invalid types for %s.\n" RESET,exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
+                printf(RED BOLD "[Semantic Analyser] Line %d: Type Mismatch. Invalid types for %s.\n" RESET,exprNode->leaf.tok->linenum, token_types[exprNode->leaf.tok->tok]);
                 SEMANTIC_ERROR = true;
                 return exprNode->type = ERROR;
             }
@@ -763,7 +763,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                                 }
                             }
                             if (index < left || index > right) {
-                                printf(RED BOLD "[Semantic Analyser] Line %d: Index %d out of bounds for array %s\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
+                                printf(RED BOLD "[Semantic Analyser] Line %d: Index %d is out of bounds for array %s.\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
                                 SEMANTIC_ERROR = true;
                             }
                         } else if (strcmp(indexNode->rightMostChild->label, "ID") == 0) {
@@ -901,7 +901,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                                 }
 
                                 if (index < left || index > right) {
-                                    printf(RED BOLD "[Semantic Analyser] Line %d: Index %d out of bounds for array %s\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
+                                    printf(RED BOLD "[Semantic Analyser] Line %d: Index %d is out of bounds for array %s.\n" RESET, indexNode->leftMostChild->leaf.tok->linenum, index, name);
                                     SEMANTIC_ERROR = true;
                                 }
                             }
@@ -1065,7 +1065,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     VAR_TYPE inputType = typeExtractor(curr, symbolTableNode);
                     if (inputNode != NULL && inputNode->type.varType == ARR) {
                         if (inputType != ARR) {
-                            printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
+                            printf(RED BOLD "[Semantic Analyser] Line %d: Input parameter type of %s does not match with formal parameter. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme);
                             SEMANTIC_ERROR = true;
                         } else if (inputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array %s.\n" RESET, curr->leaf.tok->linenum, inputNode->name);
@@ -1076,7 +1076,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             VAR_TYPE inputArrayType = varRecord->type.array.arrType;
 
                             if (arrayType != inputArrayType) {
-                                printf(RED BOLD "[Semantic Analyser] Line %d: Array type mismatch. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
+                                printf(RED BOLD "[Semantic Analyser] Line %d: Input parameter type of %s does not match with formal parameter. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, typeStrings[arrayType]);
                                 SEMANTIC_ERROR = true;
                             }
                             
@@ -1108,13 +1108,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                                 int varRecordSize = varRecordRight - varRecordLeft + 1;
 
                                 if (inputNodeSize != varRecordSize) {
-                                    printf(RED BOLD "[Semantic Analyser] Line %d: Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, inputNodeLeft, inputNodeRight);
+                                    printf(RED BOLD "[Semantic Analyser] Line %d: Input parameter type of %s does not match with formal parameter. Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, inputNodeLeft, inputNodeRight);
                                     SEMANTIC_ERROR = true;
                                 }
                             }
                         }
                     } else if (inputNode != NULL && inputType != inputNode->type.varType && inputType != ERROR) {
-                        printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[inputNode->type.varType]);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: Input parameter type of %s does not match with formal parameter. Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, typeStrings[inputNode->type.varType]);
                         SEMANTIC_ERROR = true;
                     }
 
@@ -1189,7 +1189,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     VAR_TYPE outputType = typeExtractor(curr, symbolTableNode);
                     if (outputNode != NULL && outputNode->type.varType == ARR) {
                         if (outputType != ARR) {
-                            printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum);
+                            printf(RED BOLD "[Semantic Analyser] Line %d: Output parameter type of %s does not match with formal parameter. Type mismatch. Expected ARRAY type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme);
                             SEMANTIC_ERROR = true;
                         } else if (outputType == ARR && isMinus) {
                             printf(RED BOLD "[Semantic Analyser] Line %d: Unary minus operation not allowed on array %s.\n" RESET, curr->leaf.tok->linenum, outputNode->name);
@@ -1200,7 +1200,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                             VAR_TYPE outputArrayType = varRecord->type.array.arrType;
 
                             if (arrayType != outputArrayType) {
-                                printf(RED BOLD "[Semantic Analyser] Line %d: Array type mismatch. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[arrayType]);
+                                printf(RED BOLD "[Semantic Analyser] Line %d: Output parameter type of %s does not match with formal parameter. Array type mismatch. Expected array of %s type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, typeStrings[arrayType]);
                                 SEMANTIC_ERROR = true;
                             }
                             
@@ -1232,13 +1232,13 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                                 int varRecordSize = varRecordRight - varRecordLeft + 1;
 
                                 if (outputNodeSize != varRecordSize) {
-                                    printf(RED BOLD "[Semantic Analyser] Line %d: Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, outputNodeLeft, outputNodeRight);
+                                    printf(RED BOLD "[Semantic Analyser] Line %d: Output parameter type of %s does not match with formal parameter. Array sizes mismatch. Expected array of [%d..%d].\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, outputNodeLeft, outputNodeRight);
                                     SEMANTIC_ERROR = true;
                                 }
                             }
                         }
                     } else if (outputNode != NULL && outputType != outputNode->type.varType && outputType != ERROR) {
-                        printf(RED BOLD "[Semantic Analyser] Line %d: Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, typeStrings[outputNode->type.varType]);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: Output parameter type of %s does not match with formal parameter. Type mismatch. Expected %s type.\n" RESET, moduleNode->leaf.tok->linenum, curr->leaf.tok->lexeme, typeStrings[outputNode->type.varType]);
                         SEMANTIC_ERROR = true;
                     }
 
