@@ -474,6 +474,9 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinputIntPrompt: db \"Input: Enter an integer value \", 10, 0\n");
     fprintf(codefile, "\tinputRealPrompt: db \"Input: Enter a real value \", 10, 0\n");
     fprintf(codefile, "\tinputBoolPrompt: db \"Input: Enter a boolean value \", 10, 0\n");
+    fprintf(codefile, "\tinputArrayIntPrompt: db \"Input: Enter %%d array elements of integer type for range %%d to %%d\", 10, 0\n");
+    fprintf(codefile, "\tinputArrayRealPrompt: db \"Input: Enter %%d array elements of real type for range %%d to %%d\", 10, 0\n");
+    fprintf(codefile, "\tinputArrayBoolPrompt: db \"Input: Enter %%d array elements of booleam type for range %%d to %%d\", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
     fprintf(codefile, "\tOutOfBoundError: db \"\033[1;31mRUNTIME ERROR: Array index out of bounds\033[0m\", 10, 0\n");
     fprintf(codefile, "\tTypeMismatchError: db \"\033[1;31mRUNTIME ERROR: Type Mismatch Error\033[0m\", 10, 0\n");
@@ -577,6 +580,20 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
 
     if(arr_type == INT || arr_type == BOOL){
         printf("Getting Into Int\n");
+        fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
+        fprintf(codefile, "\tMOV rsi, %d\n", ele_count);
+        int lowerBound = q->result->type.array.left;
+        if (q->result->type.array.leftNegative) { 
+            lowerBound = -lowerBound; 
+        }
+        int upperBound = q->result->type.array.right;
+        if (q->result->type.array.rightNegative) { 
+            upperBound = -upperBound; 
+        }
+        fprintf(codefile, "\tMOV rdx, %d\n", lowerBound);
+        fprintf(codefile, "\tMOV rcx, %d\n", upperBound);
+        fprintf(codefile, "\tMOV rax, 0\n");
+        fprintf(codefile, "\tCALL printf\n");
         newLabel = getNewLabelVariable();
         fprintf(codefile, "\tMOV rcx, 0\n");
         fprintf(codefile, "\t; Getting an integer in array\n");
@@ -585,9 +602,7 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tsection .text\n");
         fprintf(codefile, "%s:\tpush rax\n", newLabel);
         fprintf(codefile, "\tpush rcx\n");
-        fprintf(codefile, "\tMOV rdi, inputIntPrompt\n");
-        fprintf(codefile, "\txor rax, rax\n");
-        fprintf(codefile, "\tCALL printf\n");
+        
         fprintf(codefile, "\tPOP rcx\n");
         fprintf(codefile, "\tPOP rax\n");
         fprintf(codefile, "\tPUSH rax\n");
@@ -1783,3 +1798,49 @@ void insertDefaultStatement(FILE *codefile, Quadruple* q){
     // popLoopStack(lStack);
     // fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
+
+// Dynamic Array - TODO
+// void insertDynamicArrayDeclare(FILE *codefile, Quadruple* q){
+//     char leftID[20];
+//     char rightID[20];
+//     int leftIDOffset, rightIDOffset;
+
+//     // Left dynamic
+//     bool isLeftID = q->result->type.array.isLeftID;
+//     bool isRightID = q->result->type.array.isRightID;
+//     //
+//     if(!isLeftID && !isRightID){
+//         printf("Fatal error, staic array treated as mistake\n");
+//     }
+//     if(isLeftID){
+//         //Left Dynamic
+//         strcpy(leftID,q->result->type.array.leftID);
+//         leftIDOffset = (variableExists(q->symbolTableNode,leftID,hash(leftID)))->offset;
+//         fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", leftIDOffset*16);
+        
+//     }
+//     else{
+//         // Left Static
+//         fprintf(codefile, "\tMOV rax, %d]\n", q->result->type.array.left); 
+//     }
+//     // Unary negative
+//     if(q->result->type.array.leftNegative){
+//         fprintf(codefile,"\tNEG rax\n");
+//     } 
+
+
+//     if(rightID){
+//         //Right Dynamic
+//         strcpy(rightID,q->result->type.array.rightID);
+//         rightIDOffset = (variableExists(q->symbolTableNode,rightID,hash(rightID)))->offset;
+//         fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", rightIDOffset*16);
+//     }
+//     else{
+//         //Right Static
+//         fprintf(codefile, "\tMOV rbx, %d]\n", q->result->type.array.right); 
+//     }
+
+//     fprintf(codefile,"section .bss\n");
+
+//     fprintf(codefile,"section .text\n");
+// }
