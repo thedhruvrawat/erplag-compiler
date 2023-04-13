@@ -476,14 +476,14 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinputBoolPrompt: db \"Input: Enter a boolean value \", 10, 0\n");
     fprintf(codefile, "\tinputArrayIntPrompt: db \"Input: Enter %%d array elements of integer type for range %%d to %%d\", 10, 0\n");
     fprintf(codefile, "\tinputArrayRealPrompt: db \"Input: Enter %%d array elements of real type for range %%d to %%d\", 10, 0\n");
-    fprintf(codefile, "\tinputArrayBoolPrompt: db \"Input: Enter %%d array elements of booleam type for range %%d to %%d\", 10, 0\n");
+    fprintf(codefile, "\tinputArrayBoolPrompt: db \"Input: Enter %%d array elements of boolean type for range %%d to %%d\", 10, 0\n");
     fprintf(codefile, "\tnewline: db \"\", 10, 0\n");
     fprintf(codefile, "\tOutOfBoundError: db \"\033[1;31mRUNTIME ERROR: Array index out of bounds\033[0m\", 10, 0\n");
     fprintf(codefile, "\tTypeMismatchError: db \"\033[1;31mRUNTIME ERROR: Type Mismatch Error\033[0m\", 10, 0\n");
     fprintf(codefile, "\tDivBy0Exception: db \"\033[1;31mEXCEPTION: Division by 0\033[0m\", 10, 0\n\n");
-    fprintf(codefile, "\tInputNotInteger: db \"\033[1;31mRUNTIME ERROR: Expected INTEGER: Given input is not an integer\033[0m\", 10, 0\n\n");
-    fprintf(codefile, "\tInputNotReal: db \"\033[1;31mRUNTIME ERROR: Expected REAL: Given input is not a real value\033[0m\", 10, 0\n\n");
-    fprintf(codefile, "\tInputNotBoolean: db \"\033[1;31mRUNTIME ERROR: Expected BOOLEAN: Given input is not boolean\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotInteger: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected INTEGER: Given input is not an integer\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotReal: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected REAL: Given input is not a real value\033[0m\", 10, 0\n\n");
+    fprintf(codefile, "\tInputNotBoolean: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected BOOLEAN: Given input is not boolean\033[0m\", 10, 0\n\n");
     fprintf(codefile, "\ttypeInteger: db \"integer\", 0\n");
     fprintf(codefile, "\ttypeReal: db \"real\", 0\n");
     fprintf(codefile, "\ttypeBoolean: db \"boolean\", 0\n");
@@ -580,7 +580,14 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
 
     if(arr_type == INT || arr_type == BOOL){
         printf("Getting Into Int\n");
-        fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
+        if(arr_type == INT){
+            fprintf(codefile, "\t; Getting an integer array\n");
+            fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
+        } else {
+            fprintf(codefile, "\t; Getting a boolean array\n");
+            fprintf(codefile, "\tMOV rdi, inputArrayBoolPrompt\n");
+        }
+        
         fprintf(codefile, "\tMOV rsi, %d\n", ele_count);
         int lowerBound = q->result->type.array.left;
         if (q->result->type.array.leftNegative) { 
@@ -614,6 +621,13 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
+
+        fprintf(codefile, "\tCMP EAX, 1\n");
+        if(arr_type == INT)
+            fprintf(codefile, "\tJNE InputIsNotIntegerError\n");
+        else
+            fprintf(codefile, "\tJNE InputIsNotBooleanError\n");
+
         fprintf(codefile, "\tPOP rcx\n");
         fprintf(codefile, "\tPOP rax\n");
         // fprintf(codefile, "\tMOV qword[temp_integer__%d], rax\n");
