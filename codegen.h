@@ -46,4 +46,6 @@ void insertSwitchEnd(FILE *codefile, Quadruple* q);
 void insertCaseStatement(FILE *codefile, Quadruple* q);
 void insertDefaultStatement(FILE *codefile, Quadruple* q);
 void insertCaseEnd(FILE *codefile, Quadruple* q);
+void insertGetArrayValue(FILE *codefile, Quadruple *q, char type)
+void insertDynamicArrayDeclare(FILE *codefile, Quadruple* q);
 #endif

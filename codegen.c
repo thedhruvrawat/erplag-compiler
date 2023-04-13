@@ -1783,3 +1783,49 @@ void insertDefaultStatement(FILE *codefile, Quadruple* q){
     // popLoopStack(lStack);
     // fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
+
+// Dynamic Array - TODO
+// void insertDynamicArrayDeclare(FILE *codefile, Quadruple* q){
+//     char leftID[20];
+//     char rightID[20];
+//     int leftIDOffset, rightIDOffset;
+
+//     // Left dynamic
+//     bool isLeftID = q->result->type.array.isLeftID;
+//     bool isRightID = q->result->type.array.isRightID;
+//     //
+//     if(!isLeftID && !isRightID){
+//         printf("Fatal error, staic array treated as mistake\n");
+//     }
+//     if(isLeftID){
+//         //Left Dynamic
+//         strcpy(leftID,q->result->type.array.leftID);
+//         leftIDOffset = (variableExists(q->symbolTableNode,leftID,hash(leftID)))->offset;
+//         fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", leftIDOffset*16);
+        
+//     }
+//     else{
+//         // Left Static
+//         fprintf(codefile, "\tMOV rax, %d]\n", q->result->type.array.left); 
+//     }
+//     // Unary negative
+//     if(q->result->type.array.leftNegative){
+//         fprintf(codefile,"\tNEG rax\n");
+//     } 
+
+
+//     if(rightID){
+//         //Right Dynamic
+//         strcpy(rightID,q->result->type.array.rightID);
+//         rightIDOffset = (variableExists(q->symbolTableNode,rightID,hash(rightID)))->offset;
+//         fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", rightIDOffset*16);
+//     }
+//     else{
+//         //Right Static
+//         fprintf(codefile, "\tMOV rbx, %d]\n", q->result->type.array.right); 
+//     }
+
+//     fprintf(codefile,"section .bss\n");
+
+//     fprintf(codefile,"section .text\n");
+// }
