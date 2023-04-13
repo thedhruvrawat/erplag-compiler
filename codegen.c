@@ -1642,10 +1642,10 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     char *forBlockInit = getNewLabelVariable();
     fprintf(codefile,";FOR loop start\n");
     fprintf(codefile, "section .bss\n");
-    char *lVar1 = (char*)malloc(sizeof(char) * 16);
-    char *lVar2 = (char*)malloc(sizeof(char) * 16);
-    snprintf(lVar1, 16, "var_%s_1", forBlockInit);
-    snprintf(lVar2, 16, "var_%s_2", forBlockInit);
+    char *lVar1 = (char*)malloc(sizeof(char) * 25);
+    char *lVar2 = (char*)malloc(sizeof(char) * 25);
+    snprintf(lVar1, 25, "var_%s_1", forBlockInit);
+    snprintf(lVar2, 25, "var_%s_2", forBlockInit);
     fprintf(codefile,"%s resq 1\n",lVar1);
     fprintf(codefile,"%s resq 1\n",lVar2);
     fprintf(codefile, "section .text\n");

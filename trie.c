@@ -258,6 +258,9 @@ char** getElements(Trie* tr)
  */
 void freeTrie(Trie* tr)
 {
+    if (tr == NULL) {
+        return;
+    }
     for (int i = 0; i < 128; ++i) {
         if (tr->next[i] == NULL) {
             continue;
