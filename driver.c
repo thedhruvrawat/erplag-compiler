@@ -178,6 +178,7 @@ int main(int argc, char* argv[])
             }
             printf(GREEN BOLD "Token Stream Over\n" RESET);
             printf("-------------------------------------------------------------------------------------\n");
+            cleanLexer();
             break;
         }
         case 2: {
@@ -208,6 +209,8 @@ int main(int argc, char* argv[])
             }
             if (PARSER_ERROR || LEXER_ERROR) {
                 printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                cleanLexer();
+                cleanParser();
                 break;
             }
             ASTCreator(pt);
@@ -230,6 +233,8 @@ int main(int argc, char* argv[])
             printf("-------------------------------------------------------------------------------------\n");
             if (PARSER_ERROR || LEXER_ERROR) {
                 printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                cleanLexer();
+                cleanParser();
                 break;
             }
             ASTCreator(pt);
@@ -259,6 +264,8 @@ int main(int argc, char* argv[])
             }
             if (PARSER_ERROR || LEXER_ERROR) {
                 printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                cleanLexer();
+                cleanParser(); 
                 break;
             }
             ASTCreator(pt);
@@ -281,6 +288,8 @@ int main(int argc, char* argv[])
             }
             if (PARSER_ERROR || LEXER_ERROR) {
                 printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                cleanLexer();
+                cleanParser(); 
                 break;
             }
             ASTCreator(pt);
@@ -293,6 +302,8 @@ int main(int argc, char* argv[])
             printf("-------------------------------------------------------------------------------------\n");
             if (SEMANTIC_ERROR) {
                 printf(RED BOLD "Cannot generate activation records due to semantic errors.\n" RESET);
+                cleanLexer();
+                cleanParser(); 
                 break;
             }
             printf(UNDERLINE BOLD "Printing the activation records: \n" RESET);
@@ -321,6 +332,8 @@ int main(int argc, char* argv[])
             }
             if (PARSER_ERROR || LEXER_ERROR) {
                 printf(RED BOLD "Cannot generate AST due to lexical/syntactical errors.\n" RESET);
+                cleanLexer();
+                cleanParser();
                 break;
             }
             ASTCreator(pt);
@@ -352,6 +365,8 @@ int main(int argc, char* argv[])
                 printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
             }
             if (PARSER_ERROR || LEXER_ERROR) {
+                cleanLexer();
+                cleanParser();
                 break;
             }
             ASTCreator(pt);
@@ -382,6 +397,8 @@ int main(int argc, char* argv[])
                 printf(GREEN BOLD "Input source code is syntactically correct\n" RESET);
             }
             if (PARSER_ERROR || LEXER_ERROR) {
+                cleanLexer();
+                cleanParser();
                 break;
             }
             ASTCreator(pt);
@@ -395,6 +412,8 @@ int main(int argc, char* argv[])
 
             if (SEMANTIC_ERROR) {
                 printf(RED BOLD "Cannot generate code due to semantic errors.\n" RESET);
+                cleanLexer();
+                cleanParser();
                 break;
             }
 

@@ -620,7 +620,7 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     }
 }
 
-void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type){
+void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type) {
     int range_low = 0, range_high = 0;
     int lower_bound_offset = -1, upper_bound_offset = -1;
 

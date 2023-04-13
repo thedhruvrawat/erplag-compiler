@@ -32,6 +32,7 @@ void insertWhileStatement(FILE* codefile, Quadruple* q);
 void insertWhileEndStatement(FILE* codefile, Quadruple* q);
 void insertSwitchStatement(FILE *codefile, Quadruple* q);
 void insertGetArrayValue(FILE *codefile, Quadruple *q, char type);
+void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type);
 
 loopStNode *getLoopStackNode(char *label);
 loopSt *initLoopStack(void);
