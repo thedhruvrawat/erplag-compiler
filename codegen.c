@@ -21,8 +21,8 @@ int real_count = 0;
 int bool_count = 0;
 
 char *getNewLabelVariable() {
-    char *label = (char*)malloc(sizeof(char) * 10);
-    snprintf(label, 10, "__label_%d", labelCount);
+    char *label = (char*)malloc(sizeof(char) * 15);
+    snprintf(label, 15, "__label_%d", labelCount);
     labelCount++;
     return label;
 }
@@ -563,7 +563,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
             }
             case DRIVER_END_OP:{
                 fprintf(codefile, "\tjmp exit\n");
-                
+
                 fprintf(codefile, "InputIsNotIntegerError:\n");
                 fprintf(codefile, "\tmov rdi, InputNotInteger\n");
                 fprintf(codefile, "\tcall printf\n");
@@ -734,7 +734,7 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
     //fprintf(codefile, "\tEMPTY_STACK\n");
 }
 
-void insertGetArrayValue(FILE *codefile, Quadruple *q, char type){
+void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     // static array input
     printf("Getting into array value\n");
     VAR_TYPE arr_type = q->result->type.array.arrType;
