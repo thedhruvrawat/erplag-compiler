@@ -156,8 +156,14 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     insertPrintStatement(codefile, currQuad, 'F');
                 } else if (currQuad->arg1Type == INT) {
                     insertPrintStatement(codefile, currQuad, 'I');
-                } else {
+                } else if(currQuad->arg1Type == BOOL){
                     insertPrintStatement(codefile, currQuad, 'B');
+                }
+                else if(currQuad->arg1Type == ARR){
+                    insertPrintStatement(codefile, currQuad, 'A');
+                }
+                else{
+                    printf("Unhandled type for codegen PRINT_ID_OP\n");
                 }
                 break;
             }
@@ -467,6 +473,11 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tinputInt: db \"%%d\", 0\n");
     fprintf(codefile, "\tinputReal: db \"%%lf\", 0\n");
     fprintf(codefile, "\tinputBool: db \"%%d\", 0\n");
+    fprintf(codefile, "\toutputPrompt: db \"Output:\", 0\n");
+    fprintf(codefile, "\toutputArrayInt: db \" %%d\", 0\n");
+    fprintf(codefile, "\toutputArrayReal: db \" %%d\", 0\n");
+    fprintf(codefile, "\toutputArrayTrue: db \" true\", 0\n");
+    fprintf(codefile, "\toutputArrayFalse: db \" false\", 0\n");
     fprintf(codefile, "\toutputInt: db \"Output: %%d\", 10, 0\n");
     fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
     fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
@@ -792,6 +803,7 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMOV rdi, outputInt\n");
             fprintf(codefile, "\tmov rsi, rax\n");
         }
+        fprintf(codefile, "\tcall printf\n");
     } else if(type == 'F') {
         if(q->isArg1ID) {
             fprintf(codefile, "\t; Printing a real ID\n");
@@ -810,7 +822,8 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile,"\tMOVQ rsi, xmm0\n");
             fprintf(codefile, "\tMOV rax, 1\n");         
         }
-    } else {
+        fprintf(codefile, "\tcall printf\n");
+    } else if(type == 'B'){
         if(q->isArg1ID) {
             fprintf(codefile, "\t; Printing a boolean ID\n");
             fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", arg1Offset*16);
@@ -832,9 +845,49 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMOV rdi, outputFalse\n");
             fprintf(codefile, "continue_post_bool__%d:\n", boolPrints);
         }
+        fprintf(codefile, "\tcall printf\n");
         boolPrints++;
     }
-    fprintf(codefile, "\tcall printf\n");
+    else if(type == 'A'){
+        VAR_TYPE arr_type = q->arg1ID->type.array.arrType;
+        if (q->arg1ID->type.array.isLeftID || q->arg1ID->type.array.isRightID) {
+            printf("Dynamic Arrays not handled yet!\n");
+            return;
+        }
+        fprintf(codefile, "\t; Printing an array\n");
+        int left = q->arg1ID->type.array.left;
+        if (q->arg1ID->type.array.leftNegative) { left = -left; }
+
+        int right = q->arg1ID->type.array.right;
+        if (q->arg1ID->type.array.rightNegative) { right = -right; }
+
+        int width = right - left + 1;
+        for (int i = 0; i < width; ++i) {
+            fprintf(codefile, "\tMOV rdi, outputPrompt\n");
+            fprintf(codefile, "\tCALL printf\n");
+            int offset = q->arg1ID->offset + i * 16;
+            switch (arr_type) {
+                case INT: {
+                    fprintf(codefile, "\tMOV rdi, outputArrayInt\n");
+                    fprintf(codefile, "\tmov rsi, qword[rbp-%d]\n", offset);
+                    break;
+                }
+                case DOUBLE: {
+                    break;
+                }
+                case BOOL: {
+                    break;
+                }
+            }
+            fprintf(codefile, "\tCALL printf\n");
+        }
+        fprintf(codefile, "\tMOV rdi, newline\n");
+        fprintf(codefile, "\tCALL printf\n");
+    }
+    else{
+        // Cannot reach here currently, but useful to add more types later on 
+        printf("Fatal, Invalid char passed \n"); 
+    }
     // fprintf(codefile, "\tMOV rdi, newline\n");
     // fprintf(codefile, "\tcall printf\n");
 }
