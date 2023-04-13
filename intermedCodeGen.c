@@ -1005,8 +1005,6 @@ void printQuadrupleTable(void) {
     while (quad != NULL) {
         fprintf(fp, "%-25s", opStrings[quad->op]);
 
-        printf("%s\n", opStrings[quad->op]);
-
         if (quad->op == MODULE_USE_OP || quad->op == MODULE_OP || quad->op == MODULE_END_OP) {
             fprintf(fp, "%-10s%-10s%-20s%-10s%-10s\n", "**", "**", quad->moduleName, "**", "**");
             fprintf(fp, "Input List: ");
@@ -1085,7 +1083,6 @@ void printQuadrupleTable(void) {
                 fprintf(fp, "%-10s", "**");
             }
         } else {
-            printf("%p\n", quad->result);
             fprintf(fp, "%-20s", quad->result->name);
             fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
         }
