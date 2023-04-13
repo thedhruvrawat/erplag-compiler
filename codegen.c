@@ -148,6 +148,8 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     insertArrayAssignmentOperation(codefile, currQuad, 'I');
                 } else if(currQuad->result->type.array.arrType == BOOL){
                     insertArrayAssignmentOperation(codefile, currQuad, 'B');
+                } else if(currQuad->result->type.array.arrType == REAL){
+                    insertArrayAssignmentOperation(codefile, currQuad, 'F');
                 }
                 break;
             } 
@@ -171,6 +173,8 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     insertPrintArrayElementOperation(codefile, currQuad, 'I');
                 } else if(currQuad->arg1ID->type.array.arrType == BOOLEAN) {
                     insertPrintArrayElementOperation(codefile, currQuad, 'B');
+                } else if(currQuad->arg1ID->type.array.arrType == REAL) {
+                    insertPrintArrayElementOperation(codefile, currQuad, 'F');
                 }
             } break;
             case FOR_OP:{
@@ -588,12 +592,15 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
 
     char* newLabel;
 
-    if(arr_type == INT || arr_type == BOOL){
+    if(arr_type == INT || arr_type == BOOL || arr_type == REAL){
         printf("Getting Into Int\n");
         if(arr_type == INT){
             fprintf(codefile, "\t; Getting an integer array\n");
             fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
-        } else {
+        } else if(arr_type == REAL){
+            fprintf(codefile, "\t; Getting an real array\n");
+            fprintf(codefile, "\tMOV rdi, inputArrayRealPrompt\n");
+        }else {
             fprintf(codefile, "\t; Getting a boolean array\n");
             fprintf(codefile, "\tMOV rdi, inputArrayBoolPrompt\n");
         }
@@ -626,8 +633,11 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tPUSH rcx\n");
 
         fprintf(codefile, "\tLEA rsi, [temp_integer__%d]\n", integer_count);    
+        if(arr_type == REAL)
+            fprintf(codefile, "\tMOV rdi, inputReal\n");
+        else
+            fprintf(codefile, "\tMOV rdi, inputInt\n");
 
-        fprintf(codefile, "\tMOV rdi, inputInt\n");
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
@@ -635,6 +645,8 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tCMP EAX, 1\n");
         if(arr_type == INT)
             fprintf(codefile, "\tJNE InputIsNotIntegerError\n");
+        if(arr_type == REAL)
+            fprintf(codefile, "\tJNE InputIsNotRealError\n");
         else
             fprintf(codefile, "\tJNE InputIsNotBooleanError\n");
 
@@ -779,6 +791,14 @@ void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rsi\n", q->result->offset*16);
 
         }break;
+
+        case DOUBLE: {
+            fprintf(codefile, "\tMOV rdi, outputInt\n");
+                fprintf(codefile, "\tMOV rbx, rbp\n");
+                fprintf(codefile, "\tSUB rbx, rax\n");
+                fprintf(codefile, "\tMOVSD xmm0, QWORD[rbx]\n");
+                fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", q->result->offset*16);
+        }
     }
 
 
@@ -868,7 +888,7 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
                 case INT: {
                     fprintf(codefile, "\tMOV rdi, outputArrayInt\n");
                     fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", offset);
-                    fprintf(codefile, "\tmov rsi, rax\n", offset);
+                    fprintf(codefile, "\tmov rsi, rax\n");
                     break;
                 }
                 case DOUBLE: {
@@ -991,6 +1011,8 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
     fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
     fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
+    fprintf(codefile, "\tPUSH rax\n");
+    fprintf(codefile, "\tPUSH rcx\n");
 
     switch (type) {
         case 'I': {
@@ -1009,7 +1031,14 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
 
             
         } break;
-
+        case 'F': {
+            fprintf(codefile, "\tMOV rdi, outputReal\n");
+            fprintf(codefile, "\tMOV rbx, rbp\n");
+            fprintf(codefile, "\tSUB rbx, rax\n");
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbx]\n");
+            fprintf(codefile, "\tMOVQ rsi, xmm0\n");
+            fprintf(codefile, "\tMOV rax, 1\n");
+        }break;
         case 'B': {
             fprintf(codefile, "\tMOV rdi, outputFalse\n");
             fprintf(codefile, "\tMOV rbx, rbp\n");
@@ -1024,6 +1053,8 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     }
 
     fprintf(codefile, "\tCALL printf\n");
+    fprintf(codefile, "\tPOP rcx\n");
+    fprintf(codefile, "\tPOP rax\n");
     // fprintf(codefile, "\tMOV rdi, newline\n");
     // fprintf(codefile, "\tCALL printf\n");
     // fprintf(codefile, "\tPOP rbp\n");
@@ -1503,6 +1534,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1535,41 +1567,49 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
             fprintf(codefile, "\tADD rax, rbx\n"); // final calue of offset stored in rax
-            fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg1Offset*16); // final value of integer stored in rbx
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16); // final value of integer stored in rbx
             fprintf(codefile, "\tMOV rdx, rbp\n");
             fprintf(codefile, "\tSUB rdx, rax\n");
-            fprintf(codefile, "\tMOV QWORD[rdx], rbx\n");
+            fprintf(codefile, "\tMOVSD QWORD[rdx], xmm0\n");
 
         } else if(q->isArg1ID==false && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
             int arrOffset = 0;
             printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
             fprintf(codefile, "\tADD rax, rbx\n"); // final calue of offset stored in rax
-            fprintf(codefile, "\tMOV rbx, %d\n", q->arg1Num);
+            fprintf(codefile, "\treal_buffer_%d dq %f\n", real_count, q->arg1Real);
+            fprintf(codefile, "\tsection .text\n");
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[real_buffer_%d]\n", real_count);
             fprintf(codefile, "\tMOV rdx, rbp\n");
             fprintf(codefile, "\tSUB rdx, rax\n");
-            fprintf(codefile, "\tMOV QWORD[rdx], rbx\n");
+            fprintf(codefile, "\tMOVSD QWORD[rdx], xmm0\n");
+            real_count++;
 
         } else if(q->isArg1ID && q->isArg2ID==false){
-            resultOffset += q->arg2Num;
+            resultOffset += q->arg2Num-range_low;
             printf("arg1Offset %d\n", arg1Offset);
-            fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg1Offset*16);
-            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16);
+            fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset*16);
 
         } else if(q->isArg1ID==false && q->isArg2ID==false){
-            resultOffset += q->arg2Num;
+            resultOffset += q->arg2Num-range_low;
             // printf("Array element offset: %d\n", resultOffset);
-            fprintf(codefile, "\tMOV rax, %f\n", q->arg1Real);
-            fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
-
+            fprintf(codefile, "\tsection .data\n");
+            fprintf(codefile, "\treal_buffer_%d dq %f\n", real_count, q->arg1Real);
+            fprintf(codefile, "\tsection .text\n");
+            fprintf(codefile, "\tMOVSD xmm0, QWORD[real_buffer_%d]\n", real_count);
+            fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);
+            real_count++;
         }
     } break;
     case 'B': {
@@ -1578,6 +1618,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1592,6 +1633,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
