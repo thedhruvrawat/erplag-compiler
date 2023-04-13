@@ -13,5 +13,6 @@ symbolTable.txt
 parseTable.txt
 quadrupleTable.txt
 code.asm
+code_temp.asm
 testing
 compiler

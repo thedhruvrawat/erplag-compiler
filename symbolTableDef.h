@@ -105,6 +105,7 @@ typedef struct GlobalRecord { // These are Records at the first layer/row of Sym
     Record* outputList;
     unsigned int outputListSize;
     unsigned int activationRecordSize;
+    int tempInteger;
     SymbolTableNode* funcST;
     SymbolTableNode* inputST;
     SymbolTableNode* outputST;

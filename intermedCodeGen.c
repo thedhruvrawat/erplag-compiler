@@ -1082,6 +1082,7 @@ void printQuadrupleTable(void) {
                 fprintf(fp, "%-10s", "**");
             }
         } else {
+            printf("%p\n", quad->result);
             fprintf(fp, "%-20s", quad->result->name);
             fprintf(fp, "%-10s", typeStrings[quad->result->type.varType]);
         }
@@ -1153,6 +1154,7 @@ void createQuadrupleTable(void) {
             generateQuadruple(moduleRecord->funcST, DRIVER_END_OP, NULL, NULL, NULL, 0);
         } else {
             Quadruple* endQuad = generateQuadruple(moduleRecord->funcST, MODULE_END_OP, NULL, NULL, NULL, 0);
+            strcpy(endQuad->moduleName, name);
             endQuad->inputList = quad->inputList;
             endQuad->outputList = quad->outputList;
         }
