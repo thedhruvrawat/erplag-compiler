@@ -1900,7 +1900,7 @@ void printSymbolTable(char* filename) {
             funcRecord = funcRecord->next;
         }
     }
-    printf(GREEN BOLD "Symbol Table generated successfully\n" RESET);
+    printf(GREEN BOLD "Symbol Table generated successfully and stored in symbolTable.txt\n" RESET);
     fclose(fp);
 
     return;
