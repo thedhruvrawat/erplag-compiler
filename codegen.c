@@ -276,7 +276,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 RecordListNode* inputNode = currQuad->inputList->head;
                 while (inputNode != NULL) {
                     if (inputNode->type == ARR) {
-                        // TODO
+                        printf("Arrays as input parameters not supported yet!\n");
                     } else {
                         fprintf(codefile, "\tPOP rax\n");
                         fprintf(codefile, "\tMOV QWORD[rbp - %d], rax\n", inputNode->record->offset * 16);
@@ -317,7 +317,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 RecordListNode* inputNode = currQuad->inputList->tail;
                 while (inputNode != NULL) {
                     if (inputNode->type == ARR) {
-                        // TODO
+                        printf("Arrays as input parameters not supported yet!\n");
                     } else {
                         if (inputNode->isID) {
                             if (inputNode->isMinus && inputNode->type == DOUBLE) {
@@ -362,7 +362,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 RecordListNode* outputNode = currQuad->outputList->head;
                 while (outputNode != NULL) {
                     if (outputNode->type == ARR) {
-                        // TODO
+                        printf("Arrays as input parameters not supported yet!\n");
                     } else {
                         fprintf(codefile, "\tPOP rax\n");
                         if (outputNode->isID) {
