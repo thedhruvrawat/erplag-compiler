@@ -212,11 +212,12 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 } else if(currQuad->result->type.varType == BOOL){
                     insertGetValueStatement(codefile, currQuad, 'B');
                 } 
-                // else {
-                //     insertGetValueInArray(codefile, currQuad);
-                // }
+                else {
+                    insertGetArrayValue(codefile, currQuad, 'N');
+                }
                 break;
             }
+            
             case SWITCH_OP:{
                 insertSwitchStatement(codefile,currQuad);
                 break;
@@ -731,6 +732,68 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         bool_count++;
     }
     //fprintf(codefile, "\tEMPTY_STACK\n");
+}
+
+void insertGetArrayValue(FILE *codefile, Quadruple *q, char type){
+    // static array input
+    printf("Getting into array value\n");
+    VAR_TYPE arr_type = q->result->type.array.arrType;
+    int ele_count = q->result->width - 8;
+    if(ele_count >0){
+        if (arr_type == INTEGER) ele_count = ele_count/2;
+        if (arr_type == REAL) ele_count /= 4;
+        else {}
+    } else {
+        printf("Array size is 0\n");
+    }
+
+    int resultOffset = q->result->offset;
+
+    char* newLabel;
+
+    if(arr_type == INT || arr_type == BOOL){
+        printf("Getting Into Int\n");
+        newLabel = getNewLabelVariable();
+        fprintf(codefile, "\tMOV rcx, 0\n");
+        fprintf(codefile, "\t; Getting an integer in array\n");
+        fprintf(codefile, "\tsection .bss\n");
+        fprintf(codefile, "\t\ttemp_integer__%d resq 1\n", integer_count);
+        fprintf(codefile, "\tsection .text\n");
+        fprintf(codefile, "%s:\tpush rax\n", newLabel);
+        fprintf(codefile, "\tpush rcx\n");
+        fprintf(codefile, "\tMOV rdi, inputIntPrompt\n");
+        fprintf(codefile, "\txor rax, rax\n");
+        fprintf(codefile, "\tCALL printf\n");
+        fprintf(codefile, "\tPOP rcx\n");
+        fprintf(codefile, "\tPOP rax\n");
+        fprintf(codefile, "\tPUSH rax\n");
+        fprintf(codefile, "\tPUSH rcx\n");
+
+        fprintf(codefile, "\tLEA rsi, [temp_integer__%d]\n", integer_count);    
+
+        fprintf(codefile, "\tMOV rdi, inputInt\n");
+        fprintf(codefile, "\tMOV rax, 0\n");    
+        
+        fprintf(codefile, "\tCALL scanf\n");
+        fprintf(codefile, "\tPOP rcx\n");
+        fprintf(codefile, "\tPOP rax\n");
+        // fprintf(codefile, "\tMOV qword[temp_integer__%d], rax\n");
+        fprintf(codefile, "\tMOV rbx, 0\n");
+        fprintf(codefile, "\tMOV rbx, qword [temp_integer__%d]\n", integer_count); // integer read stored in rbx
+        fprintf(codefile, "\tMOV rax, %d\n", resultOffset); // array offset base
+        // fprintf(codefile, "\tMOV rdx, %d\n", ele_count);
+        // fprintf(codefile, "\tSUB rdx, rcx\n"); // rdx contains num offset in which number is to be added
+        fprintf(codefile, "\tADD rax, rcx\n"); // rax contains final offset in which number is to be added
+        fprintf(codefile, "\tMOV rdx, 16\n");
+        fprintf(codefile, "\tMUL rdx\n"); // actual offset value stored in rax
+        fprintf(codefile, "\tMOV rdx, rbp\n");
+        fprintf(codefile, "\tSUB rdx, rax\n"); // 
+        fprintf(codefile, "\tMOV qword[rdx], rbx\n");
+        fprintf(codefile, "\tADD rcx, 1\n");
+        fprintf(codefile, "\tCMP rcx, %d\n", ele_count);
+        fprintf(codefile, "\tJL %s\n", newLabel);
+        integer_count++;
+    }
 }
 
 void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
