@@ -865,12 +865,15 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 while (caseNode != NULL) {
                     if (caseNode->leaf.tok->tok == DEFAULT) {
                         generateQuadruple(symbolTableNode, DEFAULT_OP, NULL, NULL, NULL, 0);
+                        populateQuadrupleTable(caseNode->leftMostChild, currChild);
+                        currChild = currChild->next;
+                        generateQuadruple(symbolTableNode, CASE_END_OP, NULL, NULL, NULL, 0);
                     } else {
                         generateQuadruple(symbolTableNode, CASE_OP, caseNode->leftMostChild, NULL, NULL, 0);
+                        populateQuadrupleTable(caseNode->leftMostChild->next, currChild);
+                        currChild = currChild->next;
+                        generateQuadruple(symbolTableNode, CASE_END_OP, NULL, NULL, NULL, 0);
                     }
-                    populateQuadrupleTable(caseNode->leftMostChild->next, currChild);
-                    currChild = currChild->next;
-                    generateQuadruple(symbolTableNode, CASE_END_OP, NULL, NULL, NULL, 0);
 
                     caseNode = caseNode->next;
                 }
