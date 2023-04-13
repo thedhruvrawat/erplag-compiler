@@ -1,35 +1,7 @@
-<<module compute_expr>>
-takes input[ a: boolean, b:real, c:boolean];
-returns [u:real, v:boolean];
-start
-	declare p, q, d: real;
-	declare m: boolean;
-	get_value(d);
-	get_value(q);
-	p:= b+ d*2.0 - 3.0;
-	m:= a OR c AND b<=b;
-	u:= p+q;
-	v:= m OR p<=q;
-	print(a);
-	print(b);
-	print(c);
-	print(d);
-	print(p);
-	print(q);
-	print(u);
-	print(v);
-end
-
 <<<driver program>>>
 start
-	declare x, y, z: real;
-	get_value(x);
-	get_value(y);
-	declare k, h:boolean;
-	h:= false;
-	[z, k]:= use module compute_expr with parameters true, y, h;				
-	print(x);
-	print(y);
-	print(z);
-	print(k);
+	for (k in 1..3)
+	start
+		print(k);
+	end
 end

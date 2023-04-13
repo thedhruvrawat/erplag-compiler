@@ -897,7 +897,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                     }
                 }
 
-                Quadruple* quad = generateQuadruple(symbolTableNode, FOR_OP, NULL, NULL, idNode, 0);
+                Quadruple* quad = generateQuadruple(currChild, FOR_OP, NULL, NULL, idNode, 0);
                 quad->arg1Num = left;
                 quad->arg2Num = right;
 
