@@ -1447,7 +1447,7 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     */
 
     char *forBlockInit = getNewLabelVariable();
-    
+    fprintf(codefile,";FOR loop start\n");
     fprintf(codefile, "section .bss\n");
     char *lVar1 = (char*)malloc(sizeof(char) * 16);
     char *lVar2 = (char*)malloc(sizeof(char) * 16);
@@ -1549,6 +1549,7 @@ void insertForEnd(FILE *codefile, Quadruple* q){
     char* loopEndLabel = peekLoopStack(lStack)->label;
     fprintf(codefile,"%s: \n",loopEndLabel);
     popLoopStack(lStack);
+    fprintf(codefile,";FOR loop end\n");
 }
 
 // Stack functions to store labels for loops (nested)
