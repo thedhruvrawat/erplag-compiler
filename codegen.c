@@ -577,7 +577,7 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
 
 void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     // static array input
-    printf("Getting into array value\n");
+    // printf("Getting into array value\n");
     VAR_TYPE arr_type = q->result->type.array.arrType;
     int ele_count = q->result->width - 8;
     if(ele_count >0){
@@ -593,7 +593,7 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     char* newLabel;
 
     if(arr_type == INT || arr_type == BOOL || arr_type == REAL){
-        printf("Getting Into Int\n");
+        // printf("Getting Into Int\n");
         if(arr_type == INT){
             fprintf(codefile, "\t; Getting an integer array\n");
             fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
@@ -1514,7 +1514,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     {
         if(q->isArg1ID && q->isArg2ID){
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
@@ -1530,7 +1530,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(!q->isArg1ID && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
@@ -1546,7 +1546,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(q->isArg1ID && !q->isArg2ID){
             resultOffset += q->arg2Num-range_low;
-            printf("resultOffset %d\n", resultOffset);
+            // printf("resultOffset %d\n", resultOffset);
             fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg1Offset*16);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
@@ -1564,7 +1564,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     case 'F': {
         if(q->isArg1ID && q->isArg2ID){
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
@@ -1579,7 +1579,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(q->isArg1ID==false && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
@@ -1597,7 +1597,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(q->isArg1ID && q->isArg2ID==false){
             resultOffset += q->arg2Num-range_low;
-            printf("arg1Offset %d\n", arg1Offset);
+            // printf("arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\tMOVSD xmm0, QWORD[rbp-%d]\n", arg1Offset*16);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], xmm0\n", resultOffset*16);
 
@@ -1615,7 +1615,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     case 'B': {
         if(q->isArg1ID && q->isArg2ID){
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
@@ -1630,7 +1630,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(q->isArg1ID==false && q->isArg2ID){ // index in ID and value is INTEGER   arg1=value, arg2=index
             int arrOffset = 0;
-            printf("ArrayElementOffset %d\n", arrOffset);
+            // printf("ArrayElementOffset %d\n", arrOffset);
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
@@ -1645,7 +1645,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 
         } else if(q->isArg1ID && q->isArg2ID==false){
             resultOffset += q->arg2Num - range_low;
-            printf("arg1Offset %d\n", arg1Offset);
+            // printf("arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg1Offset*16);
             fprintf(codefile, "\tMOV QWORD[rbp-%d], rax\n", resultOffset*16);
 
@@ -1745,7 +1745,7 @@ void insertWhileEndStatement(FILE* codefile, Quadruple* q) {
     strcpy(whileBlockInit, peekLoopStack(lStack)->label);
     popLoopStack(lStack);
 
-    printf("whileBlockInit: %p\n", whileBlockInit);
+    // printf("whileBlockInit: %p\n", whileBlockInit);
     fprintf(codefile,"\tJMP %s \n", whileBlockInit);
     fprintf(codefile,"%s: \n", whileBlockClose);
 
