@@ -1487,33 +1487,6 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     if(q->result->type.array.leftNegative) range_low *= -1;
     if(q->result->type.array.rightNegative) range_high *= -1;
 
-    // if(q->result->type.array.isLeftID){
-    //     char lower_bound_var[20];
-    //     strcpy(lower_bound_var, q->result->type.array.leftID);
-    //     Record* lower_bound = variableExists(q->symbolTableNode, lower_bound_var, hash(lower_bound_var));
-    //     if(lower_bound != NULL){
-    //         lower_bound_offset = lower_bound->offset;
-    //     } else {
-    //         printf("Lower bound variable not found\n");
-    //     }
-    // } else {
-    //     range_low = q->result->type.array.left;
-    // }
-
-    // if(q->result->type.array.isRightID){
-    //     char upper_bound_var[20];
-    //     strcpy(upper_bound_var, q->result->type.array.rightID);
-    //     Record *upper_bound = variableExists(q->symbolTableNode, upper_bound_var, hash(upper_bound_var));
-    //     if(upper_bound!=NULL){
-    //         upper_bound_offset = upper_bound->offset;
-    //     } else {
-    //         printf("Upper bound variable not found");
-    //     }
-    // } else {
-    //     range_high = q->result->type.array.right;
-    // }
-
-
     int arg1Offset= -1; int arg2Offset = -1;
     if(q->isArg1ID) { //Is a Record storing value to be assigned
         arg1Offset = q->arg1ID->offset;
@@ -1523,6 +1496,7 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     }
     int resultOffset = q->result->offset;
 
+    char* newLabel = NULL;
     fprintf(codefile, "\t;Array Assignment\n");
     switch (type)
     {
@@ -1535,6 +1509,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1551,6 +1542,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1584,6 +1592,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1599,6 +1624,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1635,6 +1677,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
@@ -1650,6 +1709,23 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, "\t;Array Assignment variable index, Integer value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
             fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
+
+            fprintf(codefile, "\tCMP rbx, 0\n"); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJGE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+
+            fprintf(codefile, "\tCMP rbx, %d\n", range_high-range_low); // Relative offset should be greater than zero
+            newLabel = getNewLabelVariable();
+            fprintf(codefile, "\tJLE %s\n", newLabel); // ### Error output to be added
+            fprintf(codefile, "\tmov rdi, OutOfBoundError\n ");
+            fprintf(codefile, "\tcall printf\n");
+            fprintf(codefile, "\t jmp exit\n");
+            fprintf(codefile, "%s:\t\n", newLabel);
+            
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
