@@ -10,6 +10,7 @@ Group Number : 2
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "colorCodes.h"
 #include "codegen.h"
 
 
@@ -429,7 +430,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 insertDefaultStatement(codefile,currQuad);
             }
             default: {
-                printf("Not handled yet.\n");
+                printf(YELLOW BOLD "This array functionality not handled.\n" RESET);
                 break;
             }
         }

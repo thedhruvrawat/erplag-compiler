@@ -34,7 +34,7 @@ start
 	get_value(y);
 	declare k, h:boolean;
 	h:= false;
-	[z, k]:= use module compute_expr with parameters x, y, h;				
+	[z, k]:= use module compute_expr with parameters -3, y, h;				
 	print(x);
 	print(y);
 	print(z);

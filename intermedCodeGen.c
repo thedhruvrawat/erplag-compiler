@@ -716,6 +716,10 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 if (arrayAccess) {
                     ASTNode* indexNode = statement->leftMostChild->rightMostChild;
                     populateQuadrupleForExpressions(indexNode->rightMostChild, symbolTableNode);
+                    if (indexNode->numChildren == 2) {
+                        Quadruple* quad = generateQuadruple(symbolTableNode, UMINUS_OP, indexNode->rightMostChild, NULL, NULL, indexNode->rightMostChild->type);
+                        strcpy(indexNode->leftMostChild->symbolTableLabel, quad->result->name);
+                    }
                     generateQuadruple(symbolTableNode, ASSIGN_ARRAY_ACCESS_OP, expr, indexNode->leftMostChild, idNode, varRecord->type.array.arrType);
                 } else if (idType != ARR) {
                     strcpy(idNode->symbolTableLabel, varRecord->name);

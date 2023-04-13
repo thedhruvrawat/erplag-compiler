@@ -1,0 +1,33 @@
+<<module arraysum>>
+takes input[list:array[-4..20] of real];
+returns [sum:real];
+start
+    declare s: real;
+    declare x: integer;
+    x := 4 * 5 + 5;
+    list[4] := 5.4321e-3+list[x];  ** ERROR DYNAMIC : list[25] is out of bounds **
+    s := 5.4321e-3; 
+    **list := 5.4321e-3;              Error : lHS of assignment shouldn't be anything except **
+    **index := 5.4321e-3;             Error : lHS of assignment shouldn't be anything except **
+    declare index : integer;
+    for (index in 4..20)
+    start
+        s := s + list[index];
+    end
+    sum := s;
+end
+<<<driver program>>>
+start
+    declare num, k:integer;
+    declare A:array [-4..20] of real;
+    for( k in 6..25) ** ERROR -> Dynamic Check shoudl tell that A[21] is out of bounds **
+    start
+        A[k]:=2.3;
+        print(A[k]);
+    end
+    declare ok: real;
+    print(A[-4]);
+    A[-4] := A[-4] * A[20];
+    [ok] := use module arraysum with parameters A;             **ERROR -> num: INT, while arraysum is REAL**
+    print(num);
+end

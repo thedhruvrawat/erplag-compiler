@@ -552,13 +552,13 @@ void createAST(void) {
                 case 60: { // <N_13> = NUM <N_12>
                     ASTNode* numNode = createASTNode("NUM", stackNode->parseTreeNode->child);
                     appendASTNodeAsChild(numNode, stackNode->parent);
-                    pushChildrenToASTStack(st, stackNode->parent->parent, stackNode->parseTreeNode->child);
+                    pushChildrenToASTStack(st, stackNode->parent->parent, stackNode->parseTreeNode->child->next);
                     break;
                 }
                 case 61: { // <N_13> = RNUM <N_12>
                     ASTNode* rnumNode = createASTNode("RNUM", stackNode->parseTreeNode->child);
                     appendASTNodeAsChild(rnumNode, stackNode->parent);
-                    pushChildrenToASTStack(st, stackNode->parent->parent, stackNode->parseTreeNode->child);
+                    pushChildrenToASTStack(st, stackNode->parent->parent, stackNode->parseTreeNode->child->next);
                     break;
                 }
                 case 62: { // <N_13> = ID <N_11> <N_12>
