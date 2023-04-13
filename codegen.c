@@ -591,6 +591,9 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 fprintf(codefile, "\tret\n");
                 break;
             }
+            case DEFAULT_OP:{
+                insertDefaultStatement(codefile,currQuad);
+            }
             default: {
                 printf("Not handled yet.\n");
                 break;
@@ -1542,7 +1545,7 @@ void insertForStatement(FILE *codefile, Quadruple* q){
     */
 
     char *forBlockInit = getNewLabelVariable();
-    
+    fprintf(codefile,";FOR loop start\n");
     fprintf(codefile, "section .bss\n");
     char *lVar1 = (char*)malloc(sizeof(char) * 16);
     char *lVar2 = (char*)malloc(sizeof(char) * 16);
@@ -1644,6 +1647,7 @@ void insertForEnd(FILE *codefile, Quadruple* q){
     char* loopEndLabel = peekLoopStack(lStack)->label;
     fprintf(codefile,"%s: \n",loopEndLabel);
     popLoopStack(lStack);
+    fprintf(codefile,";FOR loop end\n");
 }
 
 // Stack functions to store labels for loops (nested)
@@ -1713,6 +1717,7 @@ void insertSwitchStatement(FILE *codefile, Quadruple* q){
     char* switchVar = malloc(sizeof(char)*21);
     switchVar = q->arg1ID->name;
     int switchVarOff = variableExists(q->symbolTableNode,switchVar,hash(switchVar))->offset;
+    fprintf(codefile,"; SWITCH STATEMENT\n");
     fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", switchVarOff*16); 
     //INT value is stored in case of INT switch, else 0/1 (false/true)
 
@@ -1757,8 +1762,11 @@ void insertCaseEnd(FILE *codefile, Quadruple* q){
 }
 
 void insertDefaultStatement(FILE *codefile, Quadruple* q){
-    char nextCaseStartLabel[20];
-    strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
-    popLoopStack(lStack);
-    fprintf(codefile,"%s: \n",nextCaseStartLabel);
+    
+    char* nextCaseStartLabel = getNewLabelVariable();
+    // // char nextCaseStartLabel[20];
+    pushLoopStack(lStack,nextCaseStartLabel);
+    // strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
+    // popLoopStack(lStack);
+    // fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
