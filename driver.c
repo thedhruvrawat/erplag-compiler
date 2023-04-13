@@ -379,13 +379,7 @@ int main(int argc, char* argv[])
             printf("-------------------------------------------------------------------------------------\n");
             if (SEMANTIC_ERROR) {
                 printf(RED BOLD "Cannot generate code due to semantic errors.\n" RESET);
-            } else {
-                createQuadrupleTable();
-                printQuadrupleTable();
-                printf(GREEN BOLD "Intermediate Code generated and printed to quadrupleTable.txt\n" RESET);
-                codeGenerator(quadTable, fileOutput);
-                printf(GREEN BOLD "Assembly Code generated and printed to code.asm\n" RESET);
-            }
+            } 
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
