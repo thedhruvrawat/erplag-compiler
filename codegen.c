@@ -144,9 +144,9 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case ASSIGN_ARRAY_ACCESS_OP: {
-                if(currQuad->result->type.array.arrType == INTEGER){
+                if(currQuad->result->type.array.arrType == INT){
                     insertArrayAssignmentOperation(codefile, currQuad, 'I');
-                } else if(currQuad->result->type.array.arrType == BOOLEAN){
+                } else if(currQuad->result->type.array.arrType == BOOL){
                     insertArrayAssignmentOperation(codefile, currQuad, 'B');
                 }
                 break;
@@ -158,8 +158,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     insertPrintStatement(codefile, currQuad, 'I');
                 } else if(currQuad->arg1Type == BOOL){
                     insertPrintStatement(codefile, currQuad, 'B');
-                }
-                else if(currQuad->arg1Type == ARR){
+                } else if(currQuad->arg1Type == ARR){
                     insertPrintStatement(codefile, currQuad, 'A');
                 }
                 else{
@@ -847,8 +846,7 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         }
         fprintf(codefile, "\tcall printf\n");
         boolPrints++;
-    }
-    else if(type == 'A'){
+    } else if(type == 'A'){
         VAR_TYPE arr_type = q->arg1ID->type.array.arrType;
         if (q->arg1ID->type.array.isLeftID || q->arg1ID->type.array.isRightID) {
             printf("Dynamic Arrays not handled yet!\n");
@@ -862,14 +860,15 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         if (q->arg1ID->type.array.rightNegative) { right = -right; }
 
         int width = right - left + 1;
+        fprintf(codefile, "\tMOV rdi, outputPrompt\n");
+        fprintf(codefile, "\tCALL printf\n");
         for (int i = 0; i < width; ++i) {
-            fprintf(codefile, "\tMOV rdi, outputPrompt\n");
-            fprintf(codefile, "\tCALL printf\n");
-            int offset = q->arg1ID->offset + i * 16;
+            int offset = q->arg1ID->offset * 16 + i * 16;
             switch (arr_type) {
                 case INT: {
                     fprintf(codefile, "\tMOV rdi, outputArrayInt\n");
-                    fprintf(codefile, "\tmov rsi, qword[rbp-%d]\n", offset);
+                    fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", offset);
+                    fprintf(codefile, "\tmov rsi, rax\n", offset);
                     break;
                 }
                 case DOUBLE: {
@@ -1488,10 +1487,11 @@ void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
             fprintf(codefile, ";arg1Offset %d\n", arg1Offset);
             fprintf(codefile, "\t;Array Assignment variable index, Variable value\n");
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg2Offset*16); // Load index value in rbx
+            fprintf(codefile, "\tSUB rbx, %d\n", range_low); // Subtract lower bound from index
             fprintf(codefile, "\tMOV rax, 16\n"); 
             fprintf(codefile, "\tMUL rbx\n"); // stored real offset relative to real base offset 
             fprintf(codefile, "\tMOV rbx, %d\n", resultOffset*16); // Load base array offset in rbx
-            fprintf(codefile, "\tADD rax, rbx\n"); // final calue of offset stored in rax
+            fprintf(codefile, "\tADD rax, rbx\n"); // final value of offset stored in rax
             fprintf(codefile, "\tMOV rbx, QWORD[rbp-%d]\n", arg1Offset*16); // final value of integer stored in rbx
             fprintf(codefile, "\tMOV rdx, rbp\n");
             fprintf(codefile, "\tSUB rdx, rax\n");
