@@ -239,7 +239,7 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                 int right = newRec->type.array.right * (newRec->type.array.rightNegative ? -1 : 1);
 
                 if (left > right) {
-                    printf(RED BOLD "[Semantic Analyser] Specified subrange for array \"%s\" are illegal. (%d > %d)\n" RESET, name, left, right);
+                    printf(RED BOLD "[Semantic Analyser] Line %d: Specified subrange for array \"%s\" are illegal. (%d > %d)\n" RESET, idNode->leaf.tok->linenum,name, left, right);
                     SEMANTIC_ERROR = true;
                     return NULL;
                 }
@@ -260,10 +260,10 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     char* leftID = newRec->type.array.leftID;
                     Record* leftRec = variableExists(symbolTableNode, leftID, hash(leftID));
                     if (leftRec == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not declared.\n" RESET, name);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: The left bound of array \"%s\" is not declared.\n" RESET, idNode->leaf.tok->linenum,name);
                         SEMANTIC_ERROR = true;
                     } else if (leftRec->type.varType != INT) {
-                        printf(RED BOLD "[Semantic Analyser] The left bound of array \"%s\" is not of type integer.\n" RESET, name);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: The left bound of array \"%s\" is not of type integer.\n" RESET, idNode->leaf.tok->linenum,name);
                         SEMANTIC_ERROR = true;
                     }
                 }
@@ -272,10 +272,10 @@ Record* generateRecord(SymbolTableNode* symbolTableNode, ASTNode* idNode, ASTNod
                     char* rightID = newRec->type.array.rightID;
                     Record* rightRec = variableExists(symbolTableNode, rightID, hash(rightID));
                     if (rightRec == NULL) {
-                        printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not declared.\n" RESET, name);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: The right bound of array \"%s\" is not declared.\n" RESET, idNode->leaf.tok->linenum,name);
                        SEMANTIC_ERROR = true;
                     } else if (rightRec->type.varType != INT) {
-                        printf(RED BOLD "[Semantic Analyser] The right bound of array \"%s\" is not of type integer.\n" RESET, name);
+                        printf(RED BOLD "[Semantic Analyser] Line %d: The right bound of array \"%s\" is not of type integer.\n" RESET, idNode->leaf.tok->linenum,name);
                         SEMANTIC_ERROR = true;
                     }
                 }
