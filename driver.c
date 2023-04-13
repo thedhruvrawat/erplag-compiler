@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     printf("Team Members: Dhruv, Vaibhav, Shreyas, Swastik, Chirag\n");
     printf("----------------------------------------------------------------------\n");
 
-    printf(GREEN BOLD "Level 4: Symbol table/AST/Type Checking/Semantic rules modules work/Handled static and dynamic arrays in Type Checking and Code Generation\n" RESET);
+    printf(GREEN BOLD "Level 4: 16 or more ERRORs could be implemented\n\t> Symbol table module works\n\t> Abstract Syntax Tree (AST) module works\n\t> Type Checking module works\n\t> Semantic rules module works\n\t> Handled static and dynamic arrays in Type Checking module\n\t> Handled static arrays in Code Generation\n\t> Handled Integer, Real and Boolean data types in Code Generation\n" RESET);
 
     int choice = 0;
     char userInput[80];
@@ -377,6 +377,15 @@ int main(int argc, char* argv[])
                 printf(GREEN BOLD "The code is semantically correct.\n" RESET);
             }
             printf("-------------------------------------------------------------------------------------\n");
+            if (SEMANTIC_ERROR) {
+                printf(RED BOLD "Cannot generate code due to semantic errors.\n" RESET);
+            } else {
+                createQuadrupleTable();
+                printQuadrupleTable();
+                printf(GREEN BOLD "Intermediate Code generated and printed to quadrupleTable.txt\n" RESET);
+                codeGenerator(quadTable, fileOutput);
+                printf(GREEN BOLD "Assembly Code generated and printed to code.asm\n" RESET);
+            }
             end_time = clock();
             total_CPU_time = (double)(end_time - start_time);
             total_CPU_time_in_seconds = total_CPU_time / CLOCKS_PER_SEC;
