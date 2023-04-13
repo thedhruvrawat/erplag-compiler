@@ -1758,32 +1758,32 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
         while (varRecord != NULL) {
             char scope[25];
             sprintf(scope, "%d-%d", symbolTableNode->scopeStart, symbolTableNode->scopeEnd);
-            fprintf(fp, "%-25s%-25s%-25s%-7d", varRecord->name, moduleName, scope, varRecord->width);
+            fprintf(fp, "%-25s%-25s%-25s", varRecord->name, moduleName, scope);
             switch (varRecord->type.varType) {
                 case INT: {
-                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
+                    fprintf(fp, "%-20s%-10s%-20s%-50s", 
+                    "INTEGER",
                     "NO", 
                     "**",
-                    "**",
-                    "INTEGER"
+                    "**"
                     );
                     break;
                 }
                 case DOUBLE: {
-                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
+                    fprintf(fp, "%-20s%-10s%-20s%-50s", 
+                    "REAL",
                     "NO", 
                     "**",
-                    "**",
-                    "REAL"
+                    "**"
                     );
                     break;
                 }
                 case BOOL: {
-                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
+                    fprintf(fp, "%-20s%-10s%-20s%-50s", 
+                    "BOOLEAN",
                     "NO", 
                     "**",
-                    "**",
-                    "BOOLEAN"
+                    "**"
                     );
                     break;
                 }
@@ -1826,7 +1826,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         } else {
                             sprintf(firstRange, "[%s", varRecord->type.array.leftID);
                         }
-                        strcat(range, "..");
+                        strcat(firstRange, "..");
                         if (varRecord->type.array.rightNegative) {
                             sprintf(range, "%s-%d]", firstRange, varRecord->type.array.right);
                         } else {
@@ -1838,7 +1838,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         } else {
                             sprintf(firstRange, "[%d", varRecord->type.array.left);
                         }
-                        strcat(range, "..");
+                        strcat(firstRange, "..");
                         if (varRecord->type.array.rightNegative) {
                             sprintf(range, "%s-%s]", firstRange, varRecord->type.array.rightID);
                         } else {
@@ -1846,11 +1846,11 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                         }
                     }
 
-                    fprintf(fp, "%-10s%-20s%-50s%-20s", 
+                    fprintf(fp, "%-20s%-10s%-20s%-50s", 
+                    typeStrings[varRecord->type.array.arrType],
                     "YES", 
                     (isStatic ? "Static" : "Dynamic"),
-                    range,
-                    typeStrings[varRecord->type.array.arrType]
+                    range
                     );
                     break;
                 }
@@ -1859,7 +1859,7 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
                     break;
                 }
             }
-            fprintf(fp, "%-10d%-10d\n", varRecord->offset, level);
+            fprintf(fp, "%-7d%-10d%-7d\n", varRecord->width, varRecord->offset, level);
             varRecord = varRecord->next;
         }
     }
@@ -1879,17 +1879,29 @@ void printSymbolTableRec(SymbolTableNode* symbolTableNode, char* moduleName, FIL
 
 void printSymbolTable(char* filename) {
     FILE* fp = fopen(filename, "w");
-    fprintf(fp, "%-25s%-25s%-25s%-7s%-10s%-20s%-50s%-20s%-10s%-15s\n",
+    // fprintf(fp, "%-25s%-25s%-25s%-7s%-10s%-20s%-50s%-20s%-10s%-15s\n",
+    //     "Variable_name",
+    //     "Scope (Module Name)",
+    //     "Scope (Line Numbers)",
+    //     "Width",
+    //     "isArray",
+    //     "Static or Dynamic",
+    //     "Range",
+    //     "Type of Element",
+    //     "Offset",
+    //     "Nesting Level");
+    fprintf(fp, "%-25s%-25s%-25s%-20s%-10s%-20s%-50s%-7s%-10s%-15s\n",
         "Variable_name",
         "Scope (Module Name)",
         "Scope (Line Numbers)",
-        "Width",
+        "Type of Element",
         "isArray",
         "Static or Dynamic",
         "Range",
-        "Type of Element",
+        "Width",
         "Offset",
-        "Nesting Level");
+        "Nesting Level"
+        );
     for (int i = 0; i < HASH_TABLE_SIZE; ++i) {
         if (symbolTable->global[i] == NULL) { continue; }
         GlobalRecord* funcRecord = symbolTable->global[i];
