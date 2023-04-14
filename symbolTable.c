@@ -732,6 +732,7 @@ void populateSymbolTable(SymbolTableNode* symbolTableNode, ASTNode* statement, i
                     if (varRecord == NULL) {
                         printf(RED BOLD "[Semantic Analyser] Line %d: Undefined variable %s\n" RESET, printNode->leaf.tok->linenum, name);
                         SEMANTIC_ERROR = true;
+                        break;
                     }
 
                     if (printNode->next == NULL) { break; }
