@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 {
     printf("\e[1;1H\e[2J");
     if (argc != 3) {
-        printf(YELLOW BOLD "Usage: ./stage1exe <testcase.txt> <outputFile.asm>\n" RESET);
+        printf(YELLOW BOLD "Usage: ./compiler <testcase.txt> <outputFile.asm>\n" RESET);
         return 1;
     }
 

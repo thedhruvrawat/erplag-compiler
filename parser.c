@@ -737,6 +737,15 @@ void parse()
             } else {
                 printParseError(2, st->top, curTok);
 
+                if (topStack->GE->tokenID == COLON || topStack->GE->tokenID == CASE || topStack->GE->tokenID == DEFAULT) {
+                    popStack(st); 
+                    topStack = peekStack(st);
+                    free(curTok);
+                    curTok = getNextToken();
+                    curTok = createTokenCopy(curTok);
+                    continue;
+                }
+
                 while (curTok->tok != SEMICOL && curTok->tok != START && curTok->tok != END) {
                     free(curTok);
                     curTok = getNextToken();
@@ -745,6 +754,7 @@ void parse()
                         break;
                     }
                 }
+                
 
                 while ((topStack = peekStack(st))) {
                     if (topStack->GE->isTerminal && topStack->GE->tokenID == curTok->tok) {

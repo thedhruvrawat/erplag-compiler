@@ -1,0 +1,25 @@
+# Ignore compiled object files
+*.out
+*.o
+
+# Ignore Visual Studio Code workspace files
+.vscode/
+
+# Ignore Valgrind core dump files
+vgcore*
+
+# Ignore specific output files
+parseTable.txt
+symbolTable.txt
+quadrupleTable.txt
+code.asm
+code_temp.asm
+
+# Ignore JSON files
+*.json
+
+# Ignore macOS directory metadata files
+.DS_Store
+
+# Ignore compiler executable
+compiler
