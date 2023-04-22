@@ -139,3 +139,4 @@
 <sign_for_loop> = PLUS
 <sign_for_loop> = MINUS
 <sign_for_loop> = e 
+<ioStmt> = PRINTOFFSET BO ID BC SEMICOL

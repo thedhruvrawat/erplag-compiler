@@ -32,6 +32,7 @@ typedef enum {
     DRIVER_OP,
     GET_VALUE_OP,
     PRINT_ID_OP,
+    PRINT_OFFSET,
     PRINT_ARR_ELE_OP,
     MODULE_USE_OP,
     SWITCH_OP,

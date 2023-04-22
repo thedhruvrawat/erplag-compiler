@@ -169,6 +169,10 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 }
                 break;
             }
+            case PRINT_OFFSET: {
+                insertPrintOffsetStatement(codefile, currQuad);
+                break;
+            }
             case PRINT_ARR_ELE_OP: {
                 if(currQuad->arg1ID->type.array.arrType == INTEGER) {
                     insertPrintArrayElementOperation(codefile, currQuad, 'I');
@@ -196,22 +200,6 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
             }
             case FOR_END_OP:{
                 insertForEnd(codefile,currQuad);
-
-                // From END_OP
-                // if((lStack->size != 0))
-                // {
-                //     if(lStack->type == 'F'){
-                //         insertForEnd(codefile, currQuad);
-                //     }
-                //     if(lStack->type == 'S'){
-                //         insertSwitchEnd(codefile, currQuad);
-                //     }
-                // }
-                // // When it's the end of file
-                // else{
-                //     // Commented to prevent seg fault for other END_OP
-                //     // destroyLoopStack(lStack);
-                // }
                 break;
             }
             case GET_VALUE_OP: {
@@ -257,15 +245,11 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 break;
             }
             case MODULE_OP:{
-                /* -> <<module compute_expr>> takes input[ a: integer, b:integer, c:boolean];   returns [d:integer, e:boolean];<-
-                Function Call =>[u,v] := use module compute_expr[x, y, z]
-                */
                 char* name = currQuad->moduleName;
                 fprintf(codefile, "%s:\n", name);
                 GlobalRecord* moduleRecord = moduleExists(name, hash(name));
 
                 // Getting Actual Input parameters stored in stack and storing them into Formal Parameters
-                // fprintf(codefile, "\tPUSH rbp\n");
                 moduleRecord->tempInteger = integer_count;
                 fprintf(codefile, "\tsection .bss\n");
                 fprintf(codefile, "\t\ttemp_integer__%d resq 1\n", integer_count++);
@@ -371,12 +355,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     } else {
                         fprintf(codefile, "\tPOP rax\n");
                         if (outputNode->isID) {
-                            // if (outputNode->type == DOUBLE) {
-                            //     fprintf(codefile, "\tMOVSD xmm0, rax\n");
-                            //     fprintf(codefile, "\tMOVSD QWORD [rbp-%d], xmm0\n", (outputNode->record->offset * 16));
-                            // } else {
-                                fprintf(codefile, "\tMOV QWORD [rbp-%d], rax\n", (outputNode->record->offset * 16));
-                            // }
+                            fprintf(codefile, "\tMOV QWORD [rbp-%d], rax\n", (outputNode->record->offset * 16));
                         }
                     }
                     outputNode = outputNode->next;
@@ -389,7 +368,6 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                     fprintf(codefile, "main:\n");
                     fprintf(codefile, "\tpush rbp\n");
                     fprintf(codefile, "\tmov rbp, rsp\n");
-                        // //fprintf(codefile, "\tFILL_STACK\n");
                     fprintf(codefile, "\tmov rbp, rsp\n");
                     fprintf(codefile, "\tsub rsp, %d\n", stackEnd * 32);
                     break;
@@ -422,7 +400,6 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 fprintf(codefile, "\tmov rsp, rbp\n");
                 fprintf(codefile, "\tpop rbp\n");
                 fprintf(codefile, "\tMOV rax, 0\n");
-                // //fprintf(codefile, "\tEMPTY_STACK\n");
                 fprintf(codefile, "\tret\n");
                 break;
             }
@@ -433,8 +410,7 @@ void codeGenerator(QuadrupleTable *qt, char *output) {
                 printf(YELLOW BOLD "This array functionality not handled.\n" RESET);
                 break;
             }
-        }
-        
+        }        
         currQuad = currQuad->next;
     }
     
@@ -483,6 +459,7 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\toutputArrayTrue: db \" true\", 0\n");
     fprintf(codefile, "\toutputArrayFalse: db \" false\", 0\n");
     fprintf(codefile, "\toutputInt: db \"Output: %%d\", 10, 0\n");
+    fprintf(codefile, "\toutputOffset: db \"Offset: %%d\", 10, 0\n");
     fprintf(codefile, "\toutputReal: db \"Output: %%lf\", 10, 0\n");
     fprintf(codefile, "\toutputTrue: db \"Output: true\", 10, 0\n");
     
@@ -500,13 +477,9 @@ void initStrings(FILE *codefile) {
     fprintf(codefile, "\tInputNotInteger: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected INTEGER: Given input is not an integer\033[0m\", 10, 0\n\n");
     fprintf(codefile, "\tInputNotReal: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected REAL: Given input is not a real value\033[0m\", 10, 0\n\n");
     fprintf(codefile, "\tInputNotBoolean: db \"\033[1;31mRUNTIME ERROR [Type Mismatch]: Expected BOOLEAN: Given input is not boolean\033[0m\", 10, 0\n\n");
-    fprintf(codefile, "\ttypeInteger: db \"integer\", 0\n");
-    fprintf(codefile, "\ttypeReal: db \"real\", 0\n");
-    fprintf(codefile, "\ttypeBoolean: db \"boolean\", 0\n");
 }
 
 void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
-    //fprintf(codefile, "\tFILL_STACK\n");
     int resultOffset = q->result->offset;
     if(type == 'I') {
         fprintf(codefile, "\t; Getting an integer\n");
@@ -523,7 +496,6 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV rax, 0\n");    
         
         fprintf(codefile, "\tCALL scanf\n");
-        // cmp eax, 1 jne notinterror
         fprintf(codefile, "\tCMP EAX, 1\n");
         fprintf(codefile, "\tJNE InputIsNotIntegerError\n");
         fprintf(codefile, "\tMOV rax, qword [temp_integer__%d]\n", integer_count);
@@ -574,12 +546,10 @@ void insertGetValueStatement(FILE *codefile, Quadruple *q, char type) {
         fprintf(codefile, "\tMOV qword[rbp-%d], rax\n", resultOffset*16);
         bool_count++;
     }
-    //fprintf(codefile, "\tEMPTY_STACK\n");
 }
 
 void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     // static array input
-    // printf("Getting into array value\n");
     VAR_TYPE arr_type = q->result->type.array.arrType;
     int ele_count = q->result->width - 8;
     if(ele_count >0){
@@ -595,7 +565,6 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
     char* newLabel;
 
     if(arr_type == INT || arr_type == BOOL || arr_type == REAL){
-        // printf("Getting Into Int\n");
         if(arr_type == INT){
             fprintf(codefile, "\t; Getting an integer array\n");
             fprintf(codefile, "\tMOV rdi, inputArrayIntPrompt\n");
@@ -654,12 +623,9 @@ void insertGetArrayValue(FILE *codefile, Quadruple *q, char type) {
 
         fprintf(codefile, "\tPOP rcx\n");
         fprintf(codefile, "\tPOP rax\n");
-        // fprintf(codefile, "\tMOV qword[temp_integer__%d], rax\n");
         fprintf(codefile, "\tMOV rbx, 0\n");
         fprintf(codefile, "\tMOV rbx, qword [temp_integer__%d]\n", integer_count); // integer read stored in rbx
         fprintf(codefile, "\tMOV rax, %d\n", resultOffset); // array offset base
-        // fprintf(codefile, "\tMOV rdx, %d\n", ele_count);
-        // fprintf(codefile, "\tSUB rdx, rcx\n"); // rdx contains num offset in which number is to be added
         fprintf(codefile, "\tADD rax, rcx\n"); // rax contains final offset in which number is to be added
         fprintf(codefile, "\tMOV rdx, 16\n");
         fprintf(codefile, "\tMUL rdx\n"); // actual offset value stored in rax
@@ -768,14 +734,6 @@ void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type) {
 
     switch (q->arg1ID->type.array.arrType) {
         case INT: {
-            
-                // arg2IDOffset = q->arg2ID->offset; // Offset of variable which contains index value of array
-                // fprintf(codefile, "\t;Accessing variable offset array element\n");
-                // fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg2IDOffset*16); // rax contains index value
-                // fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
-                // fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
-                // fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
-                // fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
                 fprintf(codefile, "\tMOV rdi, outputInt\n");
                 fprintf(codefile, "\tMOV rbx, rbp\n");
                 fprintf(codefile, "\tSUB rbx, rax\n");
@@ -807,7 +765,6 @@ void insertArrayAccessStatement(FILE *codefile, Quadruple *q, char type) {
 }
 
 void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
-    //fprintf(codefile, "\tFILL_STACK\n");
     int arg1Offset = -1;
     if(q->isArg1ID) {
         arg1Offset = q->arg1ID->offset;
@@ -901,7 +858,6 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
                     break;
                 }
                 case BOOL: {
-                    // fprintf(codefile, "\t; Printing a boolean ID\n");
                     fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", offset);
                     fprintf(codefile, "\tCMP rax, 0\n");
                     fprintf(codefile, "\tJE boolVarIsFalse__%d\n", boolPrints);
@@ -923,8 +879,20 @@ void insertPrintStatement(FILE *codefile, Quadruple *q, char type) {
         // Cannot reach here currently, but useful to add more types later on 
         printf("Fatal, Invalid char passed \n"); 
     }
-    // fprintf(codefile, "\tMOV rdi, newline\n");
-    // fprintf(codefile, "\tcall printf\n");
+}
+
+void insertPrintOffsetStatement(FILE *codefile, Quadruple *q) {
+    // int arg1Offset = -1;
+    // if(q->isArg1ID) {
+    //     arg1Offset = q->arg1ID->offset;
+    // }
+    
+    fprintf(codefile, "\t; Printing an integer\n");
+    fprintf(codefile, "\tMOV rax, %d\n", q->arg1ID->offset);    
+    fprintf(codefile, "\tMOV rdi, outputOffset\n");
+    fprintf(codefile, "\tmov rsi, rax\n");
+    fprintf(codefile, "\tcall printf\n");
+    
 }
 
 void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
@@ -1032,20 +1000,10 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
 
     switch (type) {
         case 'I': {
-            
-                // arg2IDOffset = q->arg2ID->offset; // Offset of variable which contains index value of array
-                // fprintf(codefile, "\t;Accessing variable offset array element\n");
-                // fprintf(codefile, "\tMOV rax, QWORD[rbp-%d]\n", arg2IDOffset*16); // rax contains index value
-                // fprintf(codefile, "\tMOV rbx, %d\n", arg1Offset); // rbx contains the base index value
-                // fprintf(codefile, "\tADD rax, rbx\n"); // rax contains array element offset value
-                // fprintf(codefile, "\tMOV rdx, 16\n"); // Offset multiplier
-                // fprintf(codefile, "\tMUL rdx\n"); // rax contains actual offset of arrayelement
-                fprintf(codefile, "\tMOV rdi, outputInt\n");
-                fprintf(codefile, "\tMOV rbx, rbp\n");
-                fprintf(codefile, "\tSUB rbx, rax\n");
-                fprintf(codefile, "\tMOV rsi, QWORD[rbx]\n");
-
-            
+            fprintf(codefile, "\tMOV rdi, outputInt\n");
+            fprintf(codefile, "\tMOV rbx, rbp\n");
+            fprintf(codefile, "\tSUB rbx, rax\n");
+            fprintf(codefile, "\tMOV rsi, QWORD[rbx]\n");
         } break;
         case 'F': {
             fprintf(codefile, "\tMOV rdi, outputReal\n");
@@ -1071,9 +1029,6 @@ void insertPrintArrayElementOperation(FILE *codefile, Quadruple *q, char type) {
     fprintf(codefile, "\tCALL printf\n");
     fprintf(codefile, "\tPOP rcx\n");
     fprintf(codefile, "\tPOP rax\n");
-    // fprintf(codefile, "\tMOV rdi, newline\n");
-    // fprintf(codefile, "\tCALL printf\n");
-    // fprintf(codefile, "\tPOP rbp\n");
 }
 
 void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type) {
@@ -1167,10 +1122,7 @@ void insertArithmeticOperation(FILE *codefile, Quadruple *q, char op, char type)
             }
         }
         fprintf(codefile, "\tMOVSD QWORD[rbp-%d], xmm0\n", resultOffset*16);
-        // fprintf(codefile, "\tJMP NoException\n");
-        // fprintf(codefile, "NoException:\n");
     }
-    //fprintf(codefile, "\tEMPTY_STACK\n");
 }
 
 
@@ -1351,15 +1303,11 @@ void insertLogicalOperation(FILE *codefile, Quadruple *q, char op) { //only Bool
         case '&': {
             fprintf(codefile, "\t; LOGICAL AND\n");
             fprintf(codefile, "\tAND rax, rbx\n");
-            // fprintf(codefile, "\tCMP rax, 2\n");
-            // fprintf(codefile, "\tCMOVE rcx, rdx\n");
             break;
         }
         case '|': {
             fprintf(codefile, "\t; LOGICAL OR\n");
             fprintf(codefile, "\tOR rax, rbx\n");
-            // fprintf(codefile, "\tCMP rax, 0\n");
-            // fprintf(codefile, "\tCMOVNE rcx, rdx\n");
             break;
         }
     }
@@ -1399,7 +1347,6 @@ void insertUnaryMinusOperation(FILE *codefile, Quadruple *q, char type) { //only
 }
 
 void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) { 
-    //fprintf(codefile, "\tFILL_STACK\n");
     int arg1Offset = -1, resultOffset = -1;
     if(q->isArg1ID) { //Is a Record
         arg1Offset = q->arg1ID->offset;
@@ -1437,7 +1384,6 @@ void insertAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
 }
 
 void dynArrBoundCheck(FILE *codefile, Quadruple* q){
-
     // rcx has the index, rax and rbx will store the lower and upper bound respectively
     // Go to label exit if not in bounds
     char *leftVar, *rightVar;
@@ -1476,8 +1422,6 @@ void dynArrBoundCheck(FILE *codefile, Quadruple* q){
 
 void insertArrayAssignmentOperation(FILE *codefile, Quadruple *q, char type) {
     // Check for static array
-    // int lower_bound_offset = 0;
-    // int upper_bound_offset = 0;
     int range_low = 0;
     int range_high = 0;
 
@@ -1846,26 +1790,8 @@ void insertWhileEndStatement(FILE* codefile, Quadruple* q) {
 }
 
 void insertForEnd(FILE *codefile, Quadruple* q){
-    /* Working code for non-nested loop
-    loopStNode* temp = peekLoopStack(lStack);
-    char* loopStartLabel = temp->label;
-
-    fprintf(codefile, "\tINC rcx \n");
-    fprintf(codefile,"\tJMP %s \n",loopStartLabel);
-    popLoopStack(lStack); // popped the start
-
-    loopStNode* temp2 = peekLoopStack(lStack);
-    char* loopEndLabel = temp2->label;
-    fprintf(codefile,"%s: \n",loopEndLabel);
-    popLoopStack(lStack);
-    */
     char* lVar1 = peekLoopStack(lStack)->label;
     popLoopStack(lStack);
-
-    // char* lVar2 = peekLoopStack(lStack)->label;
-    // fprintf(codefile, "\tMOV qword[%s], rdx",lVar2);
-    // popLoopStack(lStack);
-
     char* loopStartLabel = peekLoopStack(lStack)->label;
 
     fprintf(codefile,"\tMOV rcx, qword[%s]\n",lVar1); 
@@ -1925,9 +1851,6 @@ void pushLoopStack(loopSt *st, char* label){
     st->size++;
 }
 
-// void setStackType(loopSt *st, char type){
-//     st->type = type;
-// }
 
 bool isLoopStackEmpty(loopSt * st){
     if(st->size)
@@ -1994,55 +1917,6 @@ void insertCaseEnd(FILE *codefile, Quadruple* q){
 void insertDefaultStatement(FILE *codefile, Quadruple* q){
     
     char* nextCaseStartLabel = getNewLabelVariable();
-    // // char nextCaseStartLabel[20];
     pushLoopStack(lStack,nextCaseStartLabel);
-    // strcpy(nextCaseStartLabel,peekLoopStack(lStack)->label);
-    // popLoopStack(lStack);
-    // fprintf(codefile,"%s: \n",nextCaseStartLabel);
 }
 
-// Dynamic Array - TODO
-// void insertDynamicArrayDeclare(FILE *codefile, Quadruple* q){
-//     char leftID[20];
-//     char rightID[20];
-//     int leftIDOffset, rightIDOffset;
-
-//     // Left dynamic
-//     bool isLeftID = q->result->type.array.isLeftID;
-//     bool isRightID = q->result->type.array.isRightID;
-//     //
-//     if(!isLeftID && !isRightID){
-//         printf("Fatal error, staic array treated as mistake\n");
-//     }
-//     if(isLeftID){
-//         //Left Dynamic
-//         strcpy(leftID,q->result->type.array.leftID);
-//         leftIDOffset = (variableExists(q->symbolTableNode,leftID,hash(leftID)))->offset;
-//         fprintf(codefile, "\tMOV rax, qword[rbp-%d]\n", leftIDOffset*16);
-        
-//     }
-//     else{
-//         // Left Static
-//         fprintf(codefile, "\tMOV rax, %d]\n", q->result->type.array.left); 
-//     }
-//     // Unary negative
-//     if(q->result->type.array.leftNegative){
-//         fprintf(codefile,"\tNEG rax\n");
-//     } 
-
-
-//     if(rightID){
-//         //Right Dynamic
-//         strcpy(rightID,q->result->type.array.rightID);
-//         rightIDOffset = (variableExists(q->symbolTableNode,rightID,hash(rightID)))->offset;
-//         fprintf(codefile, "\tMOV rbx, qword[rbp-%d]\n", rightIDOffset*16);
-//     }
-//     else{
-//         //Right Static
-//         fprintf(codefile, "\tMOV rbx, %d]\n", q->result->type.array.right); 
-//     }
-
-//     fprintf(codefile,"section .bss\n");
-
-//     fprintf(codefile,"section .text\n");
-// }

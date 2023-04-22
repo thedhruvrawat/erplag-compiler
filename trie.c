@@ -42,6 +42,7 @@ void populateTerminalTrie(Trie* trie)
     insertWord(trie, "program", PROGRAM);
     insertWord(trie, "get_value", GET_VALUE);
     insertWord(trie, "print", PRINT);
+    insertWord(trie, "printoffset", PRINTOFFSET);
     insertWord(trie, "use", USE);
     insertWord(trie, "with", WITH);
     insertWord(trie, "parameters", PARAMETERS);
@@ -81,6 +82,7 @@ void populateGrammarTrie(Trie* trie)
     insertWord(trie, "PROGRAM", PROGRAM);
     insertWord(trie, "GET_VALUE", GET_VALUE);
     insertWord(trie, "PRINT", PRINT);
+    insertWord(trie, "PRINTOFFSET", PRINTOFFSET);
     insertWord(trie, "USE", USE);
     insertWord(trie, "WITH", WITH);
     insertWord(trie, "PARAMETERS", PARAMETERS);

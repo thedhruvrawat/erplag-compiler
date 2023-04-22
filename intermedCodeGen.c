@@ -383,6 +383,16 @@ Quadruple* generateQuadruple(SymbolTableNode* symbolTableNode, OPERATOR op, ASTN
 
             break;
         }
+        case PRINT_OFFSET: {
+            quad->isArg1ID = true;
+            char* name = arg1->leaf.tok->lexeme;
+            quad->arg1ID = variableExists(symbolTableNode, name, hash(name));
+            quad->arg1Type = quad->arg1ID->type.varType;
+            quad->isArg2ID = true;
+            quad->arg2ID = NULL;
+            quad->result = NULL;
+            break;
+        }
         case PRINT_ARR_ELE_OP: {
             quad->isArg1ID = true;
             char* name = arg1->leaf.tok->lexeme;
@@ -679,6 +689,7 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
         6. SWITCH
         7. FOR
         8. WHILE
+        9. PRINTOFFSET
     */
 
     SymbolTableNode* currChild = symbolTableNode->children;
@@ -924,6 +935,11 @@ void populateQuadrupleTable(ASTNode* statement, SymbolTableNode* symbolTableNode
                 generateQuadruple(symbolTableNode, WHILE_END_OP, NULL, NULL, NULL, 0);
                 break;
             }
+            case 'O': { // PRINT
+                generateQuadruple(symbolTableNode, PRINT_OFFSET, statement->leftMostChild, NULL, NULL, 0);
+
+                break;
+            }
 
         }
         statement = statement->next;
@@ -983,6 +999,7 @@ void printQuadrupleTable(void) {
         "DRIVER_OP",
         "GET_VALUE_OP",
         "PRINT_ID_OP",
+        "PRINT_OFFSET",
         "PRINT_ARR_ELE_OP",
         "MODULE_USE_OP",
         "SWITCH_OP",
@@ -1081,6 +1098,8 @@ void printQuadrupleTable(void) {
                 } else {
                     fprintf(fp, "%-10s", typeStrings[quad->arg1Type]);
                 }
+            } else if (quad->op == PRINT_OFFSET) {
+                fprintf(fp, "%-10s", typeStrings[quad->arg1ID->type.varType]);
             } else if (quad->op == PRINT_ARR_ELE_OP) {
                 fprintf(fp, "%-10s", typeStrings[quad->arg1ID->type.array.arrType]);
             } else {

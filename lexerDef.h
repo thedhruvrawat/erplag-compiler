@@ -26,6 +26,7 @@ typedef enum {
     PROGRAM,
     GET_VALUE,
     PRINT,
+    PRINTOFFSET,
     USE,
     WITH,
     PARAMETERS,

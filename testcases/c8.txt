@@ -28,9 +28,9 @@ start
 		default:print(x);
 			break;
 	end	
-	print(y);
-	print(x);
-	print(z);
+	printoffset(1);
+	printoffset(x);
+	printoffset(z);
 end
 
 ** On the console 

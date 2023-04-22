@@ -23,7 +23,7 @@ bool LEXER_ERROR = false;
 const char* token_types[] = {
     "INTEGER", "REAL", "BOOLEAN", "OF", "ARRAY", "START",
     "END", "DECLARE", "MODULE", "DRIVER", "PROGRAM", "GET_VALUE",
-    "PRINT", "USE", "WITH", "PARAMETERS", "TAKES", "INPUT",
+    "PRINT", "PRINTOFFSET", "USE", "WITH", "PARAMETERS", "TAKES", "INPUT",
     "RETURNS", "FOR", "IN", "SWITCH", "CASE", "BREAK",
     "DEFAULT", "WHILE",
     // Non-Keywords

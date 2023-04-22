@@ -959,6 +959,12 @@ void createAST(void) {
                 case 140: { // <sign_for_loop> = e 
                     break;
                 }
+                case 141: { // <ioStmt> = PRINTOFFSET BO ID BC SEMICOL
+                    ASTNode* printNode = createASTNode("OFFSET", stackNode->parseTreeNode->child);
+                    appendASTNodeAsChild(printNode, stackNode->parent);
+                    pushChildrenToASTStack(st, printNode, stackNode->parseTreeNode->child->next);
+                    break;
+                }
                 default: {
                     continue;
                 }
