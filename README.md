@@ -1,8 +1,85 @@
-# ERPLAG Compiler
+# ERPLAG Compiler, Group 02
 
 ![Language](https://img.shields.io/static/v1?label=Language&message=C&color=informational&style=for-the-badge)
 
-This repository contains the toy-compiler created as part of requirements for the course **CS F363: Compiler Construction** at BITS Pilani, Pilani Campus in Spring 2023.
+This repository contains the toy-compiler created as part of requirements for the course **CS F363: Compiler Construction** at BITS Pilani, Pilani Campus in Spring 2023 under [Dr. Vandana Agarwal](https://universe.bits-pilani.ac.in/pilani/vandana/profile). Our team (**Group 2**) scored the highest among all groups which were part of the course.
+
+> See marks distribution for our team [here](./docs/Marks.pdf)
+
+## Features supported by the language
+
+> [Click here](./docs/language%20specifications.pdf) for language specifications.
+
+- The language `ERPLAG` is a strongly typed language with primitive data types as **integer** and **floating point**. 
+- It also supports two other data types: **boolean** and **arrays**. 
+- The language supports arithmetic and boolean expressions. 
+- The language supports assignment statements, input/output statements, declarative, conditional, iterative, and function call statements. 
+- The language supports the modular implementation of the functionalities. 
+- Functions can return multiple values. The function may or may not return a value as well. 
+- The scope of the variables is static and the variable is visible only in the block where it is declared.
+
+## Dependencies
+
+1. Ensure you have `gcc`, version 5.0 or greater, installed.
+> `gcc` version can be checked via `gcc --version` command on terminal.
+
+2. Ensure you have `nasm`, version 2.14.02 or greater, installed
+> `nasm` version can be checked via `nasm --version` command on terminal. You can install `nasm` via `sudo apt install nasm`
+
+## Instructions to run
+
+`makefile` has been provided with the code along with some sample test cases.
+Run the following commands.
+```bash
+$ make
+// The output to this should be
+gcc -c -g driver.c
+gcc -c -g parser.c
+gcc -c -g lexer.c
+gcc -c -g trie.c
+gcc -c -g stackADT.c
+gcc -c -g Set.c
+gcc -c -g ast.c
+gcc -c -g symbolTable.c
+gcc -c -g intermedCodeGen.c
+gcc -c -g codegen.c
+gcc -Wall driver.o parser.o trie.o lexer.o Set.o stackADT.o ast.o symbolTable.o intermedCodeGen.o codegen.o -g -o compiler
+```
+Once all the files have been compiled correctly, run
+```bash
+$ ./compiler <testcase.txt> <outputFile.asm>
+```
+
+To run the `.asm` file, use this command
+```bash
+$ nasm -f elf64 <outputFile.asm> -o code.o && gcc -no-pie code.o -o code
+$ ./code
+```
+
+## Sample `ERPLAG` Code
+
+```
+<<<driver program>>>
+start
+	declare x, y, z:integer;
+	declare a, b, c:integer;
+	a:= 5;
+	b:= 9;
+	get_value(x);
+	get_value(y);
+	z:= x + y*b +(a-b)*y+ a*2 - b*x;	
+        print(z);
+end
+```
+
+## Sample Output
+```
+Input: Enter an integer value 
+2
+Input: Enter an integer value 
+3
+Output: 9
+```
 
 ## Team Members
 
@@ -14,33 +91,10 @@ This repository contains the toy-compiler created as part of requirements for th
 | 4      | Shreyas Sheeranali   | 2019B3A70387P | [ShreyasSR](https://github.com/ShreyasSR) |
 | 5      | Vaibhav Prabhu       | 2019B3A70593P | [prabhuvaibhav](https://github.com/prabhuvaibhav) |
 
-## Meeting Summary
+![Group](./docs/team.png)
 
-| Meeting | Summary                                                     | Date        |
-| ------- | ----------------------------------------------------------- | ----------- |
-| 1       | Project Logistics Discussion                                | Feb 3, 2023 |
-| 2       | Primitive DFA Construction                                  | Feb 4, 2023 |
-| 3       | DFA Construction, `struct` for encapsulation                | Feb 5, 2023 |
-| 4       | Coded state transitions for identifiers                     | Feb 7, 2023 |
-| 5       | Twin Buffer Implementation and many DFA states added        | Feb 9, 2023 |
-| 6       | RNUM, NUM, Trie Added; DFA completed; Comment handling      | Feb 10, 2023|
-| 7       | Analysis of DFA                                             | Feb 11, 2023|
-| 8       | Analysis of Grammar                                         | Feb 14, 2023|
-| 9       | Started first & follow set computation, error handling      | Feb 21, 2023|
-| 10      | Completed First & Follow sets, Grammar Correction           | Feb 22, 2023|
-| 11      | Parsing Table, StackADT                                     | Feb 24, 2023|
-| 12      | Union structure for TOKENS                                  | Feb 25, 2023|
-| 13      | Merge functionality of Parse Tree and Stack                 | Feb 26, 2023|
+> ## Disclaimer
+> All the code and files provided on this repository are strictly for educational purposes with no intention of promoting unfair means in any evaluative component.
 
-## Deadlines
-
-| Stage | Requirements                                                                                  | Deadline       | Submission |
-| ----- | --------------------------------------------------------------------------------------------- | -------------- | ---------- |
-| 1     | **Lexical Analyzer, Predictive Parser, Syntax Analysis, Error Recovery**                      |                | [x]        |
-|       | DFA on A3 sheet                                                                               | Feb 12, 2023   | [x]        |
-|       | Complete and Modified grammar on A4 sheet                                                     | Feb 19, 2023   | [x]        |
-|       | FIRST & FOLLOW sets on A4 sheet                                                               | Feb 19, 2023   | [x]        |
-|       | Code Submission                                                                               | March 19, 2023 | [ ]        |
-| 2     | AST Generation, Symbol Table, Semantic Analysis, Code Generation and Compiler Integration     | TBA            | [ ]        |
-
-
+## License 
+MIT
